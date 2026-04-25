@@ -57,15 +57,89 @@ function formatKm(value) {
   return typeof value === "number" ? `${value.toFixed(0)} km` : "k. A.";
 }
 
+function getPoiBreadcrumbMeta(poi) {
+  const viewerCategory = poi.viewerCategory || "Highlight";
+
+  switch (viewerCategory) {
+    case "Nationalpark":
+    case "Naturhighlight":
+    case "Aussichtspunkt":
+      return {
+        family: "Natur",
+        tone: "nature",
+        label: viewerCategory,
+      };
+    case "Sehenswuerdigkeit":
+    case "Highlight-Stadt":
+    case "Kulturort":
+      return {
+        family: "Kultur",
+        tone: "culture",
+        label: viewerCategory,
+      };
+    case "Etappenort":
+    case "Ankommen":
+      return {
+        family: "Etappe",
+        tone: "stage",
+        label: viewerCategory,
+      };
+    case "Grenze":
+      return {
+        family: "Uebergang",
+        tone: "border",
+        label: viewerCategory,
+      };
+    case "Pause & Versorgung":
+      return {
+        family: "Pause",
+        tone: "supply",
+        label: viewerCategory,
+      };
+    case "Streckenmoment":
+      return {
+        family: "Route",
+        tone: "route",
+        label: viewerCategory,
+      };
+    case "Lokales Highlight":
+      return {
+        family: "Vor Ort",
+        tone: "local",
+        label: viewerCategory,
+      };
+    default:
+      return {
+        family: "Highlight",
+        tone: "highlight",
+        label: viewerCategory,
+      };
+  }
+}
+
+function createPoiBreadcrumb(poi) {
+  const breadcrumb = getPoiBreadcrumbMeta(poi);
+
+  return `
+    <div class="poi-breadcrumb poi-breadcrumb--${breadcrumb.tone}" aria-label="POI-Kategorie">
+      <span>${breadcrumb.family}</span>
+      <span>${breadcrumb.label}</span>
+    </div>
+  `;
+}
+
 function createPoiListItem(poi) {
   return `
     <article class="poi-card">
       <div class="poi-card__header">
         <div>
-          <p class="poi-card__eyebrow">${poi.country} | ${poi.viewerCategory}</p>
+          <p class="poi-card__eyebrow">${poi.country}</p>
           <h3>${poi.name}</h3>
         </div>
-        <span class="poi-card__score">${poi.score.toFixed(3)}</span>
+        <div class="poi-card__header-meta">
+          ${createPoiBreadcrumb(poi)}
+          <span class="poi-card__score">${poi.score.toFixed(3)}</span>
+        </div>
       </div>
       <p class="poi-card__description">${poi.shortDescription}</p>
       <p class="poi-card__meta">
@@ -79,7 +153,10 @@ function createPoiListItem(poi) {
 function createJourneyPoiItem(poi, label) {
   return `
     <article class="poi-journey-card">
-      <p class="poi-card__eyebrow">${label}</p>
+      <div class="poi-inline-header">
+        <p class="poi-card__eyebrow">${label}</p>
+        ${createPoiBreadcrumb(poi)}
+      </div>
       <h4>${poi.name}</h4>
       <p class="poi-card__meta">Route km ~${formatKm(poi.routeKm)} | ${poi.relativeToLiveLabel || "noch ohne Live-Bezug"} | ${poi.viewerCategory}</p>
       <p class="poi-card__description">${poi.shortDescription}</p>
@@ -90,7 +167,10 @@ function createJourneyPoiItem(poi, label) {
 function createCompactAudienceItem(poi) {
   return `
     <article class="poi-audience-item">
-      <p class="poi-card__eyebrow">${poi.viewerCategory}</p>
+      <div class="poi-inline-header">
+        <p class="poi-card__eyebrow">Zuschauerblick</p>
+        ${createPoiBreadcrumb(poi)}
+      </div>
       <h4>${poi.name}</h4>
       <p class="poi-card__meta">${poi.relativeToLiveLabel || "noch ohne Live-Bezug"} | Route km ~${formatKm(poi.routeKm)}</p>
     </article>
@@ -100,7 +180,10 @@ function createCompactAudienceItem(poi) {
 function createMiniAudienceItem(poi) {
   return `
     <article class="dashboard-poi-item">
-      <p class="poi-card__eyebrow">${poi.viewerCategory}</p>
+      <div class="poi-inline-header">
+        <p class="poi-card__eyebrow">POI</p>
+        ${createPoiBreadcrumb(poi)}
+      </div>
       <h4>${poi.name}</h4>
       <p class="poi-card__meta">${poi.relativeToLiveLabel || "noch ohne Live-Bezug"}</p>
     </article>
@@ -123,7 +206,10 @@ export function createCurrentAudienceTile(audienceContext) {
         lead
           ? `
             <div class="dashboard-focus-card__lead">
-              <p class="poi-card__eyebrow">${lead.viewerCategory}</p>
+              <div class="poi-inline-header">
+                <p class="poi-card__eyebrow">Gerade relevant</p>
+                ${createPoiBreadcrumb(lead)}
+              </div>
               <h4>${lead.name}</h4>
               <p class="poi-card__description">${lead.whyItMattersForApp}</p>
             </div>
@@ -277,7 +363,10 @@ export function createPoiJourneyCard(journeyGroups) {
   const nextPoi = journeyGroups.nextPrimaryPoi
     ? `
         <article class="poi-next-card">
-          <p class="section-intro__eyebrow">Als Naechstes</p>
+          <div class="poi-inline-header">
+            <p class="section-intro__eyebrow">Als Naechstes</p>
+            ${createPoiBreadcrumb(journeyGroups.nextPrimaryPoi)}
+          </div>
           <h3>${journeyGroups.nextPrimaryPoi.name}</h3>
           <p class="poi-card__meta">Route km ~${formatKm(journeyGroups.nextPrimaryPoi.routeKm)} | ${journeyGroups.nextPrimaryPoi.relativeToLiveLabel || "noch ohne Live-Bezug"} | Score ${journeyGroups.nextPrimaryPoi.score.toFixed(3)}</p>
           <p class="poi-card__description">${journeyGroups.nextPrimaryPoi.whyItMattersForApp}</p>
