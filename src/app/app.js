@@ -1,0 +1,102 @@
+import { createShell } from "../layout/shell.js";
+import { createRouter } from "./router.js";
+import { moduleRegistry } from "../config/modules.js";
+import { loadRouteData } from "../services/gpxRouteService.js";
+import { createLocationProvider } from "../location/LocationProvider.js";
+import { mapLocationToRoute } from "../services/routePositionService.js";
+import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
+
+export async function createApp(root) {
+  const router = createRouter(moduleRegistry);
+  const state = {
+    routeData: null,
+    routeError: null,
+    routeLoading: true,
+    locationData: null,
+    locationError: null,
+    locationLoading: true,
+    locationProviderType: null,
+    poiData: null,
+    poiError: null,
+    poiLoading: true,
+    poiFilters: createDefaultPoiFilters(),
+  };
+  let locationProvider = null;
+
+  root.innerHTML = createShell();
+
+  const contentNode = root.querySelector("[data-app-content]");
+  const navNode = root.querySelector("[data-app-nav]");
+
+  router.mount(contentNode, navNode, () => state);
+
+  root.addEventListener("change", async (event) => {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const filterKey = target.dataset.poiFilter;
+
+    if (!filterKey) {
+      return;
+    }
+
+    if (filterKey === "includeNeedsEnrichment" && target instanceof HTMLInputElement) {
+      state.poiFilters = {
+        ...state.poiFilters,
+        [filterKey]: target.checked,
+      };
+    } else if (target instanceof HTMLSelectElement) {
+      const nextValue = filterKey === "minScore" ? Number(target.value) : target.value;
+      state.poiFilters = {
+        ...state.poiFilters,
+        [filterKey]: nextValue,
+      };
+    }
+
+    router.refresh();
+  });
+
+  try {
+    state.routeData = await loadRouteData();
+
+    try {
+      state.poiData = await loadPoiData();
+      state.poiLoading = false;
+    } catch (error) {
+      state.poiError = error instanceof Error ? error.message : "POI-Daten konnten nicht geladen werden.";
+      state.poiLoading = false;
+    }
+
+    locationProvider = createLocationProvider({
+      routeData: state.routeData,
+      onUpdate(snapshot) {
+        state.locationData = mapLocationToRoute(state.routeData, snapshot);
+        state.locationLoading = false;
+        state.locationError = null;
+        state.locationProviderType = snapshot.providerType;
+        router.refresh();
+      },
+      onError(message) {
+        state.locationLoading = false;
+        state.locationError = message;
+        router.refresh();
+      },
+    });
+
+    state.locationProviderType = locationProvider.type;
+    await locationProvider.start();
+  } catch (error) {
+    state.routeError = error instanceof Error ? error.message : "Unbekannter Fehler beim Laden der Route.";
+  } finally {
+    state.routeLoading = false;
+    state.poiLoading = false;
+    router.refresh();
+  }
+
+  window.addEventListener("beforeunload", () => {
+    locationProvider?.stop();
+  });
+}

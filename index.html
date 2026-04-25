@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Timo & Tino on Tour - eine mobile-first Reise-App fuer Familie und Freunde."
+    />
+    <title>Timo & Tino on Tour</title>
+    <link rel="stylesheet" href="./src/styles/app.css?v=20260425b" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app-shell">
+        <section class="route-loading-card">
+          <p class="section-intro__eyebrow">Startet</p>
+          <h2>Timo & Tino on Tour wird geladen.</h2>
+          <p class="muted-text">Wenn dieser Text stehen bleibt, ist beim JavaScript-Start etwas schiefgelaufen.</p>
+        </section>
+      </div>
+    </div>
+    <script type="module">
+      const root = document.querySelector("#app");
+
+      const renderStartupError = (message) => {
+        if (!root) {
+          return;
+        }
+
+        root.innerHTML = `
+          <div class="app-shell">
+            <section class="route-loading-card">
+              <p class="section-intro__eyebrow">Startfehler</p>
+              <h2>Die Web-App konnte nicht geladen werden.</h2>
+              <p class="muted-text">${message}</p>
+            </section>
+          </div>
+        `;
+      };
+
+      window.addEventListener("error", (event) => {
+        renderStartupError(event?.error?.message || event.message || "Unbekannter Browserfehler");
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason;
+        renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
+      });
+
+      import("./src/main.js?v=20260425b").catch((error) => {
+        renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
+        console.error(error);
+      });
+    </script>
+  </body>
+</html>
