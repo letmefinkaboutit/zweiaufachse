@@ -3,7 +3,8 @@ import { dashboardHighlights, tripMeta } from "../data/mockData.js";
 import { createInfoCard, createModuleTile } from "../components/cards.js";
 import {
   createLocationDashboardTile,
-  createRouteDashboardTile,
+  createRouteDashboardMapTile,
+  createRouteDashboardStatsTile,
 } from "../components/routeCards.js";
 import { createCurrentAudienceTile, createForwardAudienceTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
@@ -43,15 +44,24 @@ export function renderDashboardPage(state = {}) {
     ? createAudiencePoiContext(state.poiData.pois, state.locationData)
     : null;
 
-  const routeTile = state.routeData
-    ? createRouteDashboardTile(state.routeData, state.locationData)
+  const routeMapTile = state.routeData
+    ? createRouteDashboardMapTile(state.routeData, state.locationData)
     : createPlaceholderTile(
         "Gesamtroute mit Live-Stand",
         state.routeLoading
           ? "Die Route wird gerade geladen und als Tourachse vorbereitet."
           : state.routeError || "Die Route ist gerade nicht verfuegbar.",
         "#route",
-        "dashboard-focus-card--route",
+        "dashboard-focus-card--route-map",
+      );
+
+  const routeStatsTile = state.routeData
+    ? createRouteDashboardStatsTile(state.routeData, state.locationData)
+    : createPlaceholderTile(
+        "Tourstatus in Zahlen",
+        "Gesamtdistanz, geschafft, verbleibend und die letzten 24 Stunden erscheinen hier, sobald die Route bereit ist.",
+        "#route",
+        "dashboard-focus-card--route-stats",
       );
 
   const currentTile = audienceContext
@@ -79,7 +89,8 @@ export function renderDashboardPage(state = {}) {
         </div>
 
         <div class="dashboard-main-grid">
-          ${routeTile}
+          ${routeMapTile}
+          ${routeStatsTile}
           ${currentTile}
           ${forwardTile}
         </div>

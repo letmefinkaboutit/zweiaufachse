@@ -620,13 +620,17 @@ img {
   box-shadow: var(--shadow);
 }
 
-.dashboard-focus-card--route {
+.dashboard-focus-card--route-map,
+.dashboard-focus-card--route-stats {
   gap: 16px;
-  grid-column: 1 / -1;
 }
 
 .dashboard-focus-card__metrics {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-focus-card__metrics--stacked {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .dashboard-focus-card__metrics article,
@@ -680,6 +684,11 @@ img {
 
 .dashboard-route-labels strong {
   color: var(--primary-deep);
+}
+
+.dashboard-focus-card__detail {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .dashboard-poi-list {

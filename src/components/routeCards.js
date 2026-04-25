@@ -24,6 +24,52 @@ function getActiveProgress(routeData, locationData) {
   return routeData.currentProgress;
 }
 
+function getLast24HoursLabel(routeData, activeProgress) {
+  const currentPoint = activeProgress.currentPoint;
+
+  if (!currentPoint?.time || typeof currentPoint.cumulativeDistanceMeters !== "number") {
+    return "k. A.";
+  }
+
+  const currentTimestamp = new Date(currentPoint.time).getTime();
+
+  if (Number.isNaN(currentTimestamp)) {
+    return "k. A.";
+  }
+
+  const threshold = currentTimestamp - 24 * 60 * 60 * 1000;
+  let candidatePoint = null;
+
+  for (const point of routeData.points) {
+    if (!point.time) {
+      continue;
+    }
+
+    const pointTimestamp = new Date(point.time).getTime();
+
+    if (Number.isNaN(pointTimestamp)) {
+      continue;
+    }
+
+    if (pointTimestamp <= threshold) {
+      candidatePoint = point;
+    } else {
+      break;
+    }
+  }
+
+  if (!candidatePoint || typeof candidatePoint.cumulativeDistanceMeters !== "number") {
+    return "k. A.";
+  }
+
+  const distanceKm = Math.max(
+    0,
+    (currentPoint.cumulativeDistanceMeters - candidatePoint.cumulativeDistanceMeters) / 1000,
+  );
+
+  return `${distanceKm.toFixed(0)} km`;
+}
+
 const TILE_SIZE = 256;
 const BASEMAP_STYLE = "rastertiles/voyager_nolabels";
 const BASEMAP_ATTRIBUTION = "Kartendaten © OpenStreetMap-Mitwirkende, Basemap © CARTO";
@@ -187,11 +233,11 @@ function createRouteSvgMarkup(routeData, currentPoint, poiMarkers = [], variant 
   `;
 }
 
-export function createRouteDashboardTile(routeData, locationData) {
+export function createRouteDashboardMapTile(routeData, locationData) {
   const activeProgress = getActiveProgress(routeData, locationData);
 
   return `
-    <a class="dashboard-focus-card dashboard-focus-card--route" href="#route">
+    <a class="dashboard-focus-card dashboard-focus-card--route-map" href="#route">
       <div class="dashboard-focus-card__header">
         <div>
           <p class="section-intro__eyebrow">Favorit</p>
@@ -217,8 +263,24 @@ export function createRouteDashboardTile(routeData, locationData) {
         ${createProgressBar(activeProgress.percentLabel)}
         <p class="muted-text">${activeProgress.progressStory}</p>
       </div>
+    </a>
+  `;
+}
 
-      <div class="dashboard-focus-card__metrics">
+export function createRouteDashboardStatsTile(routeData, locationData) {
+  const activeProgress = getActiveProgress(routeData, locationData);
+  const last24HoursLabel = getLast24HoursLabel(routeData, activeProgress);
+
+  return `
+    <a class="dashboard-focus-card dashboard-focus-card--route-stats" href="#route">
+      <div class="dashboard-focus-card__header">
+        <div>
+          <p class="section-intro__eyebrow">Favorit</p>
+          <h3>Tourstatus in Zahlen</h3>
+        </div>
+      </div>
+
+      <div class="dashboard-focus-card__metrics dashboard-focus-card__metrics--stacked">
         <article>
           <span>Gesamtdistanz</span>
           <strong>${routeData.totalDistanceLabel}</strong>
@@ -231,8 +293,15 @@ export function createRouteDashboardTile(routeData, locationData) {
           <span>Verbleibend</span>
           <strong>${activeProgress.remainingLabel}</strong>
         </article>
+        <article>
+          <span>Letzte 24h</span>
+          <strong>${last24HoursLabel}</strong>
+        </article>
       </div>
 
+      <p class="dashboard-focus-card__detail">
+        ${activeProgress.progressLabel} | ${activeProgress.currentLocationLabel}
+      </p>
       <p class="dashboard-focus-card__attribution">${BASEMAP_ATTRIBUTION}</p>
     </a>
   `;
