@@ -123,16 +123,16 @@ function chooseBasemapZoom(bounds) {
 function createProjection(routeData, width, height, padding) {
   const expandedBounds = createExpandedBounds(routeData.bounds);
   const zoom = chooseBasemapZoom(expandedBounds);
+  const minRouteWorldX = lonToWorldX(expandedBounds.minLon, zoom);
+  const maxRouteWorldX = lonToWorldX(expandedBounds.maxLon, zoom);
+  const minRouteWorldY = latToWorldY(expandedBounds.maxLat, zoom);
+  const maxRouteWorldY = latToWorldY(expandedBounds.minLat, zoom);
   const minTileX = Math.floor(lonToWorldX(expandedBounds.minLon, zoom) / TILE_SIZE);
   const maxTileX = Math.floor(lonToWorldX(expandedBounds.maxLon, zoom) / TILE_SIZE);
   const minTileY = Math.floor(latToWorldY(expandedBounds.maxLat, zoom) / TILE_SIZE);
   const maxTileY = Math.floor(latToWorldY(expandedBounds.minLat, zoom) / TILE_SIZE);
-  const minWorldX = minTileX * TILE_SIZE;
-  const maxWorldX = (maxTileX + 1) * TILE_SIZE;
-  const minWorldY = minTileY * TILE_SIZE;
-  const maxWorldY = (maxTileY + 1) * TILE_SIZE;
-  const worldWidth = Math.max(maxWorldX - minWorldX, 1);
-  const worldHeight = Math.max(maxWorldY - minWorldY, 1);
+  const worldWidth = Math.max(maxRouteWorldX - minRouteWorldX, 1);
+  const worldHeight = Math.max(maxRouteWorldY - minRouteWorldY, 1);
   const drawableWidth = width - padding * 2;
   const drawableHeight = height - padding * 2;
   const scale = Math.min(drawableWidth / worldWidth, drawableHeight / worldHeight);
@@ -142,7 +142,12 @@ function createProjection(routeData, width, height, padding) {
   return {
     zoom,
     tileRange: { minTileX, maxTileX, minTileY, maxTileY },
-    worldBounds: { minWorldX, maxWorldX, minWorldY, maxWorldY },
+    worldBounds: {
+      minWorldX: minRouteWorldX,
+      maxWorldX: maxRouteWorldX,
+      minWorldY: minRouteWorldY,
+      maxWorldY: maxRouteWorldY,
+    },
     scale,
     offsetX,
     offsetY,
