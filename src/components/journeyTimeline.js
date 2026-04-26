@@ -83,8 +83,9 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
           <path d="${linePath}" fill="none" stroke="rgba(235,143,52,0.85)" stroke-width="2" stroke-linejoin="round" clip-path="url(#jt-done-clip)"/>
           ${borderLines}
           <line x1="${progressX}" y1="${markerY}" x2="${progressX}" y2="${ELEV_BOTTOM}" stroke="rgba(235,143,52,0.5)" stroke-width="1.5"/>
-          <circle class="jt-svg-pulse" cx="${progressX}" cy="${markerY}" r="7" fill="rgba(235,143,52,0.22)"/>
-          <circle cx="${progressX}" cy="${markerY}" r="3.5" fill="rgb(235,143,52)" stroke="white" stroke-width="2"/>
+          <circle class="jt-svg-pulse jt-svg-pulse--outer" cx="${progressX}" cy="${markerY}" r="10" fill="rgba(235,143,52,0.14)"/>
+          <circle class="jt-svg-pulse" cx="${progressX}" cy="${markerY}" r="8" fill="rgba(235,143,52,0.22)"/>
+          <circle cx="${progressX}" cy="${markerY}" r="5" fill="rgb(235,143,52)" stroke="white" stroke-width="2.5"/>
         </svg>
         <span class="jt-progress-pct">${Math.round(progressRatio * 100)} %</span>
 
