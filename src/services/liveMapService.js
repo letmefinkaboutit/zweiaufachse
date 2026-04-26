@@ -1,3 +1,5 @@
+import { fetchOverpassPois } from "./overpassService.js";
+
 const PLACEHOLDER_ID = "live-map-placeholder";
 const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
@@ -88,12 +90,11 @@ export function initLiveMap() {
   poiLayer = window.L.layerGroup().addTo(map);
 }
 
-export function updateLiveMap(locationData, poiData) {
+export async function updateLiveMap(locationData) {
   if (!map) return;
 
   const lat = locationData?.latitude;
   const lon = locationData?.longitude;
-  const currentKm = locationData?.routeMatch?.distanceDoneKm ?? 0;
 
   if (lat != null && lon != null) {
     if (!userHasPanned) {
@@ -112,15 +113,18 @@ export function updateLiveMap(locationData, poiData) {
     } else {
       posMarker = window.L.marker([lat, lon], { icon, zIndexOffset: 1000 }).addTo(map);
     }
+
+    try {
+      const pois = await fetchOverpassPois(lat, lon);
+      renderPoiLayer(pois);
+    } catch {
+      // Overpass unavailable — leave existing POI layer as-is
+    }
   }
+}
 
+function renderPoiLayer(pois) {
   poiLayer.clearLayers();
-
-  const pois = (poiData?.pois ?? [])
-    .filter((p) => p.latitude && p.longitude && p.routeKm != null)
-    .filter((p) => Math.abs((p.routeKm ?? 0) - currentKm) < 60)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 25);
 
   for (const poi of pois) {
     const color = categoryColor(poi);
