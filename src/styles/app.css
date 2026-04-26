@@ -593,6 +593,27 @@ img {
   font-weight: 600;
 }
 
+.status-chip__ellipsis {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.status-chip__ellipsis span {
+  color: var(--accent);
+  font-weight: 900;
+  animation: chip-dot 1.4s ease-in-out infinite;
+  opacity: 0;
+}
+
+.status-chip__ellipsis span:nth-child(2) { animation-delay: 0.22s; }
+.status-chip__ellipsis span:nth-child(3) { animation-delay: 0.44s; }
+
+@keyframes chip-dot {
+  0%, 60%, 100% { opacity: 0; }
+  30%            { opacity: 1; }
+}
+
 .status-chip--searching {
   background: rgba(31, 42, 47, 0.06);
   color: var(--muted);

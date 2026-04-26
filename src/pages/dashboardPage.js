@@ -31,7 +31,7 @@ function createStatusChipBar(state) {
 
   const movementChip =
     isMoving === null
-      ? `<span class="status-chip status-chip--unknown">Signal empfangen</span>`
+      ? `<span class="status-chip status-chip--unknown">Signal empfangen<span class="status-chip__ellipsis"><span>·</span><span>·</span><span>·</span></span></span>`
       : isMoving
         ? `<span class="status-chip status-chip--moving"><span class="status-chip__dot"></span>in Bewegung</span>`
         : `<span class="status-chip status-chip--still"><span class="status-chip__dot"></span>Nicht in Bewegung</span>`;
