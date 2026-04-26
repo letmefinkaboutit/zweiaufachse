@@ -1,13 +1,13 @@
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
-const RADIUS_M = 40000;
+const RADIUS_M = 20000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
-  return `v${CACHE_VERSION}_${(lat * 5).toFixed(0)}_${(lon * 5).toFixed(0)}`;
+  return `v${CACHE_VERSION}_${(lat * 10).toFixed(0)}_${(lon * 10).toFixed(0)}`;
 }
 
 const HISTORIC_SET = new Set(["castle","fort","palace","monastery","abbey","ruins","memorial","monument","cathedral","church","archaeological_site","city_gate"]);
