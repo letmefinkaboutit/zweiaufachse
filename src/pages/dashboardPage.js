@@ -1,5 +1,5 @@
 import { moduleRegistry } from "../config/modules.js";
-import { dashboardHighlights, tripMeta } from "../data/mockData.js";
+import { dashboardHighlights } from "../data/mockData.js";
 import { createInfoCard, createModuleTile } from "../components/cards.js";
 import {
   createLocationDashboardTile,
@@ -8,6 +8,39 @@ import {
 } from "../components/routeCards.js";
 import { createCurrentAudienceTile, createForwardAudienceTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
+import { computeMovementStatus } from "../services/routePositionService.js";
+
+function createStatusChipBar(state) {
+  const { locationData, previousLocationData } = state;
+
+  if (!locationData) {
+    return "";
+  }
+
+  const { isMoving, speedKph } = computeMovementStatus(locationData, previousLocationData);
+
+  const movementChip =
+    isMoving === null
+      ? `<span class="status-chip status-chip--unknown">Signal empfangen</span>`
+      : isMoving
+        ? `<span class="status-chip status-chip--moving"><span class="status-chip__dot"></span>in Bewegung</span>`
+        : `<span class="status-chip status-chip--still"><span class="status-chip__dot"></span>Nicht in Bewegung</span>`;
+
+  const speedChip =
+    isMoving && speedKph !== null
+      ? `<span class="status-chip status-chip--meta">${speedKph.toFixed(0)} km/h</span>`
+      : "";
+
+  const updateChip = `<span class="status-chip status-chip--meta">${locationData.routeMatch.lastUpdateLabel}</span>`;
+
+  return `
+    <div class="dashboard-status-bar">
+      ${movementChip}
+      ${speedChip}
+      ${updateChip}
+    </div>
+  `;
+}
 
 function createPlaceholderTile(title, text, href = "#route", extraClass = "") {
   const classes = ["dashboard-focus-card", extraClass].filter(Boolean).join(" ");
@@ -22,17 +55,6 @@ function createPlaceholderTile(title, text, href = "#route", extraClass = "") {
       </div>
       <p class="muted-text">${text}</p>
     </a>
-  `;
-}
-
-function createDashboardMasthead() {
-  return `
-    <section class="dashboard-masthead">
-      <p class="section-intro__eyebrow">Start</p>
-      <h1>${tripMeta.subtitle}</h1>
-      <p class="dashboard-masthead__meta">${tripMeta.todayLabel} | Aktuell: ${tripMeta.currentLocation}</p>
-      <p class="dashboard-masthead__text">${tripMeta.dailyBrief}</p>
-    </section>
   `;
 }
 
@@ -80,34 +102,20 @@ export function renderDashboardPage(state = {}) {
 
   return `
     <div class="dashboard-page">
-      ${createDashboardMasthead()}
+      ${createStatusChipBar(state)}
 
-      <section class="dashboard-section">
-        <div class="dashboard-section__title">
-          <p class="section-intro__eyebrow">Favoriten</p>
-          <h2>Die wichtigsten Kacheln fuer den schnellen Blick</h2>
-        </div>
+      <div class="dashboard-main-grid">
+        ${routeMapTile}
+        ${routeStatsTile}
+        ${currentTile}
+        ${forwardTile}
+      </div>
 
-        <div class="dashboard-main-grid">
-          ${routeMapTile}
-          ${routeStatsTile}
-          ${currentTile}
-          ${forwardTile}
-        </div>
-      </section>
-
-      <section class="dashboard-section">
-        <div class="dashboard-section__title">
-          <p class="section-intro__eyebrow">Sandbox</p>
-          <h2>Alles Weitere im Grid</h2>
-        </div>
-
-        <div class="dashboard-sandbox-grid">
-          ${createLocationDashboardTile(state.locationData, state)}
-          ${dashboardHighlights.map((item) => createInfoCard(item)).join("")}
-          ${sandboxModules.map((module) => createModuleTile(module)).join("")}
-        </div>
-      </section>
+      <div class="dashboard-sandbox-grid">
+        ${createLocationDashboardTile(state.locationData, state)}
+        ${dashboardHighlights.map((item) => createInfoCard(item)).join("")}
+        ${sandboxModules.map((module) => createModuleTile(module)).join("")}
+      </div>
     </div>
   `;
 }

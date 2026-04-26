@@ -13,6 +13,7 @@ export async function createApp(root) {
     routeError: null,
     routeLoading: true,
     locationData: null,
+    previousLocationData: null,
     locationError: null,
     locationLoading: true,
     locationProviderType: null,
@@ -73,6 +74,7 @@ export async function createApp(root) {
     locationProvider = createLocationProvider({
       routeData: state.routeData,
       onUpdate(snapshot) {
+        state.previousLocationData = state.locationData;
         state.locationData = mapLocationToRoute(state.routeData, snapshot);
         state.locationLoading = false;
         state.locationError = null;

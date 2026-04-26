@@ -42,6 +42,36 @@ function formatCoordinate(latitude, longitude) {
   return `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°`;
 }
 
+// Speed below this threshold is treated as stationary (GPS drift + slow pushing uphill excluded).
+// At 5-min update intervals: 4 km/h = ~333 m movement required to count as riding.
+const MOVEMENT_THRESHOLD_KPH = 4;
+
+export function computeMovementStatus(currentLocation, previousLocation) {
+  if (!currentLocation?.timestamp || !previousLocation?.timestamp) {
+    return { isMoving: null, speedKph: null };
+  }
+
+  const timeDiffMs =
+    new Date(currentLocation.timestamp).getTime() -
+    new Date(previousLocation.timestamp).getTime();
+
+  if (timeDiffMs <= 0 || Number.isNaN(timeDiffMs)) {
+    return { isMoving: null, speedKph: null };
+  }
+
+  const distanceM = haversineDistanceMeters(
+    { lat: currentLocation.latitude, lon: currentLocation.longitude },
+    { lat: previousLocation.latitude, lon: previousLocation.longitude },
+  );
+
+  const speedKph = distanceM / 1000 / (timeDiffMs / 3_600_000);
+
+  return {
+    isMoving: speedKph >= MOVEMENT_THRESHOLD_KPH,
+    speedKph,
+  };
+}
+
 export function mapLocationToRoute(routeData, snapshot) {
   if (!routeData?.points?.length) {
     return null;
