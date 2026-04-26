@@ -244,27 +244,16 @@ export function createRouteDashboardMapTile(routeData, locationData) {
   const activeProgress = getActiveProgress(routeData, locationData);
 
   return `
-    <a class="dashboard-focus-card dashboard-focus-card--route-map" href="#route">
+    <div class="dashboard-focus-card dashboard-focus-card--route-map">
       <div class="dashboard-focus-card__header">
         <div>
-          <p class="section-intro__eyebrow">Favorit</p>
-          <h3>Gesamtroute mit Live-Stand</h3>
+          <p class="section-intro__eyebrow">Live-Karte</p>
+          <h3>Wo sind sie gerade?</h3>
         </div>
         <span class="tag tag--accent">${activeProgress.percentLabel}</span>
       </div>
-
-      <div class="dashboard-focus-card__map">
-        ${createRouteSvgMarkup(routeData, activeProgress.currentPoint, [], "dashboard")}
-      </div>
-
-      <div class="dashboard-focus-card__progress">
-        <div class="route-progress-block__label">
-          <span>${activeProgress.progressLabel}</span>
-          <strong>${activeProgress.percentLabel}</strong>
-        </div>
-        ${createProgressBar(activeProgress.percentLabel)}
-      </div>
-    </a>
+      <div id="live-map-placeholder" class="live-map-el"></div>
+    </div>
   `;
 }
 

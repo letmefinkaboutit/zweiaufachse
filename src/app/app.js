@@ -8,6 +8,7 @@ import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/po
 import { reverseGeocode } from "../services/geocodeService.js";
 import { buildCountrySegments } from "../services/routeCountryService.js";
 import { loadHistory, appendToHistory, computeDailyStats } from "../services/locationHistoryService.js";
+import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -32,6 +33,7 @@ export async function createApp(root) {
   let locationProvider = null;
 
   root.innerHTML = createShell();
+  mountMapObserver();
 
   const contentNode = root.querySelector("[data-app-content]");
   const navNode = root.querySelector("[data-app-nav]");
@@ -87,6 +89,7 @@ export async function createApp(root) {
         state.locationData = mapLocationToRoute(state.routeData, snapshot);
         state.locationHistory = appendToHistory(state.locationHistory, snapshot);
         state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
+        updateLiveMap(state.locationData, state.poiData);
         state.locationLoading = false;
         state.locationError = null;
         state.locationProviderType = snapshot.providerType;
