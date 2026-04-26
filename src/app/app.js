@@ -29,6 +29,7 @@ export async function createApp(root) {
     poiError: null,
     poiLoading: true,
     poiFilters: createDefaultPoiFilters(),
+    overpassPois: null,
   };
   let locationProvider = null;
 
@@ -100,6 +101,14 @@ export async function createApp(root) {
               state.geocodeData = geocodeData;
               router.refresh();
             }
+          })
+          .catch(() => {});
+
+        import("../services/overpassService.js")
+          .then(({ fetchOverpassPois }) => fetchOverpassPois(snapshot.latitude, snapshot.longitude))
+          .then((pois) => {
+            state.overpassPois = pois;
+            router.refresh();
           })
           .catch(() => {});
 

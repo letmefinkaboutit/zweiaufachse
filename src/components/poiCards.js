@@ -228,6 +228,54 @@ function createMiniAudienceItem(poi) {
   `;
 }
 
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function nearbyDistLabel(km) {
+  if (km < 0.3) return "direkt bei Timo & Tino";
+  if (km < 1) return `${Math.round(km * 1000)} m entfernt`;
+  return `${km.toFixed(1).replace(".", ",")} km entfernt`;
+}
+
+export function createNearbyOverpassTile(overpassPois, locationData) {
+  const lat = locationData?.latitude;
+  const lon = locationData?.longitude;
+
+  const loading = overpassPois === null && lat != null;
+
+  const items = (overpassPois || [])
+    .filter((p) => p.latitude != null && p.longitude != null)
+    .map((p) => {
+      const dist = lat != null ? haversineKm(lat, lon, p.latitude, p.longitude) : Infinity;
+      return { ...p, _dist: dist, relativeToLiveLabel: dist < Infinity ? nearbyDistLabel(dist) : "" };
+    })
+    .sort((a, b) => a._dist - b._dist)
+    .slice(0, 7);
+
+  return `
+    <div class="dashboard-focus-card">
+      <div class="dashboard-focus-card__header">
+        <div>
+          <p class="section-intro__eyebrow">Jetzt hier</p>
+          <h3>Was ist spannend?</h3>
+        </div>
+      </div>
+      ${loading
+        ? `<p class="muted-text">POIs werden geladen…</p>`
+        : items.length
+          ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
+          : `<p class="muted-text">Keine POIs in der Nähe gefunden.</p>`
+      }
+    </div>
+  `;
+}
+
 export function createCurrentAudienceTile(audienceContext) {
   const items = audienceContext?.currentArea || [];
   const lead = items[0] || audienceContext?.currentLead || null;

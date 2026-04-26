@@ -6,7 +6,7 @@ import {
   createRouteDashboardMapTile,
   createRouteDashboardStatsTile,
 } from "../components/routeCards.js";
-import { createCurrentAudienceTile, createForwardAudienceTile } from "../components/poiCards.js";
+import { createNearbyOverpassTile, createForwardAudienceTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
 import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
@@ -100,12 +100,7 @@ export function renderDashboardPage(state = {}) {
         "dashboard-focus-card--route-stats",
       );
 
-  const currentTile = audienceContext
-    ? createCurrentAudienceTile(audienceContext)
-    : createPlaceholderTile(
-        "Was ist hier gerade spannend?",
-        "Sobald Live-Position und POIs zusammenlaufen, erscheint hier der aktuelle Blick rund um den Standort.",
-      );
+  const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData);
 
   const forwardTile = audienceContext
     ? createForwardAudienceTile(audienceContext)
