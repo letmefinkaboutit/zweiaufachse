@@ -5,6 +5,16 @@ const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/
 const mapEl = document.createElement("div");
 mapEl.className = "live-map-el";
 
+const mapLoadingEl = document.createElement("div");
+mapLoadingEl.className = "map-loading-overlay";
+mapLoadingEl.innerHTML = `
+  <div class="map-loading-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <p class="map-loading-label">Karte wird geladen</p>
+`;
+mapEl.appendChild(mapLoadingEl);
+
 let map = null;
 let posMarker = null;
 let poiLayer = null;
@@ -66,7 +76,8 @@ export function initLiveMap() {
     preferCanvas: true,
   });
 
-  window.L.tileLayer(TILE_URL, { subdomains: "abcd", maxZoom: 19 }).addTo(map);
+  const tileLayer = window.L.tileLayer(TILE_URL, { subdomains: "abcd", maxZoom: 19 }).addTo(map);
+  tileLayer.on("load", () => mapLoadingEl.classList.add("map-loading-overlay--done"));
 
   map.on("dragstart", () => { userHasPanned = true; });
 
@@ -139,6 +150,7 @@ export function mountMapObserver() {
     if (placeholder) {
       initLiveMap();
       userHasPanned = false;
+      mapLoadingEl.classList.remove("map-loading-overlay--done");
       placeholder.parentNode?.replaceChild(mapEl, placeholder);
       requestAnimationFrame(() => map?.invalidateSize());
     }

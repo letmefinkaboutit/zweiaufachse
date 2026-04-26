@@ -1007,6 +1007,56 @@ img {
   overflow: hidden;
   background: rgba(31, 42, 47, 0.06);
   flex-shrink: 0;
+  position: relative;
+}
+
+.map-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(248, 247, 244, 0.82);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.map-loading-overlay--done {
+  opacity: 0;
+}
+
+.map-loading-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.map-loading-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #eb8f34;
+  animation: map-dot-bounce 1.3s ease-in-out infinite;
+}
+
+.map-loading-dots span:nth-child(2) { animation-delay: 0.18s; }
+.map-loading-dots span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes map-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-9px); opacity: 1; }
+}
+
+.map-loading-label {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+  letter-spacing: 0.03em;
 }
 
 .live-pos-marker {
