@@ -635,6 +635,7 @@ img {
 
 .journey-timeline-card {
   grid-column: 1 / -1;
+  position: relative;
   padding: 16px 20px 18px;
   background:
     linear-gradient(180deg, rgba(255, 252, 246, 0.98), rgba(247, 242, 232, 0.94)),
@@ -642,6 +643,16 @@ img {
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow: var(--shadow);
+}
+
+.jt-progress-pct {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.03em;
 }
 
 .jt-track {
