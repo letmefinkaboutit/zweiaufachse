@@ -11,7 +11,7 @@ import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
 
 function createStatusChipBar(state) {
-  const { locationData, previousLocationData } = state;
+  const { locationData, previousLocationData, geocodeData } = state;
 
   if (!locationData) {
     return "";
@@ -33,11 +33,22 @@ function createStatusChipBar(state) {
 
   const updateChip = `<span class="status-chip status-chip--meta">${locationData.routeMatch.lastUpdateLabel}</span>`;
 
+  const locationChip = geocodeData?.locationLabel
+    ? `<span class="status-chip status-chip--location">${geocodeData.flag} ${geocodeData.locationLabel}</span>`
+    : "";
+
+  const stateChip =
+    geocodeData?.state
+      ? `<span class="status-chip status-chip--meta">${geocodeData.state}</span>`
+      : "";
+
   return `
     <div class="dashboard-status-bar">
       ${movementChip}
       ${speedChip}
       ${updateChip}
+      ${locationChip}
+      ${stateChip}
     </div>
   `;
 }

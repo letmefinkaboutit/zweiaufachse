@@ -5,6 +5,7 @@ import { loadRouteData } from "../services/gpxRouteService.js";
 import { createLocationProvider } from "../location/LocationProvider.js";
 import { mapLocationToRoute } from "../services/routePositionService.js";
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
+import { reverseGeocode } from "../services/geocodeService.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -14,6 +15,7 @@ export async function createApp(root) {
     routeLoading: true,
     locationData: null,
     previousLocationData: null,
+    geocodeData: null,
     locationError: null,
     locationLoading: true,
     locationProviderType: null,
@@ -79,6 +81,16 @@ export async function createApp(root) {
         state.locationLoading = false;
         state.locationError = null;
         state.locationProviderType = snapshot.providerType;
+
+        reverseGeocode(snapshot.latitude, snapshot.longitude)
+          .then((geocodeData) => {
+            if (geocodeData) {
+              state.geocodeData = geocodeData;
+              router.refresh();
+            }
+          })
+          .catch(() => {});
+
         router.refresh();
       },
       onError(message) {

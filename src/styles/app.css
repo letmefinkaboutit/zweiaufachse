@@ -622,6 +622,13 @@ img {
   font-weight: 600;
 }
 
+.status-chip--location {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--line);
+  color: var(--text);
+  gap: 8px;
+}
+
 .status-chip__dot {
   width: 9px;
   height: 9px;
