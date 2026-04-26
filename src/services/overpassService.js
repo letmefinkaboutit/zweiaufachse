@@ -3,10 +3,11 @@ const RADIUS_M = 40000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
+const CACHE_VERSION = 2; // bump to invalidate old node-only results
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
-  return `${(lat * 5).toFixed(0)}_${(lon * 5).toFixed(0)}`;
+  return `v${CACHE_VERSION}_${(lat * 5).toFixed(0)}_${(lon * 5).toFixed(0)}`;
 }
 
 const CATEGORY_MAP = [
@@ -22,7 +23,10 @@ const CATEGORY_MAP = [
 ];
 
 function mapPoi(el) {
-  if (!el.tags?.name || el.lat == null || el.lon == null) return null;
+  if (!el.tags?.name) return null;
+  const lat = el.lat ?? el.center?.lat;
+  const lon = el.lon ?? el.center?.lon;
+  if (lat == null || lon == null) return null;
   const tags = el.tags;
 
   for (const rule of CATEGORY_MAP) {
@@ -30,8 +34,8 @@ function mapPoi(el) {
       const desc = tags["description:de"] || tags.description || buildAutoDesc(tags);
       return {
         name: tags.name,
-        latitude: el.lat,
-        longitude: el.lon,
+        latitude: lat,
+        longitude: lon,
         viewerCategory: rule.category,
         shortDescription: desc,
         score: rule.score,
@@ -53,10 +57,13 @@ function buildQuery(lat, lon) {
   return `[out:json][timeout:25];
 (
   node(around:${r},${lat},${lon})["tourism"~"^(viewpoint|attraction|museum|artwork|alpine_hut)$"]["name"];
+  way(around:${r},${lat},${lon})["tourism"~"^(attraction|museum|artwork)$"]["name"];
   node(around:${r},${lat},${lon})["natural"="peak"]["name"];
   node(around:${r},${lat},${lon})["historic"]["name"];
+  way(around:${r},${lat},${lon})["historic"]["name"];
+  relation(around:${r},${lat},${lon})["historic"]["name"];
 );
-out body;`;
+out center;`;
 }
 
 export async function fetchOverpassPois(lat, lon) {
