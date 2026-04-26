@@ -1,4 +1,4 @@
-export function createJourneyTimelineCard(routeData, locationData, countrySegments) {
+export function createJourneyTimelineCard(routeData, locationData, countrySegments, dailyStats = {}) {
   if (!countrySegments?.length || !routeData) return "";
 
   const progressRatio = locationData?.routeMatch?.progressRatio ?? routeData.currentProgress.ratio ?? 0;
@@ -87,6 +87,32 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
           <circle cx="${progressX}" cy="${markerY}" r="3.5" fill="rgb(235,143,52)" stroke="white" stroke-width="2"/>
         </svg>
         <span class="jt-progress-pct">${Math.round(progressRatio * 100)} %</span>
+
+        <div class="stats-progress__labels jt-dist-labels">
+          <div>
+            <strong>${locationData?.routeMatch?.distanceDoneLabel ?? routeData.currentProgress.distanceDoneLabel}</strong>
+            <span>geschafft</span>
+          </div>
+          <div class="stats-progress__total">
+            <strong>${routeData.totalDistanceLabel}</strong>
+            <span>gesamt</span>
+          </div>
+          <div>
+            <strong>${locationData?.routeMatch?.remainingLabel ?? routeData.currentProgress.remainingLabel}</strong>
+            <span>verbleibend</span>
+          </div>
+        </div>
+
+        <div class="stats-daily">
+          <div class="stats-daily__item">
+            <span>Heute</span>
+            <strong>${dailyStats.todayKm != null ? `${dailyStats.todayKm.toFixed(0)} km` : "–"}</strong>
+          </div>
+          <div class="stats-daily__item">
+            <span>Gestern</span>
+            <strong class="stats-daily__item--muted">${dailyStats.yesterdayKm != null ? `${dailyStats.yesterdayKm.toFixed(0)} km` : "–"}</strong>
+          </div>
+        </div>
       </div>
     </article>
   `;

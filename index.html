@@ -11,7 +11,7 @@
       content="Timo & Tino on Tour - eine mobile-first Reise-App fuer Familie und Freunde."
     />
     <title>Timo & Tino on Tour</title>
-    <link rel="stylesheet" href="./src/styles/app.css?v=20260426c" />
+    <link rel="stylesheet" href="./src/styles/app.css?v=20260426d" />
   </head>
   <body>
     <div id="app">
@@ -51,7 +51,7 @@
         renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
       });
 
-      import("./src/main.js?v=20260426c").catch((error) => {
+      import("./src/main.js?v=20260426d").catch((error) => {
         renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
         console.error(error);
       });

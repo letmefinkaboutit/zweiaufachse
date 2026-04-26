@@ -659,6 +659,15 @@ img {
   letter-spacing: 0.03em;
 }
 
+.jt-dist-labels {
+  padding-top: 14px;
+  border-top: 1px solid rgba(31, 42, 47, 0.09);
+}
+
+.jt-dist-labels > div:last-child {
+  text-align: right;
+}
+
 .jt-track {
   display: flex;
   flex-direction: column;

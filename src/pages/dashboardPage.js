@@ -110,7 +110,7 @@ export function renderDashboardPage(state = {}) {
       ${createStatusChipBar(state)}
 
       <div class="dashboard-main-grid">
-        ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments)}
+        ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments, state.dailyStats)}
         ${routeMapTile}
         ${routeStatsTile}
         ${currentTile}

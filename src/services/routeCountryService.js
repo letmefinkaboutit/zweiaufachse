@@ -3,6 +3,7 @@
 const COUNTRY_BOXES = [
   { code: "DE", flag: "🇩🇪", color: "#1a1a1a", minLat: 47.3, maxLat: 55.1, minLon:  5.9, maxLon: 15.2 },
   { code: "AT", flag: "🇦🇹", color: "#ED2939", minLat: 46.4, maxLat: 48.0, minLon:  9.5, maxLon: 17.2 },
+  { code: "IT", flag: "🇮🇹", color: "#009246", minLat: 45.5, maxLat: 47.1, minLon:  6.6, maxLon: 14.0 },
   { code: "SI", flag: "🇸🇮", color: "#003DA5", minLat: 45.4, maxLat: 46.9, minLon: 13.3, maxLon: 16.7 },
   { code: "HR", flag: "🇭🇷", color: "#FF0000", minLat: 42.4, maxLat: 46.6, minLon: 13.5, maxLon: 19.4 },
   { code: "BA", flag: "🇧🇦", color: "#002395", minLat: 42.6, maxLat: 45.3, minLon: 15.7, maxLon: 19.7 },
