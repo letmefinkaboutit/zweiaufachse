@@ -83,7 +83,7 @@ export function renderDashboardPage(state = {}) {
       );
 
   const routeStatsTile = state.routeData
-    ? createRouteDashboardStatsTile(state.routeData, state.locationData)
+    ? createRouteDashboardStatsTile(state.routeData, state.locationData, state.dailyStats)
     : createPlaceholderTile(
         "Tourstatus in Zahlen",
         "Gesamtdistanz, geschafft, verbleibend und die letzten 24 Stunden erscheinen hier, sobald die Route bereit ist.",

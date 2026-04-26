@@ -7,6 +7,7 @@ import { mapLocationToRoute } from "../services/routePositionService.js";
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
 import { reverseGeocode } from "../services/geocodeService.js";
 import { buildCountrySegments } from "../services/routeCountryService.js";
+import { loadHistory, appendToHistory, computeDailyStats } from "../services/locationHistoryService.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -18,6 +19,8 @@ export async function createApp(root) {
     previousLocationData: null,
     geocodeData: null,
     countrySegments: null,
+    locationHistory: loadHistory(),
+    dailyStats: { todayKm: null, yesterdayKm: null },
     locationError: null,
     locationLoading: true,
     locationProviderType: null,
@@ -67,6 +70,7 @@ export async function createApp(root) {
   try {
     state.routeData = await loadRouteData();
     state.countrySegments = buildCountrySegments(state.routeData);
+    state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
 
     try {
       state.poiData = await loadPoiData();
@@ -81,6 +85,8 @@ export async function createApp(root) {
       onUpdate(snapshot) {
         state.previousLocationData = state.locationData;
         state.locationData = mapLocationToRoute(state.routeData, snapshot);
+        state.locationHistory = appendToHistory(state.locationHistory, snapshot);
+        state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
         state.locationLoading = false;
         state.locationError = null;
         state.locationProviderType = snapshot.providerType;

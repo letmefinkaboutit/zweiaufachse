@@ -11,6 +11,8 @@ function createProgressBar(progressPercent) {
 function getActiveProgress(routeData, locationData) {
   if (locationData?.routeMatch) {
     return {
+      progressRatio: locationData.routeMatch.progressRatio,
+      distanceDoneKm: locationData.routeMatch.distanceDoneKm,
       percentLabel: locationData.routeMatch.percentLabel,
       distanceDoneLabel: locationData.routeMatch.distanceDoneLabel,
       remainingLabel: locationData.routeMatch.remainingLabel,
@@ -266,42 +268,52 @@ export function createRouteDashboardMapTile(routeData, locationData) {
   `;
 }
 
-export function createRouteDashboardStatsTile(routeData, locationData) {
+export function createRouteDashboardStatsTile(routeData, locationData, dailyStats = {}) {
   const activeProgress = getActiveProgress(routeData, locationData);
-  const last24HoursLabel = getLast24HoursLabel(routeData, activeProgress);
+  const progressPct = Math.round((activeProgress.progressRatio ?? 0) * 100);
+
+  const fmtKm = (km) => (km != null ? `${km.toFixed(0)} km` : "–");
 
   return `
     <a class="dashboard-focus-card dashboard-focus-card--route-stats" href="#route">
       <div class="dashboard-focus-card__header">
         <div>
           <p class="section-intro__eyebrow">Favorit</p>
-          <h3>Tourstatus in Zahlen</h3>
+          <h3>Tourstatus</h3>
+        </div>
+        <span class="tag tag--accent">${progressPct} %</span>
+      </div>
+
+      <div class="stats-progress">
+        <div class="stats-progress__bar">
+          <div class="stats-progress__fill" style="width:${progressPct}%"></div>
+        </div>
+        <div class="stats-progress__labels">
+          <div>
+            <strong>${activeProgress.distanceDoneLabel}</strong>
+            <span>geschafft</span>
+          </div>
+          <div class="stats-progress__total">
+            <strong>${routeData.totalDistanceLabel}</strong>
+            <span>gesamt</span>
+          </div>
+          <div>
+            <strong>${activeProgress.remainingLabel}</strong>
+            <span>verbleibend</span>
+          </div>
         </div>
       </div>
 
-      <div class="dashboard-focus-card__metrics dashboard-focus-card__metrics--stacked">
-        <article>
-          <span>Gesamtdistanz</span>
-          <strong>${routeData.totalDistanceLabel}</strong>
-        </article>
-        <article>
-          <span>Bisher geschafft</span>
-          <strong>${activeProgress.distanceDoneLabel}</strong>
-        </article>
-        <article>
-          <span>Verbleibend</span>
-          <strong>${activeProgress.remainingLabel}</strong>
-        </article>
-        <article>
-          <span>Letzte 24h</span>
-          <strong>${last24HoursLabel}</strong>
-        </article>
+      <div class="stats-daily">
+        <div class="stats-daily__item">
+          <span>Heute</span>
+          <strong>${fmtKm(dailyStats.todayKm)}</strong>
+        </div>
+        <div class="stats-daily__item">
+          <span>Gestern</span>
+          <strong class="stats-daily__item--muted">${fmtKm(dailyStats.yesterdayKm)}</strong>
+        </div>
       </div>
-
-      <p class="dashboard-focus-card__detail">
-        ${activeProgress.progressLabel} | ${activeProgress.currentLocationLabel}
-      </p>
-      <p class="dashboard-focus-card__attribution">${BASEMAP_ATTRIBUTION}</p>
     </a>
   `;
 }

@@ -773,6 +773,92 @@ img {
   line-height: 1.5;
 }
 
+/* ── Stats tile: progress block ─────────────────────────── */
+.stats-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stats-progress__bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(31, 42, 47, 0.09);
+  overflow: hidden;
+}
+
+.stats-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  transition: width 0.6s ease;
+}
+
+.stats-progress__labels {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stats-progress__labels > div:last-child {
+  text-align: right;
+}
+
+.stats-progress__total {
+  text-align: center;
+  opacity: 0.65;
+}
+
+.stats-progress__labels strong {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-deep);
+  line-height: 1.1;
+  margin-bottom: 1px;
+}
+
+.stats-progress__total strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+/* ── Stats tile: daily section ───────────────────────────── */
+.stats-daily {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(31, 42, 47, 0.09);
+}
+
+.stats-daily__item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stats-daily__item span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.stats-daily__item strong {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--primary-deep);
+  line-height: 1;
+}
+
+.stats-daily__item--muted {
+  opacity: 0.55;
+}
+
 .dashboard-poi-list {
   align-content: start;
 }
