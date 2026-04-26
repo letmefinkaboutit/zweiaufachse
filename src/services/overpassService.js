@@ -3,23 +3,25 @@ const RADIUS_M = 40000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 2; // bump to invalidate old node-only results
+const CACHE_VERSION = 3;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
   return `v${CACHE_VERSION}_${(lat * 5).toFixed(0)}_${(lon * 5).toFixed(0)}`;
 }
 
+const HISTORIC_SET = new Set(["castle","fort","palace","monastery","abbey","ruins","memorial","monument","cathedral","church","archaeological_site","city_gate"]);
+
 const CATEGORY_MAP = [
-  { test: (t) => t.tourism === "viewpoint",                             category: "Aussichtspunkt",      score: 0.8 },
-  { test: (t) => t.natural === "peak",                                  category: "Naturhighlight",      score: 0.75 },
+  { test: (t) => t.tourism === "viewpoint",                              category: "Aussichtspunkt",   score: 0.8  },
+  { test: (t) => t.natural === "peak",                                   category: "Naturhighlight",   score: 0.75 },
   { test: (t) => t.boundary === "national_park" || t.leisure === "nature_reserve", category: "Nationalpark", score: 0.9 },
-  { test: (t) => t.tourism === "museum",                                category: "Kulturort",           score: 0.7 },
-  { test: (t) => t.tourism === "artwork",                               category: "Kulturort",           score: 0.55 },
-  { test: (t) => ["castle","monastery","abbey","ruins","memorial","monument","cathedral","church"].includes(t.historic), category: "Sehenswuerdigkeit", score: 0.72 },
-  { test: (t) => t.historic && t.tourism === "attraction",              category: "Sehenswuerdigkeit",   score: 0.68 },
-  { test: (t) => t.tourism === "attraction",                            category: "Sehenswuerdigkeit",   score: 0.6 },
-  { test: (t) => t.tourism === "alpine_hut",                            category: "Etappenort",          score: 0.65 },
+  { test: (t) => t.tourism === "museum",                                 category: "Kulturort",        score: 0.7  },
+  { test: (t) => t.tourism === "artwork",                                category: "Kulturort",        score: 0.55 },
+  { test: (t) => HISTORIC_SET.has(t.historic),                          category: "Sehenswuerdigkeit",score: 0.72 },
+  { test: (t) => t.historic && t.tourism === "attraction",               category: "Sehenswuerdigkeit",score: 0.68 },
+  { test: (t) => t.tourism === "attraction",                             category: "Sehenswuerdigkeit",score: 0.6  },
+  { test: (t) => t.tourism === "alpine_hut",                             category: "Etappenort",       score: 0.65 },
 ];
 
 function mapPoi(el) {
@@ -52,16 +54,18 @@ function buildAutoDesc(tags) {
   return null;
 }
 
+const HISTORIC_VALUES = "castle|monastery|abbey|ruins|memorial|monument|cathedral|church|fort|palace|archaeological_site|city_gate";
+
 function buildQuery(lat, lon) {
   const r = RADIUS_M;
-  return `[out:json][timeout:25];
+  return `[out:json][timeout:30];
 (
   node(around:${r},${lat},${lon})["tourism"~"^(viewpoint|attraction|museum|artwork|alpine_hut)$"]["name"];
-  way(around:${r},${lat},${lon})["tourism"~"^(attraction|museum|artwork)$"]["name"];
+  way(around:${r},${lat},${lon})["tourism"~"^(attraction|museum)$"]["name"];
   node(around:${r},${lat},${lon})["natural"="peak"]["name"];
-  node(around:${r},${lat},${lon})["historic"]["name"];
-  way(around:${r},${lat},${lon})["historic"]["name"];
-  relation(around:${r},${lat},${lon})["historic"]["name"];
+  node(around:${r},${lat},${lon})["historic"~"^(${HISTORIC_VALUES})$"]["name"];
+  way(around:${r},${lat},${lon})["historic"~"^(${HISTORIC_VALUES})$"]["name"];
+  relation(around:${r},${lat},${lon})["historic"~"^(${HISTORIC_VALUES})$"]["name"];
 );
 out center;`;
 }
@@ -83,6 +87,10 @@ export async function fetchOverpassPois(lat, lon) {
   if (!response.ok) throw new Error(`Overpass error ${response.status}`);
 
   const data = await response.json();
+  if (data.remark?.includes("timed out") || data.remark?.includes("error")) {
+    throw new Error(`Overpass: ${data.remark}`);
+  }
+
   const pois = (data.elements || [])
     .map(mapPoi)
     .filter(Boolean)
