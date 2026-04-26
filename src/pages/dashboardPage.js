@@ -9,6 +9,7 @@ import {
 import { createCurrentAudienceTile, createForwardAudienceTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
+import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
 
 function createStatusChipBar(state) {
   const { locationData, previousLocationData, geocodeData } = state;
@@ -107,6 +108,7 @@ export function renderDashboardPage(state = {}) {
       ${createStatusChipBar(state)}
 
       <div class="dashboard-main-grid">
+        ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments)}
         ${routeMapTile}
         ${routeStatsTile}
         ${currentTile}

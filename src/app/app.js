@@ -6,6 +6,7 @@ import { createLocationProvider } from "../location/LocationProvider.js";
 import { mapLocationToRoute } from "../services/routePositionService.js";
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
 import { reverseGeocode } from "../services/geocodeService.js";
+import { buildCountrySegments } from "../services/routeCountryService.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -16,6 +17,7 @@ export async function createApp(root) {
     locationData: null,
     previousLocationData: null,
     geocodeData: null,
+    countrySegments: null,
     locationError: null,
     locationLoading: true,
     locationProviderType: null,
@@ -64,6 +66,7 @@ export async function createApp(root) {
 
   try {
     state.routeData = await loadRouteData();
+    state.countrySegments = buildCountrySegments(state.routeData);
 
     try {
       state.poiData = await loadPoiData();
