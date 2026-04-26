@@ -31,24 +31,15 @@ function createStatusChipBar(state) {
       ? `<span class="status-chip status-chip--meta">${speedKph.toFixed(0)} km/h</span>`
       : "";
 
-  const updateChip = `<span class="status-chip status-chip--meta">${locationData.routeMatch.lastUpdateLabel}</span>`;
-
   const locationChip = geocodeData?.locationLabel
-    ? `<span class="status-chip status-chip--location">${geocodeData.flag} ${geocodeData.locationLabel}</span>`
+    ? `<span class="status-chip status-chip--location">${geocodeData.flag} ${geocodeData.locationLabel}${geocodeData.state ? `, ${geocodeData.state}` : ""}</span>`
     : "";
-
-  const stateChip =
-    geocodeData?.state
-      ? `<span class="status-chip status-chip--meta">${geocodeData.state}</span>`
-      : "";
 
   return `
     <div class="dashboard-status-bar">
       ${movementChip}
       ${speedChip}
-      ${updateChip}
       ${locationChip}
-      ${stateChip}
     </div>
   `;
 }

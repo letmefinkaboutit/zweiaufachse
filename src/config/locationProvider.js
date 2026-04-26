@@ -5,7 +5,7 @@ export const locationProviderConfig = {
   mock: {
     updateIntervalMs: 9000,
     baseProgressRatio: routeSource.currentProgressRatio,
-    oscillationPattern: [0, 0.001, 0.002, 0.003, 0.002, 0.004],
+    oscillationPattern: [0],
     speedKph: 21,
     batteryLevel: 78,
   },

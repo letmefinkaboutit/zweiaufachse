@@ -64,26 +64,12 @@ img {
   padding: 20px 16px 110px;
 }
 
-.app-header {
-  display: grid;
-  gap: 14px;
-  padding: 14px 4px 22px;
-}
-
-.app-header h1,
 .section-intro h2,
 .hero-card h2 {
   font-family: var(--font-heading);
   letter-spacing: -0.03em;
 }
 
-.app-header h1 {
-  font-size: clamp(2rem, 7vw, 3.4rem);
-  line-height: 0.96;
-}
-
-.brand-chip,
-.app-header__eyebrow,
 .section-intro__eyebrow,
 .hero-card__eyebrow,
 .award-card__eyebrow,
@@ -92,15 +78,6 @@ img {
   letter-spacing: 0.14em;
   font-size: 0.72rem;
   color: var(--muted);
-}
-
-.brand-chip {
-  display: inline-flex;
-  width: fit-content;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(12, 107, 88, 0.14);
 }
 
 .app-main,
