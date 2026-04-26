@@ -245,13 +245,6 @@ export function createRouteDashboardMapTile(routeData, locationData) {
 
   return `
     <div class="dashboard-focus-card dashboard-focus-card--route-map">
-      <div class="dashboard-focus-card__header">
-        <div>
-          <p class="section-intro__eyebrow">Live-Karte</p>
-          <h3>Wo sind sie gerade?</h3>
-        </div>
-        <span class="tag tag--accent">${activeProgress.percentLabel}</span>
-      </div>
       <div id="live-map-placeholder" class="live-map-el"></div>
     </div>
   `;
