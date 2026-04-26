@@ -89,7 +89,7 @@ export async function createApp(root) {
         state.locationData = mapLocationToRoute(state.routeData, snapshot);
         state.locationHistory = appendToHistory(state.locationHistory, snapshot);
         state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
-        updateLiveMap(state.locationData);
+        updateLiveMap(state.locationData, state.routeData);
         state.locationLoading = false;
         state.locationError = null;
         state.locationProviderType = snapshot.providerType;

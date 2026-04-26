@@ -18,6 +18,7 @@ mapEl.appendChild(mapLoadingEl);
 let map = null;
 let posMarker = null;
 let poiLayer = null;
+let routeLayer = null;
 let userHasPanned = false;
 
 function categoryColor(poi) {
@@ -85,11 +86,14 @@ export function initLiveMap() {
     .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
     .addTo(map);
 
+  routeLayer = window.L.layerGroup().addTo(map);
   poiLayer = window.L.layerGroup().addTo(map);
 }
 
-export async function updateLiveMap(locationData) {
+export async function updateLiveMap(locationData, routeData) {
   if (!map) return;
+
+  if (routeData) drawRoute(routeData, locationData);
 
   const lat = locationData?.latitude;
   const lon = locationData?.longitude;
@@ -119,6 +123,40 @@ export async function updateLiveMap(locationData) {
     } catch (e) {
       // Overpass unavailable or module missing — leave existing POI layer as-is
     }
+  }
+}
+
+function drawRoute(routeData, locationData) {
+  routeLayer.clearLayers();
+
+  const pts = routeData.sampledRoute;
+  if (!pts?.length) return;
+
+  const doneMeter = (locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000;
+  let splitIdx = pts.findIndex((p) => p.cumulativeDistanceMeters >= doneMeter);
+  if (splitIdx === -1) splitIdx = pts.length - 1;
+
+  const toLL = (p) => [p.lat, p.lon];
+  const lineOpts = { lineCap: "round", lineJoin: "round" };
+
+  const remainingCoords = pts.slice(splitIdx).map(toLL);
+  if (remainingCoords.length > 1) {
+    window.L.polyline(remainingCoords, {
+      ...lineOpts,
+      color: "#b0bec5",
+      weight: 3,
+      opacity: 0.5,
+    }).addTo(routeLayer);
+  }
+
+  const doneCoords = pts.slice(0, splitIdx + 1).map(toLL);
+  if (doneCoords.length > 1) {
+    window.L.polyline(doneCoords, {
+      ...lineOpts,
+      color: "#eb8f34",
+      weight: 3.5,
+      opacity: 0.85,
+    }).addTo(routeLayer);
   }
 }
 
