@@ -774,11 +774,7 @@ img {
   box-shadow: var(--shadow);
 }
 
-.dashboard-focus-card--route-map {
-  padding: 0;
-  overflow: hidden;
-}
-
+.dashboard-focus-card--route-map,
 .dashboard-focus-card--route-stats {
   gap: 16px;
 }
@@ -1007,7 +1003,7 @@ img {
 /* ── Live map ───────────────────────────────────────────────── */
 .live-map-el {
   height: 360px;
-  border-radius: 0;
+  border-radius: 10px;
   overflow: hidden;
   background: rgba(31, 42, 47, 0.06);
   flex-shrink: 0;
