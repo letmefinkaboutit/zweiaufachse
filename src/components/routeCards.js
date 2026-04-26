@@ -253,11 +253,6 @@ export function createRouteDashboardMapTile(routeData, locationData) {
 
       <div class="dashboard-focus-card__map">
         ${createRouteSvgMarkup(routeData, activeProgress.currentPoint, [], "dashboard")}
-        <div class="dashboard-route-labels">
-          <p><strong>Start</strong><span>${routeData.startLabel}</span></p>
-          <p><strong>Jetzt</strong><span>${activeProgress.currentLocationLabel}</span></p>
-          <p><strong>Ziel</strong><span>${routeData.endLabel}</span></p>
-        </div>
       </div>
 
       <div class="dashboard-focus-card__progress">
@@ -266,7 +261,6 @@ export function createRouteDashboardMapTile(routeData, locationData) {
           <strong>${activeProgress.percentLabel}</strong>
         </div>
         ${createProgressBar(activeProgress.percentLabel)}
-        <p class="muted-text">${activeProgress.progressStory}</p>
       </div>
     </a>
   `;

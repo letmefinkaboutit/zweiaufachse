@@ -691,25 +691,6 @@ img {
   display: block;
 }
 
-.dashboard-route-labels {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.dashboard-route-labels p {
-  display: grid;
-  gap: 4px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(12, 107, 88, 0.08);
-  color: var(--muted);
-}
-
-.dashboard-route-labels strong {
-  color: var(--primary-deep);
-}
 
 .dashboard-focus-card__detail {
   color: var(--muted);
