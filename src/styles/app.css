@@ -606,6 +606,13 @@ img {
   gap: 8px;
 }
 
+.status-chip__pin {
+  width: 10px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
 .status-chip__dot {
   width: 9px;
   height: 9px;

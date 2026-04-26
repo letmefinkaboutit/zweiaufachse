@@ -32,8 +32,10 @@ function createStatusChipBar(state) {
       ? `<span class="status-chip status-chip--meta">${speedKph.toFixed(0)} km/h</span>`
       : "";
 
+  const pinIcon = `<svg class="status-chip__pin" viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M5 0C2.24 0 0 2.24 0 5c0 3.5 5 9 5 9s5-5.5 5-9c0-2.76-2.24-5-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" fill="currentColor"/></svg>`;
+
   const locationChip = geocodeData?.locationLabel
-    ? `<span class="status-chip status-chip--location">${geocodeData.flag} ${geocodeData.locationLabel}${geocodeData.state ? `, ${geocodeData.state}` : ""}</span>`
+    ? `<span class="status-chip status-chip--location">${pinIcon}${geocodeData.flag} ${geocodeData.locationLabel}${geocodeData.state ? `, ${geocodeData.state}` : ""}</span>`
     : "";
 
   return `
