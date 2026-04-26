@@ -151,9 +151,10 @@ export function mountMapObserver() {
   const observer = new MutationObserver(() => {
     const placeholder = document.getElementById(PLACEHOLDER_ID);
     if (placeholder) {
+      const isFirstInit = !map;
       initLiveMap();
       userHasPanned = false;
-      mapLoadingEl.classList.remove("map-loading-overlay--done");
+      if (isFirstInit) mapLoadingEl.classList.remove("map-loading-overlay--done");
       placeholder.parentNode?.replaceChild(mapEl, placeholder);
       requestAnimationFrame(() => map?.invalidateSize());
     }
