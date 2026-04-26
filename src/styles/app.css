@@ -592,6 +592,22 @@ img {
   font-weight: 600;
 }
 
+.status-chip--searching {
+  background: rgba(31, 42, 47, 0.06);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.status-chip--searching .status-chip__dot {
+  background: var(--muted);
+  animation: dot-searching 1.6s ease-in-out infinite;
+}
+
+@keyframes dot-searching {
+  0%, 100% { opacity: 0.2; transform: scale(0.75); }
+  50%       { opacity: 1;   transform: scale(1.1);  }
+}
+
 .status-chip--meta {
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--line);

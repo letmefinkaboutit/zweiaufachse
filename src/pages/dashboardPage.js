@@ -12,9 +12,18 @@ import { computeMovementStatus } from "../services/routePositionService.js";
 import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
 
 function createStatusChipBar(state) {
-  const { locationData, previousLocationData, geocodeData } = state;
+  const { locationData, previousLocationData, geocodeData, locationLoading } = state;
 
   if (!locationData) {
+    if (locationLoading) {
+      return `
+        <div class="dashboard-status-bar">
+          <span class="status-chip status-chip--searching">
+            <span class="status-chip__dot"></span>GPS wird gesucht
+          </span>
+        </div>
+      `;
+    }
     return "";
   }
 
