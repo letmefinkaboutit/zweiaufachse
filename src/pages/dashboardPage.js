@@ -121,12 +121,12 @@ export function renderDashboardPage(state = {}) {
       <div class="dashboard-main-grid">
         ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments, state.dailyStats)}
         ${routeMapTile}
-        ${routeStatsTile}
         ${currentTile}
         ${forwardTile}
       </div>
 
       <div class="dashboard-sandbox-grid">
+        ${routeStatsTile}
         ${createLocationDashboardTile(state.locationData, state)}
         ${dashboardHighlights.map((item) => createInfoCard(item)).join("")}
         ${sandboxModules.map((module) => createModuleTile(module)).join("")}
