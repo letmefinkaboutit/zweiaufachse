@@ -68,7 +68,6 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
 
   return `
     <article class="journey-timeline-card">
-      <span class="jt-progress-pct">${Math.round(progressRatio * 100)} %</span>
       <div class="jt-track">
         <div class="jt-flags">${flagSlots}</div>
         <svg class="jt-profile-svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,6 +86,7 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
           <circle class="jt-svg-pulse" cx="${progressX}" cy="${markerY}" r="7" fill="rgba(235,143,52,0.22)"/>
           <circle cx="${progressX}" cy="${markerY}" r="3.5" fill="rgb(235,143,52)" stroke="white" stroke-width="2"/>
         </svg>
+        <span class="jt-progress-pct">${Math.round(progressRatio * 100)} %</span>
       </div>
     </article>
   `;
