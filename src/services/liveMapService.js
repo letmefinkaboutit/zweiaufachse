@@ -1,5 +1,3 @@
-import { fetchOverpassPois } from "./overpassService.js";
-
 const PLACEHOLDER_ID = "live-map-placeholder";
 const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
@@ -115,10 +113,11 @@ export async function updateLiveMap(locationData) {
     }
 
     try {
+      const { fetchOverpassPois } = await import("./overpassService.js");
       const pois = await fetchOverpassPois(lat, lon);
       renderPoiLayer(pois);
-    } catch {
-      // Overpass unavailable — leave existing POI layer as-is
+    } catch (e) {
+      // Overpass unavailable or module missing — leave existing POI layer as-is
     }
   }
 }
