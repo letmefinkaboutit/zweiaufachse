@@ -8,6 +8,7 @@ mapEl.className = "live-map-el";
 let map = null;
 let posMarker = null;
 let poiLayer = null;
+let userHasPanned = false;
 
 function categoryColor(poi) {
   switch (poi.viewerCategory) {
@@ -67,6 +68,8 @@ export function initLiveMap() {
 
   window.L.tileLayer(TILE_URL, { subdomains: "abcd", maxZoom: 19 }).addTo(map);
 
+  map.on("dragstart", () => { userHasPanned = true; });
+
   window.L.control.attribution({ prefix: false })
     .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
     .addTo(map);
@@ -82,7 +85,9 @@ export function updateLiveMap(locationData, poiData) {
   const currentKm = locationData?.routeMatch?.distanceDoneKm ?? 0;
 
   if (lat != null && lon != null) {
-    map.setView([lat, lon], 13, { animate: true, duration: 0.8 });
+    if (!userHasPanned) {
+      map.setView([lat, lon], 13, { animate: true, duration: 0.8 });
+    }
 
     const icon = window.L.divIcon({
       className: "",
@@ -133,6 +138,7 @@ export function mountMapObserver() {
     const placeholder = document.getElementById(PLACEHOLDER_ID);
     if (placeholder) {
       initLiveMap();
+      userHasPanned = false;
       placeholder.parentNode?.replaceChild(mapEl, placeholder);
       requestAnimationFrame(() => map?.invalidateSize());
     }
