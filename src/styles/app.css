@@ -888,6 +888,84 @@ img {
   opacity: 0.55;
 }
 
+/* ── Compact POI rows (dashboard audience tiles) ─────────── */
+.poi-lead-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(12, 107, 88, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.poi-lead-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.poi-lead-item__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-deep);
+  line-height: 1.2;
+}
+
+.poi-lead-item__dist {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.poi-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.poi-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.poi-compact-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.poi-compact-row__name {
+  flex: 1;
+  font-size: 0.87rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--primary-deep);
+}
+
+.poi-compact-row__badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.poi-compact-row__dist {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .dashboard-poi-list {
   align-content: start;
 }

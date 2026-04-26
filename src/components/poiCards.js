@@ -117,13 +117,51 @@ function getPoiBreadcrumbMeta(poi) {
   }
 }
 
+const TONE_COLOR = {
+  nature:    "#3a8b37",
+  culture:   "#c47a1e",
+  stage:     "#2c6fad",
+  border:    "#8a5ca7",
+  supply:    "#1a8a72",
+  route:     "#6a6a6a",
+  local:     "#c4863a",
+  highlight: "#eb8f34",
+};
+
 function createPoiBreadcrumb(poi) {
   const breadcrumb = getPoiBreadcrumbMeta(poi);
 
   return `
     <div class="poi-breadcrumb poi-breadcrumb--${breadcrumb.tone}" aria-label="POI-Kategorie">
-      <span>${breadcrumb.family}</span>
       <span>${breadcrumb.label}</span>
+    </div>
+  `;
+}
+
+function createPoiCompactRow(poi) {
+  const { label, tone } = getPoiBreadcrumbMeta(poi);
+  const color = TONE_COLOR[tone] || TONE_COLOR.highlight;
+  const dist = poi.relativeToLiveLabel || "";
+  return `
+    <div class="poi-compact-row">
+      <span class="poi-compact-row__dot" style="background:${color}"></span>
+      <span class="poi-compact-row__name">${poi.name}</span>
+      <span class="poi-compact-row__badge" style="color:${color}">${label}</span>
+      <span class="poi-compact-row__dist">${dist}</span>
+    </div>
+  `;
+}
+
+function createPoiLeadItem(poi) {
+  const { label, tone } = getPoiBreadcrumbMeta(poi);
+  const color = TONE_COLOR[tone] || TONE_COLOR.highlight;
+  return `
+    <div class="poi-lead-item">
+      <div class="poi-lead-item__meta">
+        <span class="poi-compact-row__badge" style="color:${color}">${label}</span>
+        <span class="poi-lead-item__dist">${poi.relativeToLiveLabel || ""}</span>
+      </div>
+      <strong class="poi-lead-item__name">${poi.name}</strong>
     </div>
   `;
 }
@@ -193,60 +231,42 @@ function createMiniAudienceItem(poi) {
 export function createCurrentAudienceTile(audienceContext) {
   const items = audienceContext?.currentArea || [];
   const lead = items[0] || audienceContext?.currentLead || null;
+  const supporting = items.slice(1, 3);
 
   return `
     <a class="dashboard-focus-card" href="#route">
       <div class="dashboard-focus-card__header">
         <div>
-          <p class="section-intro__eyebrow">Favorit</p>
-          <h3>Was ist hier gerade spannend?</h3>
+          <p class="section-intro__eyebrow">Jetzt hier</p>
+          <h3>Was ist spannend?</h3>
         </div>
       </div>
-      ${
-        lead
-          ? `
-            <div class="dashboard-focus-card__lead">
-              <div class="poi-inline-header">
-                <p class="poi-card__eyebrow">Gerade relevant</p>
-                ${createPoiBreadcrumb(lead)}
-              </div>
-              <h4>${lead.name}</h4>
-              <p class="poi-card__description">${lead.whyItMattersForApp}</p>
-            </div>
-          `
-          : `<p class="muted-text">Gerade ist es eher ein ruhiger Abschnitt. Auf der Routenseite sind trotzdem alle sichtbaren Punkte im Detail verfuegbar.</p>`
+      ${lead
+        ? `
+          ${createPoiLeadItem(lead)}
+          ${supporting.length ? `<div class="poi-compact-list">${supporting.map(createPoiCompactRow).join("")}</div>` : ""}
+        `
+        : `<p class="muted-text">Gerade ein ruhiger Abschnitt.</p>`
       }
-      <div class="dashboard-poi-list">
-        ${items.length ? items.slice(0, 3).map((poi) => createMiniAudienceItem(poi)).join("") : `<p class="muted-text">Aktuell liegen keine weiteren starken Punkte direkt im Live-Fenster.</p>`}
-      </div>
     </a>
   `;
 }
 
 export function createForwardAudienceTile(audienceContext) {
-  const nextWindow = audienceContext?.nextHundredKm || [];
-  const macro = audienceContext?.macroHighlightsAhead || [];
+  const items = (audienceContext?.nextHundredKm || []).slice(0, 5);
 
   return `
     <a class="dashboard-focus-card" href="#route">
       <div class="dashboard-focus-card__header">
         <div>
-          <p class="section-intro__eyebrow">Favorit</p>
-          <h3>Was kommt als Naechstes?</h3>
+          <p class="section-intro__eyebrow">Voraus</p>
+          <h3>Was kommt als nächstes?</h3>
         </div>
       </div>
-      <section class="dashboard-focus-card__section">
-        <h4>POIs der naechsten 100 km</h4>
-        <div class="dashboard-poi-list">
-          ${nextWindow.length ? nextWindow.slice(0, 3).map((poi) => createMiniAudienceItem(poi)).join("") : `<p class="muted-text">Im naechsten Abschnitt sind aktuell noch keine passenden POIs hinterlegt.</p>`}
-        </div>
-      </section>
-      <section class="dashboard-focus-card__section">
-        <h4>Groessere Highlights weiter vorn</h4>
-        <div class="dashboard-poi-list">
-          ${macro.length ? macro.slice(0, 3).map((poi) => createMiniAudienceItem(poi)).join("") : `<p class="muted-text">Weiter vorne ist gerade kein groesseres Highlight sichtbar.</p>`}
-        </div>
-      </section>
+      ${items.length
+        ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
+        : `<p class="muted-text">Noch keine POIs für die nächste Etappe hinterlegt.</p>`
+      }
     </a>
   `;
 }
