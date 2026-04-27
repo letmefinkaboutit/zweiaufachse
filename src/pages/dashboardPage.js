@@ -100,7 +100,7 @@ export function renderDashboardPage(state = {}) {
         "dashboard-focus-card--route-stats",
       );
 
-  const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData);
+  const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData, state.overpassUnavailable);
 
   const forwardTile = audienceContext
     ? createForwardAudienceTile(audienceContext)

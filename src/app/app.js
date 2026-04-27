@@ -30,6 +30,7 @@ export async function createApp(root) {
     poiLoading: true,
     poiFilters: createDefaultPoiFilters(),
     overpassPois: null,
+    overpassUnavailable: false,
   };
   let locationProvider = null;
 
@@ -114,6 +115,7 @@ export async function createApp(root) {
             console.error("[Overpass]", err?.message || err);
             if (state.overpassPois === null) {
               state.overpassPois = [];
+              state.overpassUnavailable = !!err?.overpassUnavailable;
               router.refresh();
             }
           });

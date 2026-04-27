@@ -1,7 +1,9 @@
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
+  "https://z.overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.ru/api/interpreter",
 ];
 const RADIUS_M = 20000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -107,7 +109,11 @@ export async function fetchOverpassPois(lat, lon) {
     }
   }
 
-  if (!response) throw lastErr;
+  if (!response) {
+    const err = lastErr || new Error("All Overpass endpoints failed");
+    err.overpassUnavailable = true;
+    throw err;
+  }
 
   const data = await response.json();
   if (data.remark?.includes("timed out") || data.remark?.includes("error")) {

@@ -243,7 +243,7 @@ function nearbyDistLabel(km) {
   return `${km.toFixed(1).replace(".", ",")} km entfernt`;
 }
 
-export function createNearbyOverpassTile(overpassPois, locationData) {
+export function createNearbyOverpassTile(overpassPois, locationData, unavailable = false) {
   const lat = locationData?.latitude;
   const lon = locationData?.longitude;
 
@@ -266,11 +266,13 @@ export function createNearbyOverpassTile(overpassPois, locationData) {
           <h3>Was ist spannend?</h3>
         </div>
       </div>
-      ${loading
-        ? `<p class="muted-text">POIs werden geladen…</p>`
-        : items.length
-          ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
-          : `<p class="muted-text">Keine POIs in der Nähe gefunden.</p>`
+      ${unavailable
+        ? `<p class="muted-text">POI-Dienst momentan nicht erreichbar.</p>`
+        : loading
+          ? `<p class="muted-text">POIs werden geladen…</p>`
+          : items.length
+            ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
+            : `<p class="muted-text">Keine POIs in der Nähe gefunden.</p>`
       }
     </div>
   `;
