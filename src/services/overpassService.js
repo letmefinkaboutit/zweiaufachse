@@ -9,7 +9,7 @@ const RADIUS_M = 20000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
@@ -61,17 +61,18 @@ function buildAutoDesc(tags) {
   return null;
 }
 
-const HISTORIC_REGEX = "castle|fort|palace|monastery|abbey|ruins|ruin|memorial|monument|cathedral|church|archaeological_site|city_gate";
+const HISTORIC_REGEX = "castle|fort|palace|monastery|abbey|ruins|ruin|memorial|monument|archaeological_site|city_gate";
 
 function buildQuery(lat, lon) {
   const r = RADIUS_M;
-  return `[out:json][timeout:30];
+  return `[out:json][timeout:20];
 (
   node(around:${r},${lat},${lon})["tourism"="viewpoint"]["name"];
   node(around:${r},${lat},${lon})["natural"="peak"]["name"];
-  nwr(around:${r},${lat},${lon})["historic"~"${HISTORIC_REGEX}"]["name"];
-  nwr(around:${r},${lat},${lon})["tourism"~"museum|attraction|artwork"]["name"];
-  nwr(around:${r},${lat},${lon})["amenity"="place_of_worship"]["name"]["building"~"church|cathedral|chapel|basilica"];
+  node(around:${r},${lat},${lon})["historic"~"${HISTORIC_REGEX}"]["name"];
+  way(around:${r},${lat},${lon})["historic"~"castle|monastery|abbey|ruins|ruin"]["name"];
+  node(around:${r},${lat},${lon})["tourism"~"museum|attraction"]["name"];
+  way(around:${r},${lat},${lon})["tourism"="museum"]["name"];
   node(around:${r},${lat},${lon})["tourism"="alpine_hut"]["name"];
 );
 out center;`;
