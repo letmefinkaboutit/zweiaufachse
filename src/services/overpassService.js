@@ -1,15 +1,13 @@
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
-  "https://z.overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.openstreetmap.ru/api/interpreter",
 ];
 const RADIUS_M = 10000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 8;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
@@ -84,17 +82,16 @@ export async function fetchOverpassPois(lat, lon) {
   }
 
   const query = buildQuery(lat, lon);
+  const encodedQuery = encodeURIComponent(query);
   let response;
   let lastErr;
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
-      response = await fetch(endpoint, {
-        method: "POST",
-        body: "data=" + encodeURIComponent(query),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      response = await fetch(`${endpoint}?data=${encodedQuery}`, {
+        method: "GET",
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
