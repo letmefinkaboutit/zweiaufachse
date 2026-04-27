@@ -1,4 +1,8 @@
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
 const RADIUS_M = 20000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
@@ -79,22 +83,31 @@ export async function fetchOverpassPois(lat, lon) {
   }
 
   const query = buildQuery(lat, lon);
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 35000);
-
   let response;
-  try {
-    response = await fetch(OVERPASS_URL, {
-      method: "POST",
-      body: "data=" + encodeURIComponent(query),
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeoutId);
+  let lastErr;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        body: "data=" + encodeURIComponent(query),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) break;
+      lastErr = new Error(`Overpass HTTP ${response.status} (${endpoint})`);
+      response = null;
+    } catch (e) {
+      clearTimeout(timeoutId);
+      lastErr = e;
+      response = null;
+    }
   }
 
-  if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
+  if (!response) throw lastErr;
 
   const data = await response.json();
   if (data.remark?.includes("timed out") || data.remark?.includes("error")) {
