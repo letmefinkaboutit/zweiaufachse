@@ -79,13 +79,22 @@ export async function fetchOverpassPois(lat, lon) {
   }
 
   const query = buildQuery(lat, lon);
-  const response = await fetch(OVERPASS_URL, {
-    method: "POST",
-    body: "data=" + encodeURIComponent(query),
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-  if (!response.ok) throw new Error(`Overpass error ${response.status}`);
+  let response;
+  try {
+    response = await fetch(OVERPASS_URL, {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
 
   const data = await response.json();
   if (data.remark?.includes("timed out") || data.remark?.includes("error")) {

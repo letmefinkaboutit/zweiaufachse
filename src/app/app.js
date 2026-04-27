@@ -110,7 +110,13 @@ export async function createApp(root) {
             state.overpassPois = pois;
             router.refresh();
           })
-          .catch(() => {});
+          .catch((err) => {
+            console.error("[Overpass]", err?.message || err);
+            if (state.overpassPois === null) {
+              state.overpassPois = [];
+              router.refresh();
+            }
+          });
 
         router.refresh();
       },
