@@ -69,8 +69,10 @@ export function appendToHistory(history, snapshot) {
     const diff = new Date(snapshot.timestamp).getTime() - new Date(last.timestamp).getTime();
     if (diff < MIN_STORE_INTERVAL_MS) return history;
   }
+  const cutoff = Date.now() - MAX_AGE_MS;
+  const pruned = history.filter((e) => new Date(e.timestamp).getTime() >= cutoff);
   const updated = [
-    ...history,
+    ...pruned,
     { latitude: snapshot.latitude, longitude: snapshot.longitude, timestamp: snapshot.timestamp },
   ];
   try {

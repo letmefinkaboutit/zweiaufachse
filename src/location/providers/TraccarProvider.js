@@ -87,16 +87,6 @@ function normalizeTraccarSnapshot(device, position) {
 export function createTraccarProvider({ onUpdate, onError, config }) {
   let intervalId = null;
 
-  async function refreshPosition() {
-    try {
-      const device = await resolveDevice(config);
-      const position = await fetchLatestPosition(config, device);
-      onUpdate(normalizeTraccarSnapshot(device, position));
-    } catch (error) {
-      onError(error instanceof Error ? error.message : "Traccar-Liveposition konnte nicht geladen werden.");
-    }
-  }
-
   return {
     type: "traccar",
     label: "TraccarProvider",
@@ -104,6 +94,23 @@ export function createTraccarProvider({ onUpdate, onError, config }) {
       if (!config.enabled) {
         onError("TraccarProvider ist vorbereitet, aber in src/config/locationProvider.js noch deaktiviert.");
         return;
+      }
+
+      let device;
+      try {
+        device = await resolveDevice(config);
+      } catch (error) {
+        onError(error instanceof Error ? error.message : "Traccar-Geraet konnte nicht aufgeloest werden.");
+        return;
+      }
+
+      async function refreshPosition() {
+        try {
+          const position = await fetchLatestPosition(config, device);
+          onUpdate(normalizeTraccarSnapshot(device, position));
+        } catch (error) {
+          onError(error instanceof Error ? error.message : "Traccar-Liveposition konnte nicht geladen werden.");
+        }
       }
 
       await refreshPosition();

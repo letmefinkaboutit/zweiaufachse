@@ -1,6 +1,6 @@
 import { routeSource } from "../data/routeSource.js";
 
-export const locationProviderConfig = {
+const defaults = {
   activeProvider: "mock",
   mock: {
     updateIntervalMs: 9000,
@@ -24,4 +24,17 @@ export const locationProviderConfig = {
       uniqueId: "",
     },
   },
+};
+
+let overrides = {};
+try {
+  const mod = await import("./locationProvider.local.js");
+  overrides = mod.default ?? {};
+} catch {}
+
+export const locationProviderConfig = {
+  ...defaults,
+  ...overrides,
+  mock: { ...defaults.mock, ...(overrides.mock ?? {}) },
+  traccar: { ...defaults.traccar, ...(overrides.traccar ?? {}), auth: { ...defaults.traccar.auth, ...(overrides.traccar?.auth ?? {}) }, device: { ...defaults.traccar.device, ...(overrides.traccar?.device ?? {}) } },
 };
