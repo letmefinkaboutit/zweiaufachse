@@ -5,11 +5,11 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.openstreetmap.ru/api/interpreter",
 ];
-const RADIUS_M = 20000;
+const RADIUS_M = 10000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 6;
+const CACHE_VERSION = 7;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
@@ -65,17 +65,15 @@ const HISTORIC_REGEX = "castle|fort|palace|monastery|abbey|ruins|ruin|memorial|m
 
 function buildQuery(lat, lon) {
   const r = RADIUS_M;
-  return `[out:json][timeout:20];
+  return `[out:json][timeout:10];
 (
   node(around:${r},${lat},${lon})["tourism"="viewpoint"]["name"];
   node(around:${r},${lat},${lon})["natural"="peak"]["name"];
   node(around:${r},${lat},${lon})["historic"~"${HISTORIC_REGEX}"]["name"];
-  way(around:${r},${lat},${lon})["historic"~"castle|monastery|abbey|ruins|ruin"]["name"];
   node(around:${r},${lat},${lon})["tourism"~"museum|attraction"]["name"];
-  way(around:${r},${lat},${lon})["tourism"="museum"]["name"];
   node(around:${r},${lat},${lon})["tourism"="alpine_hut"]["name"];
 );
-out center;`;
+out body;`;
 }
 
 export async function fetchOverpassPois(lat, lon) {
