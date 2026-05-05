@@ -1570,3 +1570,244 @@ img {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ── Photo Dashboard Tile ──────────────────────────────── */
+.dashboard-focus-card--photos {
+  gap: 16px;
+}
+
+.photo-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  height: 180px;
+}
+
+.photo-tile-highlight {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 100%;
+}
+
+.photo-tile-highlight img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-tile-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr auto;
+  gap: 6px;
+}
+
+.photo-tile-small {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.photo-tile-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-tile-count {
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+  align-self: center;
+}
+
+@media (max-width: 540px) {
+  .photo-tile-grid {
+    height: 160px;
+  }
+}
+
+/* ── Gallery Page ──────────────────────────────────────── */
+.gallery-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.gallery-tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+
+.gallery-tab.is-active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.gallery-grid-view {
+  display: grid;
+  gap: 28px;
+}
+
+.gallery-day-group {
+  display: grid;
+  gap: 10px;
+}
+
+.gallery-day-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.gallery-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.gallery-photo-btn {
+  all: unset;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  aspect-ratio: 1;
+  display: block;
+}
+
+.gallery-photo-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.15s;
+}
+
+.gallery-photo-btn:hover img {
+  opacity: 0.85;
+}
+
+/* Lightbox */
+.photo-lightbox {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: min(90vw, 880px);
+  max-height: 90vh;
+  background: #1a1a1a;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.photo-lightbox::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.lightbox__img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 60px);
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.lightbox__caption {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  text-align: center;
+  margin: 0;
+}
+
+.photo-lightbox__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.gallery-no-gps {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+/* ── Gallery Map View ──────────────────────────────────── */
+.gallery-map-view {
+  display: grid;
+  gap: 16px;
+}
+
+.gallery-map-el {
+  width: 100%;
+  height: 420px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #e8e4da;
+}
+
+.photo-map-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.photo-map-marker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Gallery Route Timeline ────────────────────────────── */
+.gallery-route-view {
+  display: grid;
+  gap: 10px;
+}
+
+.route-map-svg__photo-dot {
+  fill: var(--accent);
+  stroke: #fff;
+  stroke-width: 2;
+  transition: r 0.1s;
+}
+
+.route-map-svg__photo-dot:hover {
+  r: 11;
+}
+
+@media (max-width: 540px) {
+  .gallery-photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gallery-map-el {
+    height: 300px;
+  }
+}

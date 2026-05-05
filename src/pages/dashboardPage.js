@@ -1,6 +1,6 @@
 import { moduleRegistry } from "../config/modules.js";
 import { dashboardHighlights } from "../data/mockData.js";
-import { createInfoCard, createModuleTile } from "../components/cards.js";
+import { createInfoCard, createModuleTile, createPhotoDashboardTile } from "../components/cards.js";
 import {
   createLocationDashboardTile,
   createRouteDashboardMapTile,
@@ -100,6 +100,8 @@ export function renderDashboardPage(state = {}) {
         "dashboard-focus-card--route-stats",
       );
 
+  const photoTile = createPhotoDashboardTile(state.photoData, state.photoLoading);
+
   const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData, state.overpassUnavailable);
 
   const forwardTile = audienceContext
@@ -116,6 +118,7 @@ export function renderDashboardPage(state = {}) {
       <div class="dashboard-main-grid">
         ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments, state.dailyStats)}
         ${routeMapTile}
+        ${photoTile}
         ${currentTile}
         ${forwardTile}
       </div>

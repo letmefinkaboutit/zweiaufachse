@@ -130,3 +130,61 @@ export function createStoryCard(card) {
     </article>
   `;
 }
+
+export function createPhotoDashboardTile(photos, photoLoading) {
+  const header = `
+    <div class="dashboard-focus-card__header">
+      <div>
+        <p class="section-intro__eyebrow">Fotos</p>
+        <h3>Letzte Bilder von unterwegs</h3>
+      </div>
+    </div>
+  `;
+
+  if (photoLoading) {
+    return `
+      <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
+        ${header}
+        <p class="muted-text">Fotos werden geladen…</p>
+      </a>
+    `;
+  }
+
+  if (!photos?.length) {
+    return `
+      <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
+        ${header}
+        <p class="muted-text">Noch keine Fotos hochgeladen.</p>
+      </a>
+    `;
+  }
+
+  const highlight = photos[0];
+  const rest = photos.slice(1, 5);
+  const totalLabel = `${photos.length} Foto${photos.length !== 1 ? 's' : ''}`;
+
+  const restItems = rest
+    .map(
+      (photo) => `
+        <div class="photo-tile-small">
+          <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
+        </div>
+      `,
+    )
+    .join('');
+
+  return `
+    <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
+      ${header}
+      <div class="photo-tile-grid">
+        <div class="photo-tile-highlight">
+          <img src="${highlight.url}" alt="${highlight.filename}" loading="lazy" />
+        </div>
+        <div class="photo-tile-secondary">
+          ${restItems}
+          <p class="photo-tile-count">${totalLabel} gesamt</p>
+        </div>
+      </div>
+    </a>
+  `;
+}
