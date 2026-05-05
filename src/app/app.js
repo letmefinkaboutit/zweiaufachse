@@ -114,7 +114,7 @@ export async function createApp(root) {
       return;
     }
 
-    if (e.target.closest('[data-lightbox-close]') || e.target.id === 'photo-lightbox') {
+    if (e.target.closest('[data-lightbox-close]') || e.target === document.getElementById('photo-lightbox')) {
       document.getElementById('photo-lightbox')?.close();
     }
   });
