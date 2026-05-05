@@ -566,3 +566,72 @@ export function createLocationDashboardTile(locationData, locationState = {}) {
     </a>
   `;
 }
+
+export function createPhotoRouteSvg(routeData, locationData, photos) {
+  const width = 760;
+  const height = 320;
+  const padding = 28;
+  const projection = createProjection(routeData, width, height, padding);
+  const activeProgress = getActiveProgress(routeData, locationData);
+  const currentPoint = activeProgress.currentPoint;
+  const routePolyline = createProjectedPolyline(routeData.sampledRoute, projection);
+  const clipId = 'routeMapClip-photos';
+
+  let currentMarker = '';
+  if (currentPoint) {
+    const cur = projectCoordinate(currentPoint, projection);
+    currentMarker = `<circle cx="${cur.x.toFixed(1)}" cy="${cur.y.toFixed(1)}" r="11" class="route-map-svg__current"></circle>`;
+  }
+
+  const photoDots = photos
+    .filter((p) => p.lat != null && p.lon != null)
+    .map((photo, index) => {
+      let nearestPoint = routeData.sampledRoute[0];
+      let minDist = Infinity;
+      for (const pt of routeData.sampledRoute) {
+        const d = (pt.lat - photo.lat) ** 2 + (pt.lon - photo.lon) ** 2;
+        if (d < minDist) {
+          minDist = d;
+          nearestPoint = pt;
+        }
+      }
+      const { x, y } = projectCoordinate(nearestPoint, projection);
+      const caption = photo.date ? new Date(photo.date).toLocaleDateString('de-DE') : '';
+      return `
+        <circle
+          cx="${x.toFixed(1)}"
+          cy="${y.toFixed(1)}"
+          r="8"
+          class="route-map-svg__photo-dot"
+          data-lightbox-src="${photo.url}"
+          data-lightbox-caption="${caption}"
+          data-photo-index="${index}"
+          style="cursor:pointer"
+        >
+          <title>${photo.filename}${caption ? ' · ' + caption : ''}</title>
+        </circle>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="gallery-route-view">
+      <p class="muted-text" style="margin-bottom:8px">Klick auf einen Punkt zeigt das Foto</p>
+      <svg viewBox="0 0 ${width} ${height}" class="route-map-svg" role="img" aria-label="Routenverlauf mit Fotos">
+        <defs>
+          <clipPath id="${clipId}">
+            <rect x="0" y="0" width="${width}" height="${height}" rx="28"></rect>
+          </clipPath>
+        </defs>
+        <rect x="0" y="0" width="${width}" height="${height}" rx="28" class="route-map-svg__bg"></rect>
+        <g clip-path="url(#${clipId})">
+          ${createBasemapImages(projection)}
+          <rect x="0" y="0" width="${width}" height="${height}" rx="28" class="route-map-svg__veil"></rect>
+          <polyline points="${routePolyline}" class="route-map-svg__line"></polyline>
+          ${currentMarker}
+          ${photoDots}
+        </g>
+      </svg>
+    </div>
+  `;
+}
