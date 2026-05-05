@@ -147,11 +147,15 @@ export async function createApp(root) {
         state.locationError = null;
         state.locationProviderType = snapshot.providerType;
 
+        // Skip re-renders on gallery grid/map tabs — content is photo-driven, not location-driven
+        const onGallery = window.location.hash === '#/gallery';
+        const onGalleryRouteTab = onGallery && state.galleryTab === 'route';
+
         reverseGeocode(snapshot.latitude, snapshot.longitude)
           .then((geocodeData) => {
             if (geocodeData) {
               state.geocodeData = geocodeData;
-              router.refresh();
+              if (!onGallery || onGalleryRouteTab) router.refresh();
             }
           })
           .catch(() => {});
@@ -160,18 +164,18 @@ export async function createApp(root) {
           .then(({ fetchOverpassPois }) => fetchOverpassPois(snapshot.latitude, snapshot.longitude))
           .then((pois) => {
             state.overpassPois = pois;
-            router.refresh();
+            if (!onGallery || onGalleryRouteTab) router.refresh();
           })
           .catch((err) => {
             console.error("[Overpass]", err?.message || err);
             if (state.overpassPois === null) {
               state.overpassPois = [];
               state.overpassUnavailable = !!err?.overpassUnavailable;
-              router.refresh();
+              if (!onGallery || onGalleryRouteTab) router.refresh();
             }
           });
 
-        router.refresh();
+        if (!onGallery || onGalleryRouteTab) router.refresh();
       },
       onError(message) {
         state.locationLoading = false;
