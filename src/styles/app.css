@@ -1599,11 +1599,12 @@ img {
 .photo-tile-secondary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr auto;
   gap: 6px;
+  align-content: start;
 }
 
 .photo-tile-small {
+  height: 80px;
   border-radius: var(--radius-sm);
   overflow: hidden;
 }

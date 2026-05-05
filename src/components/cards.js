@@ -119,7 +119,12 @@ export function createStoryCard(card) {
   `;
 }
 
-export function createPhotoDashboardTile(photos, photoLoading) {
+// Persistent element — survives router.refresh() so images never reload unnecessarily
+const _photoTileEl = document.createElement('a');
+_photoTileEl.className = 'dashboard-focus-card dashboard-focus-card--photos';
+_photoTileEl.href = '#/gallery';
+
+function _renderPhotoTileContent(photos, photoLoading) {
   const header = `
     <div class="dashboard-focus-card__header">
       <div>
@@ -130,21 +135,11 @@ export function createPhotoDashboardTile(photos, photoLoading) {
   `;
 
   if (photoLoading) {
-    return `
-      <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
-        ${header}
-        <p class="muted-text">Fotos werden geladen…</p>
-      </a>
-    `;
+    return header + `<p class="muted-text">Fotos werden geladen…</p>`;
   }
 
   if (!photos?.length) {
-    return `
-      <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
-        ${header}
-        <p class="muted-text">Noch keine Fotos hochgeladen.</p>
-      </a>
-    `;
+    return header + `<p class="muted-text">Noch keine Fotos hochgeladen.</p>`;
   }
 
   const highlight = photos[0];
@@ -161,18 +156,30 @@ export function createPhotoDashboardTile(photos, photoLoading) {
     )
     .join('');
 
-  return `
-    <a class="dashboard-focus-card dashboard-focus-card--photos" href="#/gallery">
-      ${header}
-      <div class="photo-tile-grid">
-        <div class="photo-tile-highlight">
-          <img src="${highlight.url}" alt="${highlight.filename}" loading="lazy" />
-        </div>
-        <div class="photo-tile-secondary">
-          ${restItems}
-          <p class="photo-tile-count">${totalLabel} gesamt</p>
-        </div>
+  return header + `
+    <div class="photo-tile-grid">
+      <div class="photo-tile-highlight">
+        <img src="${highlight.url}" alt="${highlight.filename}" loading="lazy" />
       </div>
-    </a>
+      <div class="photo-tile-secondary">
+        ${restItems}
+        <p class="photo-tile-count">${totalLabel} gesamt</p>
+      </div>
+    </div>
   `;
+}
+
+export function updatePhotoTile(photos, photoLoading) {
+  _photoTileEl.innerHTML = _renderPhotoTileContent(photos, photoLoading);
+}
+
+export function mountPhotoTileObserver() {
+  _photoTileEl.innerHTML = _renderPhotoTileContent([], true);
+  const observer = new MutationObserver(() => {
+    const slot = document.getElementById('photo-tile-slot');
+    if (slot) {
+      slot.parentNode?.replaceChild(_photoTileEl, slot);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }

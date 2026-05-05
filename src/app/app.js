@@ -11,6 +11,7 @@ import { loadHistory, appendToHistory, computeDailyStats } from "../services/loc
 import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 import { startPhotoService } from "../services/photoService.js";
 import { mountPhotoMapObserver } from "../services/photoMapService.js";
+import { mountPhotoTileObserver, updatePhotoTile } from "../components/cards.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -42,7 +43,7 @@ export async function createApp(root) {
 
   root.innerHTML = createShell();
   mountMapObserver();
-
+  mountPhotoTileObserver();
   mountPhotoMapObserver(() => state);
 
   const photoServiceInstance = startPhotoService({
@@ -50,11 +51,13 @@ export async function createApp(root) {
       state.photoData = photos;
       state.photoLoading = false;
       state.photoError = null;
+      updatePhotoTile(photos, false);
       router.refresh();
     },
     onError(message) {
       state.photoLoading = false;
       state.photoError = message;
+      updatePhotoTile([], false);
       router.refresh();
     },
   });
