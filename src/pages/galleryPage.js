@@ -94,7 +94,7 @@ function renderRouteTab(photos, routeData, locationData) {
   if (!withGps.length) {
     return `<p class="muted-text">Noch keine Fotos mit GPS-Daten vorhanden.</p>`;
   }
-  return createPhotoRouteSvg(routeData, locationData, photos);
+  return createPhotoRouteSvg(routeData, locationData, withGps);
 }
 
 export function renderGalleryPage(state = {}) {
