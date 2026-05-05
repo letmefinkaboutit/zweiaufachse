@@ -96,15 +96,6 @@ export const stats = [
   { label: "Sonnenbrand-Level", value: "Orange", tone: "fun" },
 ];
 
-export const galleryItems = [
-  { id: "g1", title: "Morgenstart", type: "Bild", caption: "Noch alle motiviert." },
-  { id: "g2", title: "Snackpause", type: "Bild", caption: "Kaffeezaehler steigt." },
-  { id: "g3", title: "Kurzes Video", type: "Video", caption: "Windtest auf offener Strasse." },
-  { id: "g4", title: "Abendlicht", type: "Bild", caption: "Tourkitsch vom Feinsten." },
-  { id: "g5", title: "Werkzeugmoment", type: "Bild", caption: "Fahrradchirurgie am Seitenstreifen." },
-  { id: "g6", title: "Campingplatz", type: "Bild", caption: "Zelt, Pasta, Erschoepfung." },
-];
-
 export const riderProfiles = [
   {
     name: "Timo",

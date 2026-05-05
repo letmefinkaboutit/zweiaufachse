@@ -58,18 +58,6 @@ export function createUpdateCard(update) {
   `;
 }
 
-export function createGalleryCard(item) {
-  return `
-    <article class="gallery-card">
-      <div class="gallery-card__media">
-        <span>${item.type}</span>
-      </div>
-      <h3>${item.title}</h3>
-      <p>${item.caption}</p>
-    </article>
-  `;
-}
-
 export function createProfileCard(profile) {
   return `
     <article class="profile-card">
