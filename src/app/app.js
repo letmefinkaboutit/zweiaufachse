@@ -9,6 +9,8 @@ import { reverseGeocode } from "../services/geocodeService.js";
 import { buildCountrySegments } from "../services/routeCountryService.js";
 import { loadHistory, appendToHistory, computeDailyStats } from "../services/locationHistoryService.js";
 import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
+import { startPhotoService } from "../services/photoService.js";
+import { mountPhotoMapObserver } from "../services/photoMapService.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -31,11 +33,31 @@ export async function createApp(root) {
     poiFilters: createDefaultPoiFilters(),
     overpassPois: null,
     overpassUnavailable: false,
+    photoData: [],
+    photoLoading: true,
+    photoError: null,
+    galleryTab: 'grid',
   };
   let locationProvider = null;
 
   root.innerHTML = createShell();
   mountMapObserver();
+
+  mountPhotoMapObserver(() => state);
+
+  const photoServiceInstance = startPhotoService({
+    onUpdate(photos) {
+      state.photoData = photos;
+      state.photoLoading = false;
+      state.photoError = null;
+      router.refresh();
+    },
+    onError(message) {
+      state.photoLoading = false;
+      state.photoError = message;
+      router.refresh();
+    },
+  });
 
   const contentNode = root.querySelector("[data-app-content]");
   const navNode = root.querySelector("[data-app-nav]");
@@ -69,6 +91,32 @@ export async function createApp(root) {
     }
 
     router.refresh();
+  });
+
+  root.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('[data-gallery-tab]');
+    if (tabBtn) {
+      state.galleryTab = tabBtn.dataset.galleryTab;
+      router.refresh();
+      return;
+    }
+
+    const photoTrigger = e.target.closest('[data-lightbox-src]');
+    if (photoTrigger) {
+      const dialog = document.getElementById('photo-lightbox');
+      if (dialog) {
+        const img = dialog.querySelector('.lightbox__img');
+        const caption = dialog.querySelector('.lightbox__caption');
+        if (img) img.src = photoTrigger.dataset.lightboxSrc;
+        if (caption) caption.textContent = photoTrigger.dataset.lightboxCaption ?? '';
+        dialog.showModal();
+      }
+      return;
+    }
+
+    if (e.target.closest('[data-lightbox-close]') || e.target.id === 'photo-lightbox') {
+      document.getElementById('photo-lightbox')?.close();
+    }
   });
 
   try {
@@ -141,5 +189,6 @@ export async function createApp(root) {
 
   window.addEventListener("beforeunload", () => {
     locationProvider?.stop();
+    photoServiceInstance.stop();
   });
 }
