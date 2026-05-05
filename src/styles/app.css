@@ -1700,6 +1700,7 @@ img {
 
 /* Lightbox */
 .photo-lightbox {
+  position: relative;
   border: none;
   border-radius: var(--radius-lg);
   padding: 0;
@@ -1715,7 +1716,7 @@ img {
   backdrop-filter: blur(4px);
 }
 
-.lightbox__img {
+.photo-lightbox__img {
   display: block;
   max-width: 100%;
   max-height: calc(90vh - 60px);
@@ -1723,7 +1724,7 @@ img {
   margin: 0 auto;
 }
 
-.lightbox__caption {
+.photo-lightbox__caption {
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.85rem;
   padding: 10px 18px;

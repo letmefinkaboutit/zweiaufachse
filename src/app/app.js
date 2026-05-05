@@ -105,8 +105,8 @@ export async function createApp(root) {
     if (photoTrigger) {
       const dialog = document.getElementById('photo-lightbox');
       if (dialog) {
-        const img = dialog.querySelector('.lightbox__img');
-        const caption = dialog.querySelector('.lightbox__caption');
+        const img = dialog.querySelector('.photo-lightbox__img');
+        const caption = dialog.querySelector('.photo-lightbox__caption');
         if (img) img.src = photoTrigger.dataset.lightboxSrc;
         if (caption) caption.textContent = photoTrigger.dataset.lightboxCaption ?? '';
         dialog.showModal();
