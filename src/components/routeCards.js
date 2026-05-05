@@ -568,6 +568,9 @@ export function createLocationDashboardTile(locationData, locationState = {}) {
 }
 
 export function createPhotoRouteSvg(routeData, locationData, photos) {
+  if (!routeData.sampledRoute?.length) {
+    return `<div class="gallery-route-view"><p class="muted-text">Keine Routenpunkte verfuegbar.</p></div>`;
+  }
   const width = 760;
   const height = 320;
   const padding = 28;
