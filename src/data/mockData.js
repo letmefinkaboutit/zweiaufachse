@@ -3,4 +3,5 @@ export const tripMeta = {
   subtitle: "Von Schorndorf bis Griechenland",
   start: "Schorndorf, Deutschland",
   destination: "Griechenland",
+  startDate: null, // auf "YYYY-MM-DD" setzen sobald die Reise beginnt
 };

@@ -28,12 +28,25 @@ function getProgress(routeData, locationData) {
   };
 }
 
+function getTripDay(progressRatio) {
+  if (tripMeta.startDate && progressRatio > 0) {
+    const start = new Date(tripMeta.startDate);
+    const today = new Date();
+    start.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const day = Math.floor((today - start) / 86400000) + 1;
+    return `Tag ${Math.max(1, day)}`;
+  }
+  return "Tag 1";
+}
+
 function createProgressHero(routeData, locationData, geocodeData) {
   const progress = getProgress(routeData, locationData);
   const pct = Math.round((progress.progressRatio ?? 0) * 100);
   const done = progress.distanceDoneLabel ?? "—";
   const remaining = progress.remainingLabel ?? "—";
   const total = routeData.totalDistanceLabel;
+  const dayLabel = getTripDay(progress.progressRatio ?? 0);
 
   const locationLine = geocodeData?.locationLabel
     ? `<p class="rp-location-line">${ICON_PIN} ${geocodeData.flag ?? ""} ${geocodeData.locationLabel}${geocodeData.state ? `, ${geocodeData.state}` : ""}</p>`
@@ -41,17 +54,15 @@ function createProgressHero(routeData, locationData, geocodeData) {
 
   return `
     <div class="rp-hero">
-      <div class="rp-hero__map">
-        ${createRouteMapFigure(routeData, locationData)}
-      </div>
       <div class="rp-hero__body">
         ${locationLine}
         <div class="rp-hero__progress-row">
           <span class="rp-hero__pct">${pct}<sup>%</sup></span>
-          <div class="rp-hero__labels">
-            <span class="rp-hero__done">${done} geschafft</span>
-            <span class="rp-hero__rem">${remaining} verbleibend von ${total}</span>
-          </div>
+          <span class="rp-hero__day">${dayLabel}</span>
+        </div>
+        <div class="rp-hero__sub-labels">
+          <span class="rp-hero__done">${done} geschafft</span>
+          <span class="rp-hero__rem">${remaining} verbleibend von ${total}</span>
         </div>
         <div class="rp-progress-bar">
           <div class="rp-progress-bar__fill" style="width:${pct}%"></div>
@@ -173,6 +184,11 @@ export function renderRoutePage(state = {}) {
       ${createProgressHero(routeData, locationData, geocodeData)}
 
       ${createQuickStats(routeData, locationData, countrySegments, dailyStats)}
+
+      <section class="rp-section">
+        <h3 class="rp-section__title">${ICON_PIN} Route</h3>
+        ${createRouteMapFigure(routeData, locationData)}
+      </section>
 
       <section class="rp-section rp-section--timeline">
         <h3 class="rp-section__title">${ICON_MOUNTAIN} Zeitstrahl & Höhenprofil</h3>

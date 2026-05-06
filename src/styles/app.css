@@ -1914,31 +1914,17 @@ img {
 
 /* ── Progress hero ─────────────────────────────────────── */
 .rp-hero {
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--primary-deep) 0%, var(--primary) 100%);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   overflow: hidden;
-  display: grid;
-  grid-template-rows: auto auto;
-}
-
-.rp-hero__map {
-  width: 100%;
-  max-height: 260px;
-  overflow: hidden;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.rp-hero__map figure,
-.rp-hero__map svg {
-  width: 100%;
-  display: block;
+  color: #fff;
 }
 
 .rp-hero__body {
-  padding: 20px 20px 22px;
+  padding: 22px 22px 24px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .rp-location-line {
@@ -1947,7 +1933,7 @@ img {
   gap: 5px;
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.75);
   letter-spacing: 0.01em;
 }
 
@@ -1955,13 +1941,13 @@ img {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .rp-hero__progress-row {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 .rp-hero__pct {
@@ -1970,7 +1956,7 @@ img {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
-  color: var(--primary);
+  color: #fff;
   white-space: nowrap;
 }
 
@@ -1979,11 +1965,20 @@ img {
   font-weight: 600;
   vertical-align: super;
   letter-spacing: 0;
-  color: var(--primary);
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.rp-hero__labels {
+.rp-hero__day {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.rp-hero__sub-labels {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -1992,12 +1987,12 @@ img {
 .rp-hero__done {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text);
+  color: #fff;
 }
 
 .rp-hero__rem {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.65);
   line-height: 1.4;
 }
 
@@ -2005,14 +2000,14 @@ img {
 .rp-progress-bar {
   position: relative;
   height: 10px;
-  background: var(--line);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 99px;
   overflow: visible;
 }
 
 .rp-progress-bar__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-deep), var(--primary));
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 99px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2023,10 +2018,10 @@ img {
   transform: translate(-50%, -50%);
   width: 18px;
   height: 18px;
-  background: var(--primary);
+  background: #fff;
   border-radius: 50%;
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 3px rgba(12, 107, 88, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
   pointer-events: none;
 }
 
