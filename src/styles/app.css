@@ -63,7 +63,7 @@ img {
 .app-shell {
   width: min(100%, var(--page-width));
   margin: 0 auto;
-  padding: 20px 16px 110px;
+  padding: 20px 16px 48px;
 }
 
 .section-intro h2,
@@ -1875,5 +1875,342 @@ img {
 
   .gallery-map-el {
     height: 300px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Route Page  (.rp-*)
+   ══════════════════════════════════════════════════════════ */
+
+.rp-page {
+  display: grid;
+  gap: 20px;
+}
+
+/* ── Intro header ──────────────────────────────────────── */
+.rp-intro {
+  padding: 4px 0 0;
+}
+
+.rp-intro h2 {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+.rp-intro__arrow {
+  color: var(--accent);
+  font-weight: 300;
+  display: inline-block;
+  margin: 0 4px;
+}
+
+/* ── Progress hero ─────────────────────────────────────── */
+.rp-hero {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.rp-hero__map {
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.rp-hero__map figure,
+.rp-hero__map svg {
+  width: 100%;
+  display: block;
+}
+
+.rp-hero__body {
+  padding: 20px 20px 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.rp-location-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.rp-location-line svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.rp-hero__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rp-hero__pct {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.rp-hero__pct sup {
+  font-size: 1.1rem;
+  font-weight: 600;
+  vertical-align: super;
+  letter-spacing: 0;
+  color: var(--primary);
+  opacity: 0.7;
+}
+
+.rp-hero__labels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rp-hero__done {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.rp-hero__rem {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ── Animated progress bar ─────────────────────────────── */
+.rp-progress-bar {
+  position: relative;
+  height: 10px;
+  background: var(--line);
+  border-radius: 99px;
+  overflow: visible;
+}
+
+.rp-progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-deep), var(--primary));
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rp-progress-bar__glow {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px rgba(12, 107, 88, 0.25);
+  pointer-events: none;
+}
+
+/* ── Quick stats grid ──────────────────────────────────── */
+.rp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.rp-stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 14px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.rp-stat-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(12, 107, 88, 0.08);
+  color: var(--primary);
+}
+
+.rp-stat-card__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.rp-stat-card__value {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.rp-stat-card__label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+/* ── Sections ──────────────────────────────────────────── */
+.rp-section {
+  display: grid;
+  gap: 12px;
+}
+
+.rp-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.rp-section__title svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+/* ── Country list ──────────────────────────────────────── */
+.rp-country-list {
+  display: grid;
+  gap: 8px;
+}
+
+.rp-country {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: opacity 0.2s;
+}
+
+.rp-country.is-future {
+  opacity: 0.55;
+}
+
+.rp-country__flag {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.rp-country__info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.rp-country__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.rp-country.is-done .rp-country__name {
+  color: var(--muted);
+}
+
+.rp-country__meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.rp-country__bar {
+  height: 5px;
+  background: var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.rp-country__bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+  min-width: 3px;
+}
+
+.rp-country__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rp-country__badge--done {
+  background: var(--success);
+  color: var(--primary-deep);
+}
+
+.rp-country__badge--active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(12, 107, 88, 0.35);
+}
+
+.rp-country__badge--future {
+  background: rgba(31, 42, 47, 0.07);
+  color: var(--muted);
+}
+
+.rp-check-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .rp-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rp-intro h2 {
+    font-size: 1.3rem;
+  }
+
+  .rp-hero__pct {
+    font-size: 2.4rem;
   }
 }
