@@ -493,11 +493,6 @@ export function createRouteMapFigure(routeData, locationData, poiMarkers = [], v
         <span class="tag tag--accent">${routeData.pointsCount.toLocaleString("de-DE")} Trackpunkte</span>
       </div>
       ${createRouteSvgMarkup(routeData, activeProgress.currentPoint, poiMarkers, variant, countrySegments)}
-      <div class="route-visual-card__footer">
-        <p><strong>Start:</strong> ${routeData.startLabel}</p>
-        <p><strong>Aktueller Punkt:</strong> ${activeProgress.currentLocationLabel}</p>
-        <p><strong>Ziel:</strong> ${routeData.endLabel}</p>
-      </div>
       <p class="route-visual-card__attribution">${BASEMAP_ATTRIBUTION}</p>
     </article>
   `;
