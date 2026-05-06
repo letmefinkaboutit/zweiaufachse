@@ -228,6 +228,7 @@ export async function createApp(root) {
           .then(({ fetchOverpassPois }) => fetchOverpassPois(snapshot.latitude, snapshot.longitude))
           .then((pois) => {
             state.overpassPois = pois;
+            state.overpassUnavailable = false;
             if (!onGallery || onGalleryRouteTab) router.refresh();
           })
           .catch((err) => {

@@ -7,7 +7,7 @@ const RADIUS_M = 10000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 8;
+const CACHE_VERSION = 9;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {
@@ -63,15 +63,15 @@ const HISTORIC_REGEX = "castle|fort|palace|monastery|abbey|ruins|ruin|memorial|m
 
 function buildQuery(lat, lon) {
   const r = RADIUS_M;
-  return `[out:json][timeout:10];
+  return `[out:json][timeout:15];
 (
   node(around:${r},${lat},${lon})["tourism"="viewpoint"]["name"];
   node(around:${r},${lat},${lon})["natural"="peak"]["name"];
-  node(around:${r},${lat},${lon})["historic"~"${HISTORIC_REGEX}"]["name"];
-  node(around:${r},${lat},${lon})["tourism"~"museum|attraction"]["name"];
-  node(around:${r},${lat},${lon})["tourism"="alpine_hut"]["name"];
+  nwr(around:${r},${lat},${lon})["historic"~"${HISTORIC_REGEX}"]["name"];
+  nwr(around:${r},${lat},${lon})["tourism"~"museum|attraction"]["name"];
+  nwr(around:${r},${lat},${lon})["tourism"="alpine_hut"]["name"];
 );
-out body;`;
+out center body;`;
 }
 
 export async function fetchOverpassPois(lat, lon) {
