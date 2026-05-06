@@ -69,7 +69,7 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
     .join("");
 
   return `
-    <article class="journey-timeline-card">
+    <a class="journey-timeline-card" href="#/route">
       <div class="jt-track">
         <div class="jt-flags">${flagSlots}</div>
         <svg class="jt-profile-svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,6 +117,6 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
           </div>
         </div>
       </div>
-    </article>
+    </a>
   `;
 }
