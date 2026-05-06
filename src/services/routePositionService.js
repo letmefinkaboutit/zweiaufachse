@@ -95,7 +95,7 @@ export function mapLocationToRoute(routeData, snapshot) {
   });
 
   const distanceDoneKm = nearestPoint.cumulativeDistanceMeters / 1000;
-  const progressRatio = routeData.totalDistanceKm > 0 ? distanceDoneKm / routeData.totalDistanceKm : 0;
+  const progressRatio = Math.min(1, Math.max(0, routeData.totalDistanceKm > 0 ? distanceDoneKm / routeData.totalDistanceKm : 0));
   const remainingKm = Math.max(routeData.totalDistanceKm - distanceDoneKm, 0);
 
   return {

@@ -46,8 +46,10 @@ export function createJourneyTimelineCard(routeData, locationData, countrySegmen
   const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
   const fillPath = `${linePath} L${VW},${ELEV_BOTTOM} L0,${ELEV_BOTTOM} Z`;
 
-  const progIdx = Math.min(pts.length - 1, Math.round(progressRatio * (pts.length - 1)));
-  const markerY = pts[progIdx].y;
+  const progIdxF = progressRatio * (pts.length - 1);
+  const progIdx0 = Math.min(pts.length - 2, Math.floor(progIdxF));
+  const t = progIdxF - progIdx0;
+  const markerY = +(pts[progIdx0].y + t * (pts[progIdx0 + 1].y - pts[progIdx0].y)).toFixed(1);
 
   const countryBands = countrySegments
     .map((seg) => {
