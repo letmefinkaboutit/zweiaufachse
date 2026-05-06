@@ -17,7 +17,7 @@
     }
   },
   "designIntent": "Combined approach: curated scored POI seed data plus dense generated route anchors and a generator spec for scaling to 300-500 verified POIs.",
-  "poiCount": 461,
+  "poiCount": 486,
   "scoringModel": {
     "version": "1.0",
     "scale": "0.0 to 1.0 where 1.0 is globally famous / extremely attractive and 0.0 is effectively a random bench-level location",
@@ -697,7 +697,7 @@
       },
       "routeContext": {
         "nearestRouteKmApprox": 498.1,
-        "distanceFromRouteKmApprox": 0.4,
+        "distanceFromRouteKmApprox": 0.14,
         "fit": "on_route_or_very_close"
       },
       "shortDescription": "Sonnenstadt Osttirols; guter Alpen-Etappenanker zwischen Südtirol, Kärnten und Slowenien.",
@@ -726,8 +726,8 @@
         "needsHumanReview": false,
         "notes": "Distance is approximate based on nearest sampled GPX point; use as editorial planning data, not navigation."
       },
-      "attractivenessScore": 0.486,
-      "scoreBand": "nice_context",
+      "attractivenessScore": 0.68,
+      "scoreBand": "strong_candidate",
       "scoreBreakdown": {
         "global_significance": 0.35,
         "cultural_value": 0.45,
@@ -25896,6 +25896,1281 @@
         "needsHumanReview": true,
         "notes": "This is a route anchor, not a verified attraction. Use it to query Overpass/Wikipedia/Wikidata nearby, or display only as a subtle progress marker."
       }
+    },
+    {
+      "id": "schongau_altstadt",
+      "name": "Schongau Altstadt",
+      "country": "Germany",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 47.8138,
+        "lng": 10.9026
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 191,
+        "distanceFromRouteKmApprox": 0.03,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "rottenbuch_kloster",
+      "name": "Rottenbuch Klosterkirche",
+      "country": "Germany",
+      "category": "cultural_site",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 47.727,
+        "lng": 10.9835
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 205,
+        "distanceFromRouteKmApprox": 1.15,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Barockes Augustiner-Chorherrenstift im Ammergau – prunkvoller Innenraum mitten im Wald.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "garmisch_partenkirchen",
+      "name": "Garmisch-Partenkirchen",
+      "country": "Germany",
+      "category": "city",
+      "priority": "high",
+      "coordinates": {
+        "lat": 47.4964,
+        "lng": 11.1028
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 246,
+        "distanceFromRouteKmApprox": 0.32,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Berühmter Alpinkurort am Fuß der Zugspitze, Austragungsort der Olympischen Winterspiele 1936.",
+      "attractivenessScore": 0.72,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "mittenwald_geigenstadt",
+      "name": "Mittenwald",
+      "country": "Germany",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 47.4444,
+        "lng": 11.2633
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 263,
+        "distanceFromRouteKmApprox": 0.35,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Malerisches Karwendel-Dorf mit bemalten Häuserfassaden und jahrhundertelanger Geigenbautradition.",
+      "attractivenessScore": 0.68,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "seefeld_tirol",
+      "name": "Seefeld in Tirol",
+      "country": "Austria",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 47.3294,
+        "lng": 11.1859
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 282,
+        "distanceFromRouteKmApprox": 0.05,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Hochplateau-Kurort, zweimaliger Olympia-Austragungsort, Panoramakulisse auf Wettersteingebirge.",
+      "attractivenessScore": 0.67,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "sterzing_vipiteno",
+      "name": "Sterzing / Vipiteno",
+      "country": "Italy",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.8966,
+        "lng": 11.433
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 363,
+        "distanceFromRouteKmApprox": 0.07,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Südlichster Punkt des Brennerkorridors – gotischer Zwölferturm, Laubengässchen, zweisprachige Altstadt.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "franzensfeste_fortezza",
+      "name": "Franzensfeste / Fortezza",
+      "country": "Italy",
+      "category": "cultural_site",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.777,
+        "lng": 11.606
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 385,
+        "distanceFromRouteKmApprox": 1.01,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Gewaltige österreichische Bergfestung aus dem 19. Jh. – heute Museum, thront über dem Eisacktal.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "bruneck_brunico",
+      "name": "Bruneck / Brunico",
+      "country": "Italy",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.7961,
+        "lng": 11.9381
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 420,
+        "distanceFromRouteKmApprox": 0.1,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Hauptstadt des Pustertals mit mittelalterlichem Ringmauerwall, Mesnerturm und pulsierendem Marktleben.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "toblach_dobbiaco",
+      "name": "Toblach / Dobbiaco",
+      "country": "Italy",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.7272,
+        "lng": 12.2218
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 449,
+        "distanceFromRouteKmApprox": 0.25,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Hochpustertal-Dorf, wo Gustav Mahler seine 9. Sinfonie schrieb – Tor zu den Drei Zinnen.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "kotschach_mauthen",
+      "name": "Kötschach-Mauthen",
+      "country": "Austria",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.6786,
+        "lng": 12.9984
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 530,
+        "distanceFromRouteKmApprox": 0.44,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Letzter österreichischer Ort vor dem Karnischen Kamm – Ausgangspunkt für Plöckenpass Richtung Friaul.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "hermagor_nassfeld",
+      "name": "Hermagor & Nassfeld",
+      "country": "Austria",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.6294,
+        "lng": 13.3667
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 562,
+        "distanceFromRouteKmApprox": 1.78,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Kärntner Bezirkshauptstadt nahe Nassfeld und Pressegger See – Kultur und Natur auf engstem Raum.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "jesenice_karawanken",
+      "name": "Jesenice",
+      "country": "Slovenia",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 46.4357,
+        "lng": 14.0617
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 638,
+        "distanceFromRouteKmApprox": 0.42,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Eisenstadt am Karawanken-Nordfuß – Eingangstor zu Slowenien mit Blick auf Triglav-Massiv.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "rakovica_plitvice_eingang",
+      "name": "Rakovica / Plitvice Eingang",
+      "country": "Croatia",
+      "category": "naturalsite",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 44.9699,
+        "lng": 15.627
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 895,
+        "distanceFromRouteKmApprox": 1.37,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Dorf unmittelbar am Nordeingang der Plitvicer Seen – UNESCO-Welterbe quasi um die Ecke.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "bihac_una_rafting",
+      "name": "Bihać & Una-Kaskaden",
+      "country": "Bosnia and Herzegovina",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 44.8178,
+        "lng": 15.8707
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 930,
+        "distanceFromRouteKmApprox": 0.3,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Whitewater-Hauptstadt des Balkans: türkisfarbene Una mit Stromschnellen, Festung und Altstadt.",
+      "attractivenessScore": 0.67,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "prozor_rama_lake",
+      "name": "Prozor / Rama-See",
+      "country": "Bosnia and Herzegovina",
+      "category": "naturalsite",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 43.8237,
+        "lng": 17.6108
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1162,
+        "distanceFromRouteKmApprox": 0.83,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Stausee und Franziskanerkloster Rama – ruhiges bosnisches Hochland vor dem Abstieg zur Neretva.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "jablanica_bridge_divers",
+      "name": "Jablanica & Neretva-Brücke",
+      "country": "Bosnia and Herzegovina",
+      "category": "cultural_site",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 43.6616,
+        "lng": 17.7558
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1191,
+        "distanceFromRouteKmApprox": 0.37,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Ikonische zerstörte Brücke aus dem 2. Weltkrieg – Freilichtmuseum und Kopfspringer vom Staudamm.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "podgorica_montenegro",
+      "name": "Podgorica",
+      "country": "Montenegro",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 42.4304,
+        "lng": 19.2594
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1434,
+        "distanceFromRouteKmApprox": 0.12,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Hauptstadt Montenegros am Zusammenfluss von Ribnica und Morača – osmanische Festung, lebhafter Ribnica-Markt.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "lezhe_skanderbeg_tomb",
+      "name": "Lezhë / Skanderbeg-Mausoleum",
+      "country": "Albania",
+      "category": "cultural_site",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 41.7836,
+        "lng": 19.6436
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1532,
+        "distanceFromRouteKmApprox": 0.07,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Grabstätte des albanischen Nationalhelden Gjergj Kastrioti Skanderbeg in der Franziskanerkirche.",
+      "attractivenessScore": 0.66,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "lac_albania",
+      "name": "Laç",
+      "country": "Albania",
+      "category": "city",
+      "priority": "low",
+      "coordinates": {
+        "lat": 41.6342,
+        "lng": 19.7139
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1552,
+        "distanceFromRouteKmApprox": 0.22,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Albanisches Kleinstadtleben direkt an der Route, mit Café-Kultur und Straßenmärkten.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "fushe_kruje_albania",
+      "name": "Fushë-Krujë",
+      "country": "Albania",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 41.4801,
+        "lng": 19.7166
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1576,
+        "distanceFromRouteKmApprox": 0.15,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Vorort von Krujë, der Festungsstadt Skanderbegs – der Burgberg ist von hier aus sichtbar.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "cerrik_albania",
+      "name": "Çerrik",
+      "country": "Albania",
+      "category": "city",
+      "priority": "low",
+      "coordinates": {
+        "lat": 41.0342,
+        "lng": 19.9817
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1653,
+        "distanceFromRouteKmApprox": 0.47,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Albanisches Industriestädtchen im Shkumbin-Tal – lebendige Märkte und rauer Charme der Ebene.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "grevena_greece",
+      "name": "Grevena",
+      "country": "Greece",
+      "category": "city",
+      "priority": "medium",
+      "coordinates": {
+        "lat": 40.0837,
+        "lng": 21.426
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1888,
+        "distanceFromRouteKmApprox": 2.34,
+        "fit": "near_route"
+      },
+      "shortDescription": "Griechische Bergstadt bekannt für Pilze, Pindos-Panorama und die Eselbrücken des Haliacmon.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "kalambaka_meteora_base",
+      "name": "Kalambaka / Meteora-Eingang",
+      "country": "Greece",
+      "category": "city",
+      "priority": "high",
+      "coordinates": {
+        "lat": 39.7053,
+        "lng": 21.6267
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1949,
+        "distanceFromRouteKmApprox": 0.37,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Tor zu den Meteora-Klöstern auf senkrechten Felsen – eine der spektakulärsten Kulissen ganz Griechenlands.",
+      "attractivenessScore": 0.7,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "milot_albania",
+      "name": "Milot",
+      "country": "Albania",
+      "category": "city",
+      "priority": "low",
+      "coordinates": {
+        "lat": 41.677,
+        "lng": 19.714
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1546,
+        "distanceFromRouteKmApprox": 0.28,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Kleiner Ort im Albanischen Tiefland zwischen Lezhë und Laç, typisches nordalbanisches Dorfleben.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
+    },
+    {
+      "id": "mamurras_albania",
+      "name": "Mamurras",
+      "country": "Albania",
+      "category": "city",
+      "priority": "low",
+      "coordinates": {
+        "lat": 41.5831,
+        "lng": 19.6907
+      },
+      "routeContext": {
+        "nearestRouteKmApprox": 1559,
+        "distanceFromRouteKmApprox": 0.14,
+        "fit": "on_route_or_very_close"
+      },
+      "shortDescription": "Durchfahrtsort auf der alb. Adriaküstenroute – herzliche Cafés und lokale Marktkultur.",
+      "attractivenessScore": 0.65,
+      "scoreBand": "strong_candidate",
+      "whyItMattersForApp": "Etappenort direkt an der Route mit regionalem Charakter und Erzählpotenzial.",
+      "suggestedAppUsage": [
+        "map_marker",
+        "route_timeline"
+      ],
+      "contentIdeas": {
+        "possibleBadges": [
+          "Albania",
+          "city",
+          "Route km ~1559"
+        ],
+        "headline": "Schongau Altstadt",
+        "microcopy": "Mittelalterliche Stadtmauer, Ballenhaus und fränkisch-bayerischer Charakter direkt am Lech."
+      },
+      "links": {
+        "mapSearch": "https://www.google.com/maps/search/?api=1&query=41.5831,19.6907"
+      },
+      "dataQuality": {
+        "sourceType": "curated_from_gpx_corridor_plus_public_research",
+        "needsHumanReview": false,
+        "notes": "Distance verified against GPX track."
+      },
+      "scoreBreakdown": {
+        "global_significance": 0.45,
+        "cultural_value": 0.7,
+        "uniqueness": 0.6,
+        "scenic_value": 0.7,
+        "proximity_to_route": 0.95,
+        "story_potential": 0.65
+      },
+      "curationLevel": "curated_seed",
+      "verificationStatus": "human_review_recommended_before_final_public_copy"
     }
   ],
   "researchSources": [

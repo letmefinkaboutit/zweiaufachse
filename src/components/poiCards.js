@@ -320,7 +320,6 @@ function buildForwardItems(poiData, locationData, countrySegments, routeData) {
       (p.distanceFromRouteKm == null || p.distanceFromRouteKm <= 3)
     )
     .sort((a, b) => a.routeKm - b.routeKm)
-    .slice(0, 10)
     .map(p => {
       const { tone, label } = getPoiBreadcrumbMeta(p);
       return {
@@ -355,7 +354,7 @@ function buildForwardItems(poiData, locationData, countrySegments, routeData) {
 
   return [...highlights, ...borders]
     .sort((a, b) => a.km - b.km)
-    .slice(0, 9);
+    .slice(0, 50);
 }
 
 function renderForwardItem(item) {
@@ -364,8 +363,8 @@ function renderForwardItem(item) {
   if (item.type === "border") {
     return `
       <div class="forward-item forward-item--border">
-        <span class="forward-item__border-flags">${item.fromFlag}<span class="forward-item__arrow">→</span>${item.toFlag}</span>
-        <span class="forward-item__name">Grenze ${item.fromCode} / ${item.toCode}</span>
+        <span class="forward-item__name forward-item__name--border">${item.fromFlag} → ${item.toFlag}</span>
+        <span class="forward-item__badge forward-item__badge--border">Ländergrenze</span>
         ${dist}
       </div>`;
   }
