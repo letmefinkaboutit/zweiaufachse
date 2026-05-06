@@ -54,7 +54,7 @@ export async function fetchWikipediaPois(lat, lon) {
   let geoResults;
   try {
     const res = await fetch(
-      `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=12000&gslimit=30&format=json&origin=*`,
+      `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=30&format=json&origin=*`,
       { signal: controller1.signal },
     );
     clearTimeout(t1);
