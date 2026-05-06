@@ -183,14 +183,14 @@ export function renderRoutePage(state = {}) {
 
       ${createProgressHero(routeData, locationData, geocodeData)}
 
-      ${createQuickStats(routeData, locationData, countrySegments, dailyStats)}
-
       <section class="rp-section rp-section--timeline">
         <h3 class="rp-section__title">${ICON_MOUNTAIN} Zeitstrahl & Höhenprofil</h3>
         ${createJourneyTimelineCard(routeData, locationData, countrySegments ?? [], dailyStats ?? {})}
       </section>
 
       ${createCountryList(routeData, locationData, countrySegments ?? [])}
+
+      ${createQuickStats(routeData, locationData, countrySegments, dailyStats)}
 
       <section class="rp-section">
         <h3 class="rp-section__title">${ICON_MOUNTAIN} Höhenprofil</h3>
