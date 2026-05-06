@@ -1716,6 +1716,10 @@ img {
   z-index: 20;
 }
 
+.page-header[hidden] {
+  display: none;
+}
+
 .page-header__back {
   display: flex;
   align-items: center;
