@@ -1,11 +1,4 @@
-import { moduleRegistry } from "../config/modules.js";
-import { dashboardHighlights } from "../data/mockData.js";
-import { createInfoCard, createModuleTile } from "../components/cards.js";
-import {
-  createLocationDashboardTile,
-  createRouteDashboardMapTile,
-  createRouteDashboardStatsTile,
-} from "../components/routeCards.js";
+import { createRouteDashboardMapTile } from "../components/routeCards.js";
 import { createNearbyOverpassTile, createForwardAudienceTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
@@ -73,9 +66,6 @@ function createPlaceholderTile(title, text, href = "#route", extraClass = "") {
 }
 
 export function renderDashboardPage(state = {}) {
-  const sandboxModules = moduleRegistry.filter(
-    (module) => module.enabled && !["dashboard", "route"].includes(module.id),
-  );
   const audienceContext = state.poiData?.pois?.length
     ? createAudiencePoiContext(state.poiData.pois, state.locationData)
     : null;
@@ -89,15 +79,6 @@ export function renderDashboardPage(state = {}) {
           : state.routeError || "Die Route ist gerade nicht verfuegbar.",
         "#route",
         "dashboard-focus-card--route-map",
-      );
-
-  const routeStatsTile = state.routeData
-    ? createRouteDashboardStatsTile(state.routeData, state.locationData, state.dailyStats)
-    : createPlaceholderTile(
-        "Tourstatus in Zahlen",
-        "Gesamtdistanz, geschafft, verbleibend und die letzten 24 Stunden erscheinen hier, sobald die Route bereit ist.",
-        "#route",
-        "dashboard-focus-card--route-stats",
       );
 
   const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData, state.overpassUnavailable);
@@ -119,13 +100,6 @@ export function renderDashboardPage(state = {}) {
         <div id="photo-tile-slot"></div>
         ${currentTile}
         ${forwardTile}
-      </div>
-
-      <div class="dashboard-sandbox-grid">
-        ${routeStatsTile}
-        ${createLocationDashboardTile(state.locationData, state)}
-        ${dashboardHighlights.map((item) => createInfoCard(item)).join("")}
-        ${sandboxModules.map((module) => createModuleTile(module)).join("")}
       </div>
     </div>
   `;
