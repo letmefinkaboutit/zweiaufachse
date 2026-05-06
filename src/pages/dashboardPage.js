@@ -1,5 +1,5 @@
 import { createRouteDashboardMapTile } from "../components/routeCards.js";
-import { createNearbyOverpassTile, createForwardAudienceTile } from "../components/poiCards.js";
+import { createNearbyOverpassTile, createForwardRouteTile } from "../components/poiCards.js";
 import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
 import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
@@ -83,12 +83,7 @@ export function renderDashboardPage(state = {}) {
 
   const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData, state.overpassUnavailable);
 
-  const forwardTile = audienceContext
-    ? createForwardAudienceTile(audienceContext)
-    : createPlaceholderTile(
-        "Was kommt als Naechstes?",
-        "Hier erscheinen gleich die naechsten 100 Kilometer und die groesseren Highlights weiter vorne.",
-      );
+  const forwardTile = createForwardRouteTile(state.poiData, state.locationData, state.countrySegments, state.routeData);
 
   return `
     <div class="dashboard-page">

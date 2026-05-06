@@ -1012,6 +1012,77 @@ img {
   align-content: start;
 }
 
+/* ── Forward route tile ────────────────────────────────── */
+.forward-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.forward-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.forward-item--border {
+  background: rgba(12, 107, 88, 0.06);
+}
+
+.forward-item__border-flags {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.forward-item__arrow {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.forward-item__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.forward-item__name {
+  flex: 1;
+  font-size: 0.87rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--primary-deep);
+}
+
+.forward-item--border .forward-item__name {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.forward-item__badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.forward-item__dist {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .dashboard-poi-item h4,
 .dashboard-focus-card__lead h4 {
   margin-top: 6px;

@@ -302,22 +302,99 @@ export function createCurrentAudienceTile(audienceContext) {
   `;
 }
 
-export function createForwardAudienceTile(audienceContext) {
-  const items = (audienceContext?.nextHundredKm || []).slice(0, 5);
+function fmtKmAhead(km) {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km.toFixed(0)} km`;
+}
+
+function buildForwardItems(poiData, locationData, countrySegments, routeData) {
+  const currentKm = locationData?.routeMatch?.distanceDoneKm ?? 0;
+  const totalKm = routeData?.totalDistanceKm ?? 0;
+
+  const highlights = (poiData?.pois ?? [])
+    .filter(p =>
+      !p.needsEnrichment &&
+      p.score >= 0.65 &&
+      p.routeKm != null &&
+      p.routeKm > currentKm &&
+      (p.distanceFromRouteKm == null || p.distanceFromRouteKm <= 3)
+    )
+    .sort((a, b) => a.routeKm - b.routeKm)
+    .slice(0, 10)
+    .map(p => {
+      const { tone, label } = getPoiBreadcrumbMeta(p);
+      return {
+        type: "poi",
+        km: p.routeKm,
+        kmAhead: p.routeKm - currentKm,
+        name: p.name,
+        label,
+        color: TONE_COLOR[tone] ?? TONE_COLOR.highlight,
+      };
+    });
+
+  const borders = (countrySegments ?? [])
+    .map((seg, i) => {
+      if (i === (countrySegments.length - 1)) return null;
+      const next = countrySegments[i + 1];
+      const crossingKm = seg.toPercent * totalKm;
+      if (crossingKm <= currentKm) return null;
+      return {
+        type: "border",
+        km: crossingKm,
+        kmAhead: crossingKm - currentKm,
+        fromFlag: seg.flag,
+        fromCode: seg.code,
+        toFlag: next.flag,
+        toCode: next.code,
+        fromColor: seg.color,
+        toColor: next.color,
+      };
+    })
+    .filter(Boolean);
+
+  return [...highlights, ...borders]
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 9);
+}
+
+function renderForwardItem(item) {
+  const dist = `<span class="forward-item__dist">${fmtKmAhead(item.kmAhead)}</span>`;
+
+  if (item.type === "border") {
+    return `
+      <div class="forward-item forward-item--border">
+        <span class="forward-item__border-flags">${item.fromFlag}<span class="forward-item__arrow">→</span>${item.toFlag}</span>
+        <span class="forward-item__name">Grenze ${item.fromCode} / ${item.toCode}</span>
+        ${dist}
+      </div>`;
+  }
 
   return `
-    <a class="dashboard-focus-card" href="#route">
+    <div class="forward-item forward-item--poi">
+      <span class="forward-item__dot" style="background:${item.color}"></span>
+      <span class="forward-item__name">${item.name}</span>
+      <span class="forward-item__badge" style="color:${item.color}">${item.label}</span>
+      ${dist}
+    </div>`;
+}
+
+export function createForwardRouteTile(poiData, locationData, countrySegments, routeData) {
+  const items = buildForwardItems(poiData, locationData, countrySegments, routeData);
+
+  return `
+    <div class="dashboard-focus-card">
       <div class="dashboard-focus-card__header">
         <div>
           <p class="section-intro__eyebrow">Voraus</p>
-          <h3>Was kommt als nächstes?</h3>
+          <h3>Was kommt noch?</h3>
         </div>
       </div>
       ${items.length
-        ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
-        : `<p class="muted-text">Noch keine POIs für die nächste Etappe hinterlegt.</p>`
+        ? `<div class="forward-route-list">${items.map(renderForwardItem).join("")}</div>`
+        : `<p class="muted-text">Keine Highlights oder Grenzübergänge gefunden.</p>`
       }
-    </a>
+    </div>
   `;
 }
 
