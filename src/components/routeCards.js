@@ -244,7 +244,7 @@ export function createRouteDashboardMapTile(routeData, locationData) {
   const activeProgress = getActiveProgress(routeData, locationData);
 
   return `
-    <div class="dashboard-focus-card dashboard-focus-card--route-map">
+    <a class="dashboard-focus-card dashboard-focus-card--route-map" href="#/route">
       <div class="dashboard-focus-card__header">
         <div>
           <p class="section-intro__eyebrow">Live-Karte</p>
@@ -252,7 +252,7 @@ export function createRouteDashboardMapTile(routeData, locationData) {
         </div>
       </div>
       <div id="live-map-placeholder" class="live-map-el"></div>
-    </div>
+    </a>
   `;
 }
 
