@@ -53,7 +53,7 @@
         renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
       });
 
-      import("./src/main.js?v=20260427f").catch((error) => {
+      import("./src/main.js?v=20260506").catch((error) => {
         renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
         console.error(error);
       });
