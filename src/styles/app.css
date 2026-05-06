@@ -1703,6 +1703,42 @@ img {
   opacity: 0.85;
 }
 
+/* ── Page Header (Subpage-Navigation) ──────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.page-header__back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+.page-header__back svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.page-header__title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted, #888);
+}
+
 /* Lightbox */
 .photo-lightbox {
   position: relative;
@@ -1730,11 +1766,35 @@ img {
 }
 
 .photo-lightbox__caption {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.85rem;
-  padding: 10px 18px;
-  text-align: center;
+  padding: 10px 16px 14px;
   margin: 0;
+}
+
+.lc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.lc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+}
+
+.lc-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 .photo-lightbox__close {

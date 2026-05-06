@@ -1,18 +1,19 @@
-import { moduleRegistry, navigationModules } from "../config/modules.js";
+import { moduleRegistry } from "../config/modules.js";
+
+const BACK_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>`;
 
 export function createRouter(modules = moduleRegistry) {
   const pageMap = new Map(modules.filter((module) => module.enabled).map((module) => [module.route, module]));
   const defaultRoute = modules.find((module) => module.defaultRoute)?.route || "/dashboard";
 
   let contentNode;
-  let navNode;
+  let headerNode;
   let getState = () => ({});
 
   function normalizeHash(hash) {
     if (!hash || hash === "#") {
       return defaultRoute;
     }
-
     return hash.replace(/^#/, "");
   }
 
@@ -21,53 +22,44 @@ export function createRouter(modules = moduleRegistry) {
     window.location.hash = targetRoute;
   }
 
-  function renderNavigation() {
-    if (!navNode) {
+  function renderHeader() {
+    if (!headerNode) return;
+    const activeRoute = normalizeHash(window.location.hash);
+    if (activeRoute === defaultRoute) {
+      headerNode.hidden = true;
+      headerNode.innerHTML = "";
       return;
     }
-
-    const activeRoute = normalizeHash(window.location.hash);
-
-    navNode.innerHTML = navigationModules
-      .filter((module) => module.enabled)
-      .map(
-        (module) => `
-          <a
-            class="bottom-nav__link ${activeRoute === module.route ? "is-active" : ""}"
-            href="#${module.route}"
-            aria-current="${activeRoute === module.route ? "page" : "false"}"
-          >
-            <span class="bottom-nav__eyebrow">${module.shortLabel}</span>
-            <span class="bottom-nav__label">${module.navLabel}</span>
-          </a>
-        `,
-      )
-      .join("");
+    const module = pageMap.get(activeRoute);
+    headerNode.hidden = false;
+    headerNode.innerHTML = `
+      <a class="page-header__back" href="#${defaultRoute}" aria-label="Zurück zur Startseite">
+        ${BACK_ICON}
+        Start
+      </a>
+      <span class="page-header__title">${module?.navLabel ?? ""}</span>
+    `;
   }
 
   function renderPage(options = {}) {
-    if (!contentNode) {
-      return;
-    }
+    if (!contentNode) return;
 
     const activeRoute = normalizeHash(window.location.hash);
     const activeModule = pageMap.get(activeRoute) || pageMap.get(defaultRoute);
 
-    if (!activeModule) {
-      return;
-    }
+    if (!activeModule) return;
 
     contentNode.innerHTML = activeModule.render(getState());
-    renderNavigation();
+    renderHeader();
 
     if (!options.preserveScroll) {
       window.scrollTo({ top: 0, behavior: "auto" });
     }
   }
 
-  function mount(contentTarget, navTarget, stateGetter = () => ({})) {
+  function mount(contentTarget, _navTarget, stateGetter = () => ({})) {
     contentNode = contentTarget;
-    navNode = navTarget;
+    headerNode = document.querySelector("[data-app-header]");
     getState = stateGetter;
 
     if (!window.location.hash) {

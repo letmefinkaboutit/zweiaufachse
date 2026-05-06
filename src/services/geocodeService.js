@@ -3,6 +3,27 @@ const MIN_INTERVAL_MS = 90_000;
 
 let lastCallTime = 0;
 
+// Per-photo geocoding — own cache, no shared rate limiter
+const _photoCache = new Map();
+
+export async function geocodeOnce(lat, lon) {
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  if (_photoCache.has(key)) return _photoCache.get(key);
+
+  const url = `${NOMINATIM_URL}?lat=${lat}&lon=${lon}&format=json&accept-language=de&addressdetails=1`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Geocoding ${res.status}`);
+
+  const data = await res.json();
+  const address = data.address || {};
+  const result = {
+    locationLabel: buildLocationLabel(address),
+    flag: countryCodeToFlag(address.country_code || ""),
+  };
+  _photoCache.set(key, result);
+  return result;
+}
+
 function countryCodeToFlag(isoCode) {
   if (!isoCode || isoCode.length !== 2) {
     return "";

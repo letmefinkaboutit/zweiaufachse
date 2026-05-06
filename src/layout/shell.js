@@ -1,6 +1,7 @@
 export function createShell() {
   return `
     <div class="app-shell">
+      <div class="page-header" data-app-header hidden></div>
       <main class="app-main" data-app-content></main>
     </div>
     <dialog id="photo-lightbox" class="photo-lightbox">
