@@ -83,7 +83,7 @@ export function renderDashboardPage(state = {}) {
 
   const currentTile = createNearbyOverpassTile(state.overpassPois, state.locationData, state.overpassUnavailable);
 
-  const forwardTile = createForwardRouteTile(state.poiData, state.locationData, state.countrySegments, state.routeData);
+  const forwardTile = createForwardRouteTile(state.poiData, state.locationData, state.countrySegments, state.routeData, state.forwardLimit ?? 15);
 
   return `
     <div class="dashboard-page">

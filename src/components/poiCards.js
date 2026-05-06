@@ -353,8 +353,7 @@ function buildForwardItems(poiData, locationData, countrySegments, routeData) {
     .filter(Boolean);
 
   return [...highlights, ...borders]
-    .sort((a, b) => a.km - b.km)
-    .slice(0, 50);
+    .sort((a, b) => a.km - b.km);
 }
 
 function renderForwardItem(item) {
@@ -381,16 +380,35 @@ function renderForwardItem(item) {
     </div>`;
 }
 
-export function createForwardRouteTile(poiData, locationData, countrySegments, routeData) {
-  const items = buildForwardItems(poiData, locationData, countrySegments, routeData);
+function createForwardLimitControl(limit) {
+  const options = [
+    { value: "5",   label: "5" },
+    { value: "15",  label: "15" },
+    { value: "all", label: "Alle" },
+  ];
+  const activeValue = limit === Infinity ? "all" : String(limit);
+  return `
+    <div class="forward-limit-control">
+      ${options.map(o => `
+        <button class="forward-limit-btn${o.value === activeValue ? " forward-limit-btn--active" : ""}"
+                data-forward-limit="${o.value}">${o.label}</button>
+      `).join("")}
+    </div>
+  `;
+}
+
+export function createForwardRouteTile(poiData, locationData, countrySegments, routeData, limit = 15) {
+  const all = buildForwardItems(poiData, locationData, countrySegments, routeData);
+  const items = limit === Infinity ? all : all.slice(0, limit);
 
   return `
     <div class="dashboard-focus-card">
-      <div class="dashboard-focus-card__header">
+      <div class="dashboard-focus-card__header dashboard-focus-card__header--row">
         <div>
           <p class="section-intro__eyebrow">Voraus</p>
           <h3>Was kommt noch?</h3>
         </div>
+        ${createForwardLimitControl(limit)}
       </div>
       ${items.length
         ? `<div class="forward-route-list">${items.map(renderForwardItem).join("")}</div>`

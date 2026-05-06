@@ -1013,6 +1013,37 @@ img {
 }
 
 /* ── Forward route tile ────────────────────────────────── */
+.dashboard-focus-card__header--row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.forward-limit-control {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.forward-limit-btn {
+  padding: 3px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.forward-limit-btn--active {
+  background: var(--primary-deep);
+  border-color: var(--primary-deep);
+  color: #fff;
+}
+
 .forward-route-list {
   display: flex;
   flex-direction: column;

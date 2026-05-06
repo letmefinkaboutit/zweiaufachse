@@ -152,6 +152,14 @@ export async function createApp(root) {
       return;
     }
 
+    const forwardLimitBtn = e.target.closest('[data-forward-limit]');
+    if (forwardLimitBtn) {
+      const raw = forwardLimitBtn.dataset.forwardLimit;
+      state.forwardLimit = raw === "all" ? Infinity : Number(raw);
+      router.refresh();
+      return;
+    }
+
     const photoTrigger = e.target.closest('[data-lightbox-src]');
     if (photoTrigger) {
       e.preventDefault();
