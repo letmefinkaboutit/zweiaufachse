@@ -148,8 +148,11 @@ function _renderPhotoTileContent(photos, photoLoading) {
 
   const restItems = rest
     .map(
-      (photo) => `
-        <div class="photo-tile-small">
+      (photo, i) => `
+        <div class="photo-tile-small photo-tile-clickable"
+          data-lightbox-src="${photo.url}"
+          data-lightbox-caption="${photo.date ? new Date(photo.date).toLocaleString('de-DE') : ''}"
+          data-lightbox-index="${i + 1}">
           <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
         </div>
       `,
@@ -158,7 +161,10 @@ function _renderPhotoTileContent(photos, photoLoading) {
 
   return header + `
     <div class="photo-tile-grid">
-      <div class="photo-tile-highlight">
+      <div class="photo-tile-highlight photo-tile-clickable"
+        data-lightbox-src="${highlight.url}"
+        data-lightbox-caption="${highlight.date ? new Date(highlight.date).toLocaleString('de-DE') : ''}"
+        data-lightbox-index="0">
         <img src="${highlight.url}" alt="${highlight.filename}" loading="lazy" />
       </div>
       <div class="photo-tile-secondary">

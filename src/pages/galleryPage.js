@@ -12,14 +12,14 @@ function renderGridTab(photos, photoLoading, photoError) {
   }
 
   const byDay = new Map();
-  for (const photo of photos) {
+  for (const [i, photo] of photos.entries()) {
     const key = photo.date ? photo.date.slice(0, 10) : 'unknown';
     if (!byDay.has(key)) byDay.set(key, []);
-    byDay.get(key).push(photo);
+    byDay.get(key).push({ photo, index: i });
   }
 
   const groups = [...byDay.entries()]
-    .map(([key, dayPhotos]) => {
+    .map(([key, dayEntries]) => {
       const label =
         key === 'unknown'
           ? 'Datum unbekannt'
@@ -29,13 +29,14 @@ function renderGridTab(photos, photoLoading, photoError) {
               year: 'numeric',
             });
 
-      const imgs = dayPhotos
+      const imgs = dayEntries
         .map(
-          (photo) => `
+          ({ photo, index }) => `
             <button
               class="gallery-photo-btn"
               data-lightbox-src="${photo.url}"
               data-lightbox-caption="${photo.date ? new Date(photo.date).toLocaleString('de-DE') : ''}"
+              data-lightbox-index="${index}"
               aria-label="${photo.filename}"
             >
               <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
@@ -57,7 +58,9 @@ function renderGridTab(photos, photoLoading, photoError) {
 }
 
 function renderMapTab(photos) {
-  const noGps = photos.filter((p) => p.lat == null || p.lon == null);
+  const noGps = photos
+    .map((p, i) => ({ photo: p, index: i }))
+    .filter(({ photo }) => photo.lat == null || photo.lon == null);
 
   const noGpsList = noGps.length
     ? `
@@ -66,9 +69,9 @@ function renderMapTab(photos) {
         <div class="gallery-photo-grid">
           ${noGps
             .map(
-              (p) => `
-            <button class="gallery-photo-btn" data-lightbox-src="${p.url}" data-lightbox-caption="${p.filename}">
-              <img src="${p.url}" alt="${p.filename}" loading="lazy" />
+              ({ photo, index }) => `
+            <button class="gallery-photo-btn" data-lightbox-src="${photo.url}" data-lightbox-caption="${photo.filename}" data-lightbox-index="${index}">
+              <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
             </button>
           `,
             )
@@ -143,11 +146,6 @@ export function renderGalleryPage(state = {}) {
       </div>
       ${tabBar}
       ${content}
-      <dialog id="photo-lightbox" class="photo-lightbox">
-        <button class="photo-lightbox__close" data-lightbox-close aria-label="Schliessen">&#x2715;</button>
-        <img class="photo-lightbox__img" src="" alt="" />
-        <p class="photo-lightbox__caption"></p>
-      </dialog>
     </div>
   `;
 }

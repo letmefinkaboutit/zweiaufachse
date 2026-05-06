@@ -96,6 +96,26 @@ export async function createApp(root) {
     router.refresh();
   });
 
+  let lightboxIndex = 0;
+
+  function updateLightboxDisplay() {
+    const dialog = document.getElementById('photo-lightbox');
+    if (!dialog) return;
+    const photo = state.photoData[lightboxIndex];
+    if (!photo) return;
+    const img = dialog.querySelector('.photo-lightbox__img');
+    const caption = dialog.querySelector('.photo-lightbox__caption');
+    if (img) img.src = photo.url;
+    if (caption) caption.textContent = photo.date ? new Date(photo.date).toLocaleString('de-DE') : '';
+  }
+
+  function navigateLightbox(dir) {
+    const next = lightboxIndex + dir;
+    if (next < 0 || next >= state.photoData.length) return;
+    lightboxIndex = next;
+    updateLightboxDisplay();
+  }
+
   root.addEventListener('click', (e) => {
     const tabBtn = e.target.closest('[data-gallery-tab]');
     if (tabBtn) {
@@ -106,12 +126,11 @@ export async function createApp(root) {
 
     const photoTrigger = e.target.closest('[data-lightbox-src]');
     if (photoTrigger) {
+      e.preventDefault();
+      lightboxIndex = parseInt(photoTrigger.dataset.lightboxIndex ?? '0', 10);
       const dialog = document.getElementById('photo-lightbox');
       if (dialog) {
-        const img = dialog.querySelector('.photo-lightbox__img');
-        const caption = dialog.querySelector('.photo-lightbox__caption');
-        if (img) img.src = photoTrigger.dataset.lightboxSrc;
-        if (caption) caption.textContent = photoTrigger.dataset.lightboxCaption ?? '';
+        updateLightboxDisplay();
         dialog.showModal();
       }
       return;
@@ -120,6 +139,23 @@ export async function createApp(root) {
     if (e.target.closest('[data-lightbox-close]') || e.target === document.getElementById('photo-lightbox')) {
       document.getElementById('photo-lightbox')?.close();
     }
+  });
+
+  let touchStartX = 0;
+  root.addEventListener('touchstart', (e) => {
+    if (e.target.closest('#photo-lightbox')) touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  root.addEventListener('touchend', (e) => {
+    if (!e.target.closest('#photo-lightbox')) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) navigateLightbox(dx < 0 ? 1 : -1);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const dialog = document.getElementById('photo-lightbox');
+    if (!dialog?.open) return;
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
   });
 
   try {

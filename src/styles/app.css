@@ -1616,6 +1616,10 @@ img {
   display: block;
 }
 
+.photo-tile-clickable {
+  cursor: pointer;
+}
+
 .photo-tile-count {
   grid-column: 1 / -1;
   font-size: 0.78rem;
