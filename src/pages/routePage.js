@@ -193,6 +193,11 @@ export function renderRoutePage(state = {}) {
       ${createQuickStats(routeData, locationData, countrySegments, dailyStats)}
 
       <section class="rp-section">
+        <h3 class="rp-section__title">${ICON_PIN} Karte</h3>
+        ${createRouteMapFigure(routeData, locationData, [], "detail", countrySegments ?? [])}
+      </section>
+
+      <section class="rp-section">
         <h3 class="rp-section__title">${ICON_MOUNTAIN} Höhenprofil</h3>
         ${createElevationFigure(routeData)}
       </section>
@@ -200,11 +205,6 @@ export function renderRoutePage(state = {}) {
       <section class="rp-section">
         <h3 class="rp-section__title">${ICON_CHECK} Meilensteine</h3>
         ${createRouteMilestones(routeData)}
-      </section>
-
-      <section class="rp-section">
-        <h3 class="rp-section__title">${ICON_PIN} Karte</h3>
-        ${createRouteMapFigure(routeData, locationData, [], "detail", countrySegments ?? [])}
       </section>
 
     </div>
