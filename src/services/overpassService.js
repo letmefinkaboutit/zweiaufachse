@@ -1,13 +1,13 @@
 const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
+  "https://overpass.openstreetmap.fr/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.openstreetmap.ru/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
 ];
 const RADIUS_M = 10000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const cache = new Map();
-const CACHE_VERSION = 9;
+const CACHE_VERSION = 10;
 
 // Round to ~20km grid cell to avoid re-querying on small movements
 function tileKey(lat, lon) {

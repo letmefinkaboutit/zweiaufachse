@@ -232,6 +232,11 @@ export async function createApp(root) {
           })
           .catch(() => {});
 
+        if (state.overpassUnavailable) {
+          state.overpassPois = null;
+          state.overpassUnavailable = false;
+        }
+
         import("../services/overpassService.js")
           .then(({ fetchOverpassPois }) => fetchOverpassPois(snapshot.latitude, snapshot.longitude))
           .then((pois) => {
