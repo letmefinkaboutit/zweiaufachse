@@ -360,17 +360,20 @@ function buildForwardItems(poiData, locationData, countrySegments, routeData) {
 function renderForwardItem(item) {
   const dist = `<span class="forward-item__dist">${fmtKmAhead(item.kmAhead)}</span>`;
 
+  const BORDER_COLOR = "#8a5ca7";
+
   if (item.type === "border") {
     return `
-      <div class="forward-item forward-item--border">
-        <span class="forward-item__name forward-item__name--border">${item.fromFlag} → ${item.toFlag}</span>
-        <span class="forward-item__badge forward-item__badge--border">Ländergrenze</span>
+      <div class="forward-item">
+        <span class="forward-item__dot" style="background:${BORDER_COLOR}"></span>
+        <span class="forward-item__name">${item.fromFlag} → ${item.toFlag}</span>
+        <span class="forward-item__badge" style="color:${BORDER_COLOR}">Ländergrenze</span>
         ${dist}
       </div>`;
   }
 
   return `
-    <div class="forward-item forward-item--poi">
+    <div class="forward-item">
       <span class="forward-item__dot" style="background:${item.color}"></span>
       <span class="forward-item__name">${item.name}</span>
       <span class="forward-item__badge" style="color:${item.color}">${item.label}</span>
