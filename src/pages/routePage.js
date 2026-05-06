@@ -204,7 +204,7 @@ export function renderRoutePage(state = {}) {
 
       <section class="rp-section">
         <h3 class="rp-section__title">${ICON_PIN} Karte</h3>
-        ${createRouteMapFigure(routeData, locationData)}
+        ${createRouteMapFigure(routeData, locationData, [], "detail", countrySegments ?? [])}
       </section>
 
     </div>

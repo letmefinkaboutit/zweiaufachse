@@ -208,22 +208,121 @@ function createBasemapImages(projection) {
   return images.join("");
 }
 
-function createRouteSvgMarkup(routeData, currentPoint, poiMarkers = [], variant = "detail") {
+// ── Country-coloured polylines ──────────────────────────
+function buildCountryGroups(sampledRoute, countrySegments, totalDistanceKm) {
+  if (!countrySegments?.length || !sampledRoute?.length) return [];
+  const totalM = totalDistanceKm * 1000;
+  const groups = [];
+  let cur = null;
+
+  for (const pt of sampledRoute) {
+    const ratio = totalM > 0 ? pt.cumulativeDistanceMeters / totalM : 0;
+    const seg = countrySegments.find(s => ratio >= s.fromPercent && ratio < s.toPercent)
+      ?? countrySegments[countrySegments.length - 1];
+
+    if (!cur || cur.code !== seg.code) {
+      const overlap = cur?.points?.at(-1);
+      cur = { code: seg.code, color: seg.color, flag: seg.flag, points: overlap ? [overlap, pt] : [pt] };
+      groups.push(cur);
+    } else {
+      cur.points.push(pt);
+    }
+  }
+  return groups;
+}
+
+function createCountryPolylines(groups, projection) {
+  return groups
+    .filter(g => g.points.length >= 2)
+    .map(g => {
+      const pts = createProjectedPolyline(g.points, projection);
+      return `<polyline points="${pts}" fill="none" stroke="${g.color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.88"/>`;
+    })
+    .join("");
+}
+
+function createCountryFlagLabels(groups, projection) {
+  const seen = new Set();
+  return groups
+    .filter(g => g.points.length >= 4)
+    .map(g => {
+      if (seen.has(g.code)) return "";
+      seen.add(g.code);
+      const mid = g.points[Math.floor(g.points.length / 2)];
+      const { x, y } = projectCoordinate(mid, projection);
+      const bx = x - 14, by = y - 26, bw = 28, bh = 22;
+      return `
+        <rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw}" height="${bh}" rx="5" fill="${g.color}" opacity="0.82"/>
+        <text x="${x.toFixed(1)}" y="${(y - 9).toFixed(1)}" text-anchor="middle" font-size="14" class="route-map-svg__flag">${g.flag}</text>`;
+    })
+    .join("");
+}
+
+// ── Climb detection ─────────────────────────────────────
+function detectMajorClimbs(sampledRoute, topN = 4) {
+  if (!sampledRoute?.length) return [];
+  const MIN_GAIN = 350;
+  const climbs = [];
+  let start = null, gain = 0, peakEle = -Infinity, peakPt = null;
+
+  const flush = () => {
+    if (start && gain >= MIN_GAIN) climbs.push({ summit: peakPt, gain: Math.round(gain) });
+    start = null; gain = 0; peakEle = -Infinity; peakPt = null;
+  };
+
+  for (let i = 1; i < sampledRoute.length; i++) {
+    const delta = sampledRoute[i].ele - sampledRoute[i - 1].ele;
+    if (delta > 0) {
+      if (!start) start = sampledRoute[i - 1];
+      gain += delta;
+      if (sampledRoute[i].ele > peakEle) { peakEle = sampledRoute[i].ele; peakPt = sampledRoute[i]; }
+    } else {
+      flush();
+    }
+  }
+  flush();
+
+  return climbs.sort((a, b) => b.gain - a.gain).slice(0, topN);
+}
+
+function createClimbMarkers(climbs, projection) {
+  return climbs.map(({ summit, gain }) => {
+    const { x, y } = projectCoordinate(summit, projection);
+    const label = gain >= 1000 ? `${(gain / 1000).toFixed(1)}k m` : `${gain} m`;
+    return `
+      <polygon points="${x.toFixed(1)},${(y - 13).toFixed(1)} ${(x - 7).toFixed(1)},${(y + 3).toFixed(1)} ${(x + 7).toFixed(1)},${(y + 3).toFixed(1)}" fill="#eb8f34" opacity="0.92"/>
+      <text x="${x.toFixed(1)}" y="${(y + 15).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#eb8f34" class="route-map-svg__climb-label">↑${label}</text>`;
+  }).join("");
+}
+
+// ── Main SVG builder ────────────────────────────────────
+function createRouteSvgMarkup(routeData, currentPoint, poiMarkers = [], variant = "detail", countrySegments = []) {
   const width = 760;
   const height = variant === "dashboard" ? 210 : variant === "hero" ? 320 : 420;
   const padding = 28;
   const projection = createProjection(routeData, width, height, padding);
   const currentProjected = projectCoordinate(currentPoint, projection);
-  const routePolyline = createProjectedPolyline(routeData.sampledRoute, projection);
   const clipId = `routeMapClip-${variant}`;
+
+  const isDetail = variant === "detail";
+  const groups = buildCountryGroups(routeData.sampledRoute, countrySegments, routeData.totalDistanceKm);
+  const hasCountries = groups.length > 0;
+
+  const routeLines = hasCountries
+    ? createCountryPolylines(groups, projection)
+    : `<polyline points="${createProjectedPolyline(routeData.sampledRoute, projection)}" class="route-map-svg__line"/>`;
+
+  const flagLabels = isDetail && hasCountries ? createCountryFlagLabels(groups, projection) : "";
+
+  const climbs = isDetail ? detectMajorClimbs(routeData.sampledRoute) : [];
+  const climbMarkers = isDetail ? createClimbMarkers(climbs, projection) : "";
+
+  const cx = currentProjected.x.toFixed(1);
+  const cy = currentProjected.y.toFixed(1);
 
   return `
     <svg viewBox="0 0 ${width} ${height}" class="route-map-svg" role="img" aria-label="Routenverlauf">
       <defs>
-        <linearGradient id="routeLineGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stop-color="#eb8f34" />
-          <stop offset="100%" stop-color="#0c6b58" />
-        </linearGradient>
         <clipPath id="${clipId}">
           <rect x="0" y="0" width="${width}" height="${height}" rx="28"></rect>
         </clipPath>
@@ -232,9 +331,12 @@ function createRouteSvgMarkup(routeData, currentPoint, poiMarkers = [], variant 
       <g clip-path="url(#${clipId})">
         ${createBasemapImages(projection)}
         <rect x="0" y="0" width="${width}" height="${height}" rx="28" class="route-map-svg__veil"></rect>
-        <polyline points="${routePolyline}" class="route-map-svg__line"></polyline>
+        ${routeLines}
         ${createPoiMarkers(routeData, poiMarkers, height)}
-        <circle cx="${currentProjected.x.toFixed(1)}" cy="${currentProjected.y.toFixed(1)}" r="11" class="route-map-svg__current"></circle>
+        ${flagLabels}
+        ${climbMarkers}
+        <circle cx="${cx}" cy="${cy}" r="16" fill="#0c6b58" opacity="0.18" class="route-map-svg__live-ring"/>
+        <circle cx="${cx}" cy="${cy}" r="8" fill="#0c6b58" stroke="white" stroke-width="2.5" class="route-map-svg__current"/>
       </g>
     </svg>
   `;
@@ -378,7 +480,7 @@ function createPoiMarkers(routeData, pois, height) {
     .join("");
 }
 
-export function createRouteMapFigure(routeData, locationData, poiMarkers = [], variant = "detail") {
+export function createRouteMapFigure(routeData, locationData, poiMarkers = [], variant = "detail", countrySegments = []) {
   const activeProgress = getActiveProgress(routeData, locationData);
 
   return `
@@ -390,7 +492,7 @@ export function createRouteMapFigure(routeData, locationData, poiMarkers = [], v
         </div>
         <span class="tag tag--accent">${routeData.pointsCount.toLocaleString("de-DE")} Trackpunkte</span>
       </div>
-      ${createRouteSvgMarkup(routeData, activeProgress.currentPoint, poiMarkers, variant)}
+      ${createRouteSvgMarkup(routeData, activeProgress.currentPoint, poiMarkers, variant, countrySegments)}
       <div class="route-visual-card__footer">
         <p><strong>Start:</strong> ${routeData.startLabel}</p>
         <p><strong>Aktueller Punkt:</strong> ${activeProgress.currentLocationLabel}</p>

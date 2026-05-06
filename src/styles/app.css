@@ -247,9 +247,27 @@ img {
 }
 
 .route-map-svg__current {
-  fill: var(--accent);
-  stroke: white;
-  stroke-width: 6;
+  filter: drop-shadow(0 0 4px rgba(12, 107, 88, 0.5));
+}
+
+.route-map-svg__live-ring {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 0.18; r: 16; }
+  50%       { opacity: 0.08; r: 22; }
+}
+
+.route-map-svg__flag {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  pointer-events: none;
+  user-select: none;
+}
+
+.route-map-svg__climb-label {
+  font-family: var(--font-body);
+  pointer-events: none;
 }
 
 .route-map-svg__poi {
