@@ -237,18 +237,18 @@ export async function createApp(root) {
           state.overpassUnavailable = false;
         }
 
-        import("../services/overpassService.js")
-          .then(({ fetchOverpassPois }) => fetchOverpassPois(snapshot.latitude, snapshot.longitude))
+        import("../services/wikipediaPoiService.js")
+          .then(({ fetchWikipediaPois }) => fetchWikipediaPois(snapshot.latitude, snapshot.longitude))
           .then((pois) => {
             state.overpassPois = pois;
             state.overpassUnavailable = false;
             if (!onGallery || onGalleryRouteTab) router.refresh();
           })
           .catch((err) => {
-            console.error("[Overpass]", err?.message || err);
+            console.error("[WikipediaPOI]", err?.message || err);
             if (state.overpassPois === null) {
               state.overpassPois = [];
-              state.overpassUnavailable = !!err?.overpassUnavailable;
+              state.overpassUnavailable = !!err?.poiUnavailable;
               if (!onGallery || onGalleryRouteTab) router.refresh();
             }
           });

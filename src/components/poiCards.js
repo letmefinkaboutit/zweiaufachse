@@ -267,7 +267,7 @@ export function createNearbyOverpassTile(overpassPois, locationData, unavailable
         </div>
       </div>
       ${unavailable
-        ? `<p class="muted-text">POI-Dienst momentan nicht erreichbar.</p>`
+        ? `<p class="muted-text">Wikipedia-Dienst momentan nicht erreichbar.</p>`
         : loading
           ? `<p class="muted-text">POIs werden geladen…</p>`
           : items.length
