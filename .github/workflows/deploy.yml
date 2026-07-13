@@ -30,6 +30,15 @@ jobs:
           test -f src/main.js
           find src -name "*.js" -print0 | xargs -0 -n1 node --check
 
+      # Temporaer bis Tour-Ende: sichtbare Versionsanzeige unten rechts,
+      # damit klar ist, welcher Stand live ist.
+      - name: Stamp deploy version
+        shell: bash
+        run: |
+          VERSION="${GITHUB_SHA:0:7} · $(TZ='Europe/Berlin' date '+%d.%m. %H:%M')"
+          sed -i "s|<div class=\"deploy-version\">lokal</div>|<div class=\"deploy-version\">${VERSION}</div>|" index.html
+          grep -q "deploy-version\">${GITHUB_SHA:0:7}" index.html
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

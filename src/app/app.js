@@ -3,11 +3,11 @@ import { createRouter } from "./router.js";
 import { moduleRegistry } from "../config/modules.js";
 import { loadRouteData } from "../services/gpxRouteService.js";
 import { createLocationProvider } from "../location/LocationProvider.js";
-import { mapLocationToRoute } from "../services/routePositionService.js";
+import { mapLocationToRoute, computeMovementStatus } from "../services/routePositionService.js";
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
 import { reverseGeocode, geocodeOnce } from "../services/geocodeService.js";
 import { buildCountrySegments } from "../services/routeCountryService.js";
-import { loadHistory, appendToHistory, computeDailyStats } from "../services/locationHistoryService.js";
+import { startDailyStatsService } from "../services/traccarHistoryService.js";
 import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 import { startPhotoService } from "../services/photoService.js";
 import { mountPhotoMapObserver } from "../services/photoMapService.js";
@@ -23,8 +23,8 @@ export async function createApp(root) {
     previousLocationData: null,
     geocodeData: null,
     countrySegments: null,
-    locationHistory: loadHistory(),
     dailyStats: { todayKm: null, yesterdayKm: null },
+    lastMovementAt: null,
     locationError: null,
     locationLoading: true,
     locationProviderType: null,
@@ -110,7 +110,7 @@ export async function createApp(root) {
 
     const img = dialog.querySelector('.photo-lightbox__img');
     const caption = dialog.querySelector('.photo-lightbox__caption');
-    if (img) img.src = photo.url;
+    if (img) img.src = photo.lightboxUrl ?? photo.url;
     if (!caption) return;
 
     const d = photo.date ? new Date(photo.date) : null;
@@ -194,10 +194,26 @@ export async function createApp(root) {
     if (e.key === 'ArrowLeft') navigateLightbox(-1);
   });
 
+  const dailyStatsService = startDailyStatsService({
+    onUpdate(stats) {
+      state.dailyStats = stats;
+      if (window.location.hash !== "#/gallery") {
+        router.refresh();
+      }
+    },
+  });
+
+  // Haelt die "aktualisiert vor X"-Anzeige aktuell, auch wenn keine neuen
+  // Positionen mehr eintreffen (Nacht, Funkloch, leerer Akku).
+  const freshnessTicker = window.setInterval(() => {
+    if (state.locationData && window.location.hash !== "#/gallery") {
+      router.refresh();
+    }
+  }, 60_000);
+
   try {
     state.routeData = await loadRouteData();
     state.countrySegments = buildCountrySegments(state.routeData);
-    state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
 
     try {
       state.poiData = await loadPoiData();
@@ -212,8 +228,12 @@ export async function createApp(root) {
       onUpdate(snapshot) {
         state.previousLocationData = state.locationData;
         state.locationData = mapLocationToRoute(state.routeData, snapshot);
-        state.locationHistory = appendToHistory(state.locationHistory, snapshot);
-        state.dailyStats = computeDailyStats(state.routeData, state.locationHistory);
+
+        const movement = computeMovementStatus(state.locationData, state.previousLocationData);
+        if (movement.isMoving) {
+          state.lastMovementAt = Date.now();
+        }
+
         updateLiveMap(state.locationData, state.routeData);
         state.locationLoading = false;
         state.locationError = null;
@@ -272,8 +292,22 @@ export async function createApp(root) {
     router.refresh();
   }
 
-  window.addEventListener("beforeunload", () => {
+  // pagehide zusaetzlich zu beforeunload — iOS Safari feuert beforeunload
+  // nicht zuverlaessig.
+  const cleanup = () => {
     locationProvider?.stop();
     photoServiceInstance.stop();
+    dailyStatsService.stop();
+    window.clearInterval(freshnessTicker);
+  };
+  window.addEventListener("beforeunload", cleanup);
+  window.addEventListener("pagehide", cleanup);
+
+  // Kommt die Seite aus dem Back-Forward-Cache zurueck, sind die Intervalle
+  // gestoppt — dann einmal frisch laden statt eingefrorener Live-Daten.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      window.location.reload();
+    }
   });
 }

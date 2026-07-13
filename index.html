@@ -11,8 +11,8 @@
       content="Timo & Tino on Tour - eine mobile-first Reise-App fuer Familie und Freunde."
     />
     <title>Timo & Tino on Tour</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <link rel="stylesheet" href="./src/vendor/leaflet/leaflet.css" />
+    <script src="./src/vendor/leaflet/leaflet.js" defer></script>
     <link rel="stylesheet" href="./src/styles/app.css?v=20260427f" />
   </head>
   <body>
@@ -25,6 +25,8 @@
         </section>
       </div>
     </div>
+    <!-- Wird beim Deploy durch die GitHub Action mit Commit + Zeit ersetzt -->
+    <div class="deploy-version">lokal</div>
     <script type="module">
       const root = document.querySelector("#app");
 
@@ -44,16 +46,29 @@
         `;
       };
 
-      window.addEventListener("error", (event) => {
+      // Nur waehrend des Starts aktiv: sobald die App laeuft ("app-ready"),
+      // darf ein spaeterer unbehandelter Fehler die UI nicht mehr ersetzen.
+      const onStartupError = (event) => {
         renderStartupError(event?.error?.message || event.message || "Unbekannter Browserfehler");
-      });
+      };
 
-      window.addEventListener("unhandledrejection", (event) => {
+      const onStartupRejection = (event) => {
         const reason = event.reason;
         renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
-      });
+      };
 
-      import("./src/main.js?v=20260506b").catch((error) => {
+      window.addEventListener("error", onStartupError);
+      window.addEventListener("unhandledrejection", onStartupRejection);
+      window.addEventListener(
+        "app-ready",
+        () => {
+          window.removeEventListener("error", onStartupError);
+          window.removeEventListener("unhandledrejection", onStartupRejection);
+        },
+        { once: true },
+      );
+
+      import("./src/main.js?v=20260713a").catch((error) => {
         renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
         console.error(error);
       });

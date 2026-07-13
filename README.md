@@ -84,7 +84,14 @@ Dieses MVP setzt bewusst auf ein leichtes Fundament:
 - POI-Konfiguration: [src/config/poiConfig.js](/Users/danielfink/Documents/zweiaufachse/src/config/poiConfig.js)
 - Zentrale Modul-Konfiguration: [src/config/modules.js](/Users/danielfink/Documents/zweiaufachse/src/config/modules.js)
 
-Die Route wird beim Start direkt aus [src/route/Schorndorf - Kritharia Alternative.gpx](/Users/danielfink/Documents/zweiaufachse/src/route/Schorndorf%20-%20Kritharia%20Alternative.gpx) geladen und in [src/services/gpxRouteService.js](/Users/danielfink/Documents/zweiaufachse/src/services/gpxRouteService.js) in Kennzahlen, Fortschritt und Visualisierungsdaten umgewandelt.
+Die Route wird beim Start aus dem kompakten `src/route/route-data.json` geladen (395 KB statt 5,9 MB GPX). Dieses File wird offline aus der Original-GPX generiert:
+
+```bash
+node tools/build-route-data.mjs    # nach jeder Routenaenderung ausfuehren
+node tools/build-poi-data.mjs      # nach Aenderungen an der POI-Quelldatei
+```
+
+Die Original-GPX bleibt als Quelle der Wahrheit im Repo. Die Simplifizierung (Douglas-Peucker, 10 m Toleranz) veraendert die sichtbare Route nicht; Gesamtdistanz und Hoehenmeter werden auf dem vollen Track berechnet. [src/services/gpxRouteService.js](src/services/gpxRouteService.js) wandelt das JSON in Kennzahlen, Fortschritt und Visualisierungsdaten um.
 Die aktuelle Position kommt zusaetzlich ueber die neue Provider-Schicht: [src/location/LocationProvider.js](/Users/danielfink/Documents/zweiaufachse/src/location/LocationProvider.js) schaltet zwischen [MockProvider](/Users/danielfink/Documents/zweiaufachse/src/location/providers/MockProvider.js) und [TraccarProvider](/Users/danielfink/Documents/zweiaufachse/src/location/providers/TraccarProvider.js) um. In [src/services/routePositionService.js](/Users/danielfink/Documents/zweiaufachse/src/services/routePositionService.js) wird das Live-Signal auf die GPX-Route gemappt.
 Die neue POI-Datenbasis liegt in [src/poi/timo_tino_route_pois_scored_expanded_generator.json](/Users/danielfink/Documents/zweiaufachse/src/poi/timo_tino_route_pois_scored_expanded_generator.json) und wird in [src/services/poiService.js](/Users/danielfink/Documents/zweiaufachse/src/services/poiService.js) normalisiert, gefiltert und fuer die UI vorbereitet.
 

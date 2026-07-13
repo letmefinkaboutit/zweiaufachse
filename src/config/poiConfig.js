@@ -1,5 +1,7 @@
 export const poiConfig = {
-  sourceFilePath: "./src/poi/timo_tino_route_pois_scored_expanded_generator.json",
+  // Kompakte, von tools/build-poi-data.mjs generierte Datei.
+  // Quelle/Editorial-Basis: timo_tino_route_pois_scored_expanded_generator.json
+  sourceFilePath: "./src/poi/pois.min.json",
   defaultFilters: {
     minScore: 0.65,
     category: "all",

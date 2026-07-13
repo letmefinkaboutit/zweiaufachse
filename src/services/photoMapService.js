@@ -45,7 +45,7 @@ export function updatePhotoMap(photos, routeData) {
   for (const photo of geoPhotos) {
     const icon = window.L.divIcon({
       className: '',
-      html: `<div class="photo-map-marker"><img src="${photo.url}" alt="" /></div>`,
+      html: `<div class="photo-map-marker"><img src="${photo.thumbUrl ?? photo.url}" alt="" /></div>`,
       iconSize: [40, 40],
       iconAnchor: [20, 20],
     });
@@ -64,7 +64,7 @@ export function updatePhotoMap(photos, routeData) {
 
     marker.bindPopup(`
       <div class="map-popup">
-        <img src="${photo.url}" class="map-popup__img" alt="${photo.filename}" />
+        <img src="${photo.thumbUrl ?? photo.url}" class="map-popup__img" alt="${photo.filename}" />
         <p class="map-popup__desc">${dateLabel}</p>
       </div>
     `);

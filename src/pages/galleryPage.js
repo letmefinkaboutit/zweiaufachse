@@ -39,7 +39,7 @@ function renderGridTab(photos, photoLoading, photoError) {
               data-lightbox-index="${index}"
               aria-label="${photo.filename}"
             >
-              <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
+              <img src="${photo.thumbUrl ?? photo.url}" alt="${photo.filename}" loading="lazy" />
             </button>
           `,
         )
@@ -71,7 +71,7 @@ function renderMapTab(photos) {
             .map(
               ({ photo, index }) => `
             <button class="gallery-photo-btn" data-lightbox-src="${photo.url}" data-lightbox-caption="${photo.filename}" data-lightbox-index="${index}">
-              <img src="${photo.url}" alt="${photo.filename}" loading="lazy" />
+              <img src="${photo.thumbUrl ?? photo.url}" alt="${photo.filename}" loading="lazy" />
             </button>
           `,
             )
@@ -93,7 +93,10 @@ function renderRouteTab(photos, routeData, locationData) {
   if (!routeData) {
     return `<p class="muted-text">Route wird noch geladen…</p>`;
   }
-  const withGps = photos.filter((p) => p.lat != null && p.lon != null);
+  // Original-Index mitgeben — die Lightbox navigiert ueber state.photoData
+  const withGps = photos
+    .map((photo, index) => ({ photo, index }))
+    .filter(({ photo }) => photo.lat != null && photo.lon != null);
   if (!withGps.length) {
     return `<p class="muted-text">Noch keine Fotos mit GPS-Daten vorhanden.</p>`;
   }

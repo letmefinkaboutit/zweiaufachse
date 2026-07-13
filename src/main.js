@@ -6,7 +6,12 @@ if (!root) {
   throw new Error("App root #app wurde nicht gefunden.");
 }
 
-createApp(root).catch((error) => {
+createApp(root)
+  .then(() => {
+    // Signal an index.html: Start geschafft, Startup-Error-Handler abruesten.
+    window.dispatchEvent(new Event("app-ready"));
+  })
+  .catch((error) => {
   root.innerHTML = `
     <div class="app-shell">
       <section class="route-loading-card">

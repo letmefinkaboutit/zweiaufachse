@@ -72,27 +72,93 @@ export function computeMovementStatus(currentLocation, previousLocation) {
   };
 }
 
+// Fenster fuer den Monotonie-Guard: Kandidaten nahe der letzten Match-Position
+// werden bevorzugt, damit der Fortschritt nicht auf einen falschen Streckenast
+// springt, wenn die Route sich selbst nahekommt oder die Fahrer abseits fahren.
+const WINDOW_BACKWARD_METERS = 30_000;
+const WINDOW_FORWARD_METERS = 80_000;
+
+let lastMatchedCumMeters = null;
+
+// Projiziert die Live-Position auf das naechste Routen-SEGMENT (nicht nur den
+// naechsten Punkt) — noetig, weil der simplifizierte Track auf Geraden
+// mehrere hundert Meter Punktabstand haben kann.
+function projectOntoRoute(points, latitude, longitude) {
+  const kx = 111320 * Math.cos((latitude * Math.PI) / 180);
+  const ky = 110574;
+  const px = longitude * kx;
+  const py = latitude * ky;
+
+  let best = null;
+  let windowed = null;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+    const ax = a.lon * kx, ay = a.lat * ky;
+    const bx = b.lon * kx, by = b.lat * ky;
+    const dx = bx - ax, dy = by - ay;
+    const lenSq = dx * dx + dy * dy;
+
+    let t = 0;
+    if (lenSq > 0) {
+      t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+      t = Math.min(1, Math.max(0, t));
+    }
+
+    const ex = px - (ax + t * dx);
+    const ey = py - (ay + t * dy);
+    const distSq = ex * ex + ey * ey;
+    const cumMeters =
+      a.cumulativeDistanceMeters + t * (b.cumulativeDistanceMeters - a.cumulativeDistanceMeters);
+
+    const candidate = { distSq, t, index: i, cumMeters };
+
+    if (!best || distSq < best.distSq) {
+      best = candidate;
+    }
+
+    if (
+      lastMatchedCumMeters !== null &&
+      cumMeters >= lastMatchedCumMeters - WINDOW_BACKWARD_METERS &&
+      cumMeters <= lastMatchedCumMeters + WINDOW_FORWARD_METERS &&
+      (!windowed || distSq < windowed.distSq)
+    ) {
+      windowed = candidate;
+    }
+  }
+
+  // Fenster-Kandidat gewinnt, solange er nicht deutlich schlechter ist als das
+  // globale Optimum (echte grosse Spruenge, z. B. Zugtransfer, bleiben moeglich).
+  const globalDist = Math.sqrt(best.distSq);
+  if (windowed) {
+    const windowedDist = Math.sqrt(windowed.distSq);
+    if (windowedDist <= Math.max(500, globalDist * 2)) {
+      return windowed;
+    }
+  }
+
+  return best;
+}
+
 export function mapLocationToRoute(routeData, snapshot) {
   if (!routeData?.points?.length) {
     return null;
   }
 
-  let nearestPoint = routeData.points[0];
-  let nearestPointIndex = 0;
-  let nearestDistanceMeters = Number.POSITIVE_INFINITY;
+  const match = projectOntoRoute(routeData.points, snapshot.latitude, snapshot.longitude);
+  const a = routeData.points[match.index];
+  const b = routeData.points[Math.min(match.index + 1, routeData.points.length - 1)];
+  const nearestPoint = {
+    lat: a.lat + match.t * (b.lat - a.lat),
+    lon: a.lon + match.t * (b.lon - a.lon),
+    ele: a.ele + match.t * (b.ele - a.ele),
+    cumulativeDistanceMeters: match.cumMeters,
+  };
+  const nearestPointIndex = match.index;
+  const nearestDistanceMeters = Math.sqrt(match.distSq);
 
-  routeData.points.forEach((point, index) => {
-    const distance = haversineDistanceMeters(
-      { lat: snapshot.latitude, lon: snapshot.longitude },
-      { lat: point.lat, lon: point.lon },
-    );
-
-    if (distance < nearestDistanceMeters) {
-      nearestDistanceMeters = distance;
-      nearestPoint = point;
-      nearestPointIndex = index;
-    }
-  });
+  lastMatchedCumMeters = match.cumMeters;
 
   const distanceDoneKm = nearestPoint.cumulativeDistanceMeters / 1000;
   const progressRatio = Math.min(1, Math.max(0, routeData.totalDistanceKm > 0 ? distanceDoneKm / routeData.totalDistanceKm : 0));

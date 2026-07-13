@@ -26,52 +26,6 @@ function getActiveProgress(routeData, locationData) {
   return routeData.currentProgress;
 }
 
-function getLast24HoursLabel(routeData, activeProgress) {
-  const currentPoint = activeProgress.currentPoint;
-
-  if (!currentPoint?.time || typeof currentPoint.cumulativeDistanceMeters !== "number") {
-    return "k. A.";
-  }
-
-  const currentTimestamp = new Date(currentPoint.time).getTime();
-
-  if (Number.isNaN(currentTimestamp)) {
-    return "k. A.";
-  }
-
-  const threshold = currentTimestamp - 24 * 60 * 60 * 1000;
-  let candidatePoint = null;
-
-  for (const point of routeData.points) {
-    if (!point.time) {
-      continue;
-    }
-
-    const pointTimestamp = new Date(point.time).getTime();
-
-    if (Number.isNaN(pointTimestamp)) {
-      continue;
-    }
-
-    if (pointTimestamp <= threshold) {
-      candidatePoint = point;
-    } else {
-      break;
-    }
-  }
-
-  if (!candidatePoint || typeof candidatePoint.cumulativeDistanceMeters !== "number") {
-    return "k. A.";
-  }
-
-  const distanceKm = Math.max(
-    0,
-    (currentPoint.cumulativeDistanceMeters - candidatePoint.cumulativeDistanceMeters) / 1000,
-  );
-
-  return `${distanceKm.toFixed(0)} km`;
-}
-
 const TILE_SIZE = 256;
 const BASEMAP_STYLE = "rastertiles/voyager_nolabels";
 const BASEMAP_ATTRIBUTION = "Kartendaten © OpenStreetMap-Mitwirkende, Basemap © CARTO";
@@ -515,7 +469,6 @@ export function createElevationFigure(routeData) {
       <div class="route-visual-card__footer">
         <p><strong>Hoehenspanne:</strong> ${routeData.elevationSpanLabel}</p>
         <p><strong>Abstieg gesamt:</strong> ${routeData.elevationLossLabel}</p>
-        <p><strong>GPX-Zeitspanne:</strong> ${routeData.journeySpanLabel}</p>
       </div>
     </article>
   `;
@@ -664,7 +617,8 @@ export function createLocationDashboardTile(locationData, locationState = {}) {
   `;
 }
 
-export function createPhotoRouteSvg(routeData, locationData, photos) {
+// photoEntries: [{ photo, index }] — index ist der Original-Index in state.photoData
+export function createPhotoRouteSvg(routeData, locationData, photoEntries) {
   if (!routeData.sampledRoute?.length) {
     return `<div class="gallery-route-view"><p class="muted-text">Keine Routenpunkte verfuegbar.</p></div>`;
   }
@@ -683,9 +637,8 @@ export function createPhotoRouteSvg(routeData, locationData, photos) {
     currentMarker = `<circle cx="${cur.x.toFixed(1)}" cy="${cur.y.toFixed(1)}" r="11" class="route-map-svg__current"></circle>`;
   }
 
-  const photoDots = photos
-    .filter((p) => p.lat != null && p.lon != null)
-    .map((photo, index) => {
+  const photoDots = photoEntries
+    .map(({ photo, index }) => {
       let nearestPoint = routeData.sampledRoute[0];
       let minDist = Infinity;
       for (const pt of routeData.sampledRoute) {
@@ -705,7 +658,7 @@ export function createPhotoRouteSvg(routeData, locationData, photos) {
           class="route-map-svg__photo-dot"
           data-lightbox-src="${photo.url}"
           data-lightbox-caption="${caption}"
-          data-photo-index="${index}"
+          data-lightbox-index="${index}"
           style="cursor:pointer"
         >
           <title>${photo.filename}${caption ? ' · ' + caption : ''}</title>

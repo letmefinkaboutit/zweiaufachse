@@ -1,25 +1,7 @@
 import { routeSource } from "../data/routeSource.js";
 
-const EARTH_RADIUS_METERS = 6371000;
 const MAX_ROUTE_SAMPLES = 240;
 const MAX_PROFILE_SAMPLES = 120;
-
-function toRadians(value) {
-  return (value * Math.PI) / 180;
-}
-
-function haversineDistanceMeters(pointA, pointB) {
-  const latitudeDelta = toRadians(pointB.lat - pointA.lat);
-  const longitudeDelta = toRadians(pointB.lon - pointA.lon);
-  const latitudeA = toRadians(pointA.lat);
-  const latitudeB = toRadians(pointB.lat);
-
-  const haversineTerm =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(latitudeA) * Math.cos(latitudeB) * Math.sin(longitudeDelta / 2) ** 2;
-
-  return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(haversineTerm), Math.sqrt(1 - haversineTerm));
-}
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -48,20 +30,6 @@ function formatDistanceLabel(distanceKm) {
   return `${distanceKm.toFixed(0)} km`;
 }
 
-function createPolyline(points, bounds, width, height, padding) {
-  const longitudeSpan = Math.max(bounds.maxLon - bounds.minLon, 0.0001);
-  const latitudeSpan = Math.max(bounds.maxLat - bounds.minLat, 0.0001);
-
-  return points
-    .map((point) => {
-      const x = padding + ((point.lon - bounds.minLon) / longitudeSpan) * (width - padding * 2);
-      const y = height - padding - ((point.lat - bounds.minLat) / latitudeSpan) * (height - padding * 2);
-
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
 function createElevationPath(points, minElevation, maxElevation, width, height, padding) {
   if (!points.length) {
     return "";
@@ -80,40 +48,6 @@ function createElevationPath(points, minElevation, maxElevation, width, height, 
       return `${command}${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
-}
-
-function parseGpx(xmlText) {
-  const parser = new DOMParser();
-  const xmlDocument = parser.parseFromString(xmlText, "application/xml");
-  const parserError = xmlDocument.querySelector("parsererror");
-
-  if (parserError) {
-    throw new Error("Die GPX-Datei konnte nicht gelesen werden.");
-  }
-
-  const trackNameNode = xmlDocument.getElementsByTagNameNS("*", "name")[0];
-  const trackPoints = Array.from(xmlDocument.getElementsByTagNameNS("*", "trkpt"));
-
-  if (!trackPoints.length) {
-    throw new Error("Die GPX-Datei enthaelt keine Trackpunkte.");
-  }
-
-  const points = trackPoints.map((node) => {
-    const elevationNode = node.getElementsByTagNameNS("*", "ele")[0];
-    const timeNode = node.getElementsByTagNameNS("*", "time")[0];
-
-    return {
-      lat: Number.parseFloat(node.getAttribute("lat") || "0"),
-      lon: Number.parseFloat(node.getAttribute("lon") || "0"),
-      ele: Number.parseFloat(elevationNode?.textContent || "0"),
-      time: timeNode?.textContent || null,
-    };
-  });
-
-  return {
-    name: trackNameNode?.textContent?.trim() || "Tourroute",
-    points,
-  };
 }
 
 function createMilestones(points, totalDistanceKm, currentProgressRatio) {
@@ -138,90 +72,47 @@ function createMilestones(points, totalDistanceKm, currentProgressRatio) {
   });
 }
 
-function buildRouteModel(parsedRoute) {
-  const { points, name } = parsedRoute;
-  const bounds = {
-    minLat: Number.POSITIVE_INFINITY,
-    maxLat: Number.NEGATIVE_INFINITY,
-    minLon: Number.POSITIVE_INFINITY,
-    maxLon: Number.NEGATIVE_INFINITY,
-  };
+// Erwartet das kompakte Format aus tools/build-route-data.mjs:
+// Punkte als [lat, lon, ele, kumulierte Meter], Kennzahlen vorberechnet
+// auf dem vollen Original-Track.
+function buildRouteModel(data) {
+  const points = data.points.map(([lat, lon, ele, cumulativeDistanceMeters]) => ({
+    lat,
+    lon,
+    ele,
+    cumulativeDistanceMeters,
+  }));
 
-  let totalDistanceMeters = 0;
-  let elevationGainMeters = 0;
-  let elevationLossMeters = 0;
-  let maxElevation = Number.NEGATIVE_INFINITY;
-  let minElevation = Number.POSITIVE_INFINITY;
-
-  const enrichedPoints = points.map((point, index) => {
-    bounds.minLat = Math.min(bounds.minLat, point.lat);
-    bounds.maxLat = Math.max(bounds.maxLat, point.lat);
-    bounds.minLon = Math.min(bounds.minLon, point.lon);
-    bounds.maxLon = Math.max(bounds.maxLon, point.lon);
-    maxElevation = Math.max(maxElevation, point.ele);
-    minElevation = Math.min(minElevation, point.ele);
-
-    if (index === 0) {
-      return {
-        ...point,
-        cumulativeDistanceMeters: 0,
-      };
-    }
-
-    const previousPoint = points[index - 1];
-    const segmentDistance = haversineDistanceMeters(previousPoint, point);
-    const elevationDelta = point.ele - previousPoint.ele;
-
-    totalDistanceMeters += segmentDistance;
-
-    if (elevationDelta > 0) {
-      elevationGainMeters += elevationDelta;
-    } else {
-      elevationLossMeters += Math.abs(elevationDelta);
-    }
-
-    return {
-      ...point,
-      cumulativeDistanceMeters: totalDistanceMeters,
-    };
-  });
-
-  const totalDistanceKm = totalDistanceMeters / 1000;
+  const totalDistanceKm = data.totalDistanceMeters / 1000;
   const currentProgressRatio = clamp(routeSource.currentProgressRatio, 0, 1);
   const currentPointIndex = Math.min(
-    enrichedPoints.length - 1,
-    Math.round((enrichedPoints.length - 1) * currentProgressRatio),
+    points.length - 1,
+    Math.round((points.length - 1) * currentProgressRatio),
   );
-  const currentPoint = enrichedPoints[currentPointIndex];
-  const sampledRoute = sampleByStep(enrichedPoints, MAX_ROUTE_SAMPLES);
-  const sampledProfile = sampleByStep(enrichedPoints, MAX_PROFILE_SAMPLES);
-  const startPoint = enrichedPoints[0];
-  const endPoint = enrichedPoints[enrichedPoints.length - 1];
-  const startTime = startPoint.time ? new Date(startPoint.time) : null;
-  const endTime = endPoint.time ? new Date(endPoint.time) : null;
-  const daysSpan =
-    startTime && endTime ? Math.max(1, Math.round((endTime - startTime) / (1000 * 60 * 60 * 24))) : null;
+  const currentPoint = points[currentPointIndex];
+  const sampledRoute = sampleByStep(points, MAX_ROUTE_SAMPLES);
+  const sampledProfile = sampleByStep(points, MAX_PROFILE_SAMPLES);
+  const startPoint = points[0];
+  const endPoint = points[points.length - 1];
 
   return {
-    name,
+    name: data.name,
     source: routeSource.filePath,
-    points: enrichedPoints,
-    pointsCount: enrichedPoints.length,
+    points,
+    pointsCount: data.originalPointsCount,
     totalDistanceKm,
     totalDistanceLabel: `${totalDistanceKm.toFixed(0)} km`,
-    elevationGainMeters,
-    elevationGainLabel: `${Math.round(elevationGainMeters).toLocaleString("de-DE")} hm`,
-    elevationLossMeters,
-    elevationLossLabel: `${Math.round(elevationLossMeters).toLocaleString("de-DE")} hm`,
-    minElevation,
-    maxElevation,
-    elevationSpanLabel: `${Math.round(minElevation)} m bis ${Math.round(maxElevation)} m`,
+    elevationGainMeters: data.elevationGainMeters,
+    elevationGainLabel: `${Math.round(data.elevationGainMeters).toLocaleString("de-DE")} hm`,
+    elevationLossMeters: data.elevationLossMeters,
+    elevationLossLabel: `${Math.round(data.elevationLossMeters).toLocaleString("de-DE")} hm`,
+    minElevation: data.minElevation,
+    maxElevation: data.maxElevation,
+    elevationSpanLabel: `${Math.round(data.minElevation)} m bis ${Math.round(data.maxElevation)} m`,
     startPoint,
     endPoint,
     startLabel: formatCoordinate(startPoint),
     endLabel: formatCoordinate(endPoint),
-    daysSpan,
-    journeySpanLabel: daysSpan ? `${daysSpan} GPX-Tage` : "keine Zeitspanne",
     currentProgress: {
       ratio: currentProgressRatio,
       percentLabel: `${Math.round(currentProgressRatio * 100)}%`,
@@ -234,21 +125,28 @@ function buildRouteModel(parsedRoute) {
       progressLabel: routeSource.currentProgressLabel,
       progressStory: routeSource.progressStory,
     },
-    milestones: createMilestones(enrichedPoints, totalDistanceKm, currentProgressRatio),
-    mapSvgPolyline: createPolyline(sampledRoute, bounds, 760, 420, 28),
-    profileSvgPath: createElevationPath(sampledProfile, minElevation, maxElevation, 760, 220, 20),
+    milestones: createMilestones(points, totalDistanceKm, currentProgressRatio),
+    profileSvgPath: createElevationPath(sampledProfile, data.minElevation, data.maxElevation, 760, 220, 20),
     sampledRoute,
-    bounds,
+    bounds: data.bounds,
   };
 }
 
 export async function loadRouteData() {
-  const response = await fetch(encodeURI(routeSource.filePath));
+  const response = await fetch(routeSource.dataPath);
 
   if (!response.ok) {
-    throw new Error(`Die GPX-Datei konnte nicht geladen werden (${response.status}).`);
+    throw new Error(
+      `Die Routendaten konnten nicht geladen werden (${response.status}). ` +
+        "Fehlt route-data.json? Dann: node tools/build-route-data.mjs",
+    );
   }
 
-  const xmlText = await response.text();
-  return buildRouteModel(parseGpx(xmlText));
+  const data = await response.json();
+
+  if (data.schema !== 1 || !Array.isArray(data.points) || !data.points.length) {
+    throw new Error("route-data.json hat ein unerwartetes Format. Bitte tools/build-route-data.mjs neu ausfuehren.");
+  }
+
+  return buildRouteModel(data);
 }
