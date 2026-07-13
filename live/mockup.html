@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Living Scene · Daten-Mockup · km 1.096</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #f7f1e7; }
+  body { font-family: "Avenir Next", "Trebuchet MS", sans-serif; }
+
+  .scene-wrap { position: fixed; inset: 0; }
+  svg.scene { width: 100%; height: 100%; display: block; }
+
+  /* ── Parallax-Loops (Tempo ≈ 19 km/h Fahrgefuehl) ── */
+  .loop-clouds   { animation: slide 70s linear infinite; }
+  .loop-mtn-far  { animation: slide 190s linear infinite; }
+  .loop-mtn      { animation: slide 130s linear infinite; }
+  .loop-hills    { animation: slide 52s linear infinite; }
+  .loop-river    { animation: slide 40s linear infinite; }
+  .loop-treeline { animation: slide 25s linear infinite; }
+  .loop-props    { animation: slide 13.5s linear infinite; }
+  .loop-dashes   { animation: slide 1.55s linear infinite; }
+  .loop-grass    { animation: slide 8.6s linear infinite; }
+  @keyframes slide { to { transform: translateX(-1200px); } }
+
+  .spokes, .crank { animation: spin 0.82s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .rider-bob { animation: bob 0.41s ease-in-out infinite alternate; }
+  .rider-bob--b { animation-delay: -0.2s; }
+  @keyframes bob { to { transform: translateY(-1.6px); } }
+
+  .glint { animation: glint 3.2s ease-in-out infinite; }
+  .glint:nth-child(2n) { animation-delay: 1.1s; }
+  .glint:nth-child(3n) { animation-delay: 2.2s; }
+  @keyframes glint { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+
+  /* ── Zustaende: Nacht ── */
+  .night-veil, .stars, .moon, .camp { opacity: 0; transition: opacity 1.4s ease; }
+  .sun-group, .riders { transition: opacity 1.3s ease; }
+  .scene--night .night-veil, .scene--night .stars, .scene--night .moon, .scene--night .camp { opacity: 1; }
+  .scene--night .sun-group, .scene--night .riders { opacity: 0; }
+  .scene--night [class^="loop-"] { animation-play-state: paused; }
+  .star { animation: twinkle 2.6s ease-in-out infinite; }
+  .star:nth-child(3n) { animation-delay: 0.9s; }
+  .star:nth-child(3n+1) { animation-delay: 1.7s; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+  .fire-glow { animation: fireglow 1.1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes fireglow { from { transform: scale(0.92); } to { transform: scale(1.08); } }
+
+  /* ── Zustaende: Wetter ── */
+  .rain, .extra-clouds, .fog { opacity: 0; transition: opacity 1.2s ease; }
+  .scene--rain .rain { opacity: 1; }
+  .scene--rain .sun-group, .scene--overcast .sun-group { opacity: 0.25; }
+  .scene--rain .extra-clouds, .scene--overcast .extra-clouds { opacity: 1; }
+  .scene--fog .fog { opacity: 0.85; }
+  .raindrop { animation: rainfall 0.7s linear infinite; }
+  @keyframes rainfall { to { transform: translate(-30px, 240px); } }
+
+  /* ── HUD ── */
+  .hud-top {
+    position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 0; right: 0;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    padding: 0 12px; pointer-events: none;
+  }
+  .chip {
+    font-size: 12.5px; font-weight: 700; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.88); backdrop-filter: blur(8px);
+    padding: 7px 12px; border-radius: 999px; white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(29, 35, 38, 0.08);
+  }
+  .chip--live { color: #0c6b58; }
+  .chip--live .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #0c6b58; margin-right: 5px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .hud {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    color: #1f2a2f;
+  }
+  .hud__label {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
+    padding: 8px 14px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hud button, .hud a {
+    font: inherit; font-size: 16px; text-decoration: none; color: inherit;
+    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
+    border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex-shrink: 0;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<div class="scene-wrap">
+<svg class="scene" id="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-label="Timo und Tino radeln durch Bosnien, km 1096 der Tour">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf0d5"/>
+      <stop offset="0.55" stop-color="#f7e6c4"/>
+      <stop offset="1" stop-color="#eedfb4"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0" stop-color="#f5a94d" stop-opacity="0.85"/>
+      <stop offset="0.55" stop-color="#f5a94d" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#f5a94d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="veilFadeP" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#122032" stop-opacity="0"/>
+      <stop offset="0.18" stop-color="#122032" stop-opacity="1"/>
+    </linearGradient>
+
+    <g id="cloud">
+      <ellipse cx="0" cy="0" rx="46" ry="16" fill="#fffdf8"/>
+      <ellipse cx="-24" cy="6" rx="28" ry="12" fill="#fffdf8"/>
+      <ellipse cx="26" cy="7" rx="30" ry="12" fill="#fffdf8"/>
+    </g>
+    <g id="cloudDark">
+      <ellipse cx="0" cy="0" rx="52" ry="18" fill="#b9bfc2"/>
+      <ellipse cx="-28" cy="7" rx="30" ry="13" fill="#b9bfc2"/>
+      <ellipse cx="30" cy="8" rx="32" ry="13" fill="#c6cbcd"/>
+    </g>
+
+    <!-- Bosnische Bergketten: bewaldet, weicher -->
+    <path id="mtnFarPath" d="M0 410 Q100 330 200 375 Q300 415 400 340 Q500 285 600 350 Q700 410 800 345 Q900 295 1000 360 Q1100 415 1200 355 L1200 480 L0 480 Z"/>
+    <path id="mtnPath" d="M0 450 Q90 380 180 425 Q270 465 360 390 Q450 330 540 400 Q630 460 720 395 Q810 340 900 405 Q990 460 1080 400 Q1140 365 1200 405 L1200 520 L0 520 Z"/>
+    <path id="hillsPath" d="M0 490 Q150 425 320 472 Q480 515 640 462 Q800 415 960 468 Q1090 512 1200 472 L1200 570 L0 570 Z"/>
+
+    <!-- Nadelbaum -->
+    <g id="conifer">
+      <rect x="-2.5" y="-4" width="5" height="8" fill="#5a4632"/>
+      <path d="M0 -46 L12 -22 L6 -22 L16 -4 L-16 -4 L-6 -22 L-12 -22 Z" fill="#3f6b52"/>
+    </g>
+
+    <!-- Baumreihe mit Dorf + Minarett (Bosnien) -->
+    <g id="treeRow">
+      <use href="#conifer" transform="translate(80,516)"/>
+      <use href="#conifer" transform="translate(130,518) scale(0.8)"/>
+      <use href="#conifer" transform="translate(420,517) scale(0.9)"/>
+      <use href="#conifer" transform="translate(1060,516)"/>
+      <use href="#conifer" transform="translate(1110,518) scale(0.75)"/>
+      <!-- Dorf mit roten Daechern + Minarett -->
+      <g transform="translate(640,518)">
+        <rect x="-46" y="-22" width="30" height="22" fill="#e9e2d2"/>
+        <path d="M-49 -22 L-31 -36 L-13 -22 Z" fill="#b5533c"/>
+        <rect x="-8" y="-18" width="26" height="18" fill="#efe8d8"/>
+        <path d="M-11 -18 L5 -30 L21 -18 Z" fill="#a84a35"/>
+        <rect x="30" y="-16" width="22" height="16" fill="#e9e2d2"/>
+        <path d="M27 -16 L41 -27 L55 -16 Z" fill="#b5533c"/>
+        <!-- Minarett -->
+        <rect x="60" y="-52" width="7" height="52" fill="#f4efe2"/>
+        <rect x="57" y="-56" width="13" height="5" fill="#dcd4c0"/>
+        <path d="M63.5 -72 L58 -56 L69 -56 Z" fill="#4d7a63"/>
+        <circle cx="63.5" cy="-73" r="2" fill="#c9a227"/>
+      </g>
+      <!-- Heuhaufen -->
+      <g transform="translate(900,518)">
+        <path d="M-14 0 Q-14 -26 0 -30 Q14 -26 14 0 Z" fill="#d9b96a"/>
+        <line x1="0" y1="-30" x2="0" y2="-36" stroke="#8a6d4a" stroke-width="2.5"/>
+      </g>
+    </g>
+
+    <!-- Fluss (Vrbas-Tal) -->
+    <g id="riverBand">
+      <rect x="0" y="0" width="1200" height="26" fill="#8fb6c4"/>
+      <g stroke="#e6f2f5" stroke-width="2.5" stroke-linecap="round">
+        <line class="glint" x1="90" y1="8" x2="130" y2="8"/>
+        <line class="glint" x1="330" y1="16" x2="358" y2="16"/>
+        <line class="glint" x1="560" y1="7" x2="600" y2="7"/>
+        <line class="glint" x1="810" y1="15" x2="842" y2="15"/>
+        <line class="glint" x1="1050" y1="9" x2="1082" y2="9"/>
+      </g>
+    </g>
+
+    <!-- Requisiten: echte Daten der Simulation -->
+    <g id="props">
+      <!-- Ortsschild: echtes Reverse-Geocoding-Ergebnis -->
+      <g transform="translate(200,566)">
+        <rect x="-3" y="-58" width="6" height="58" rx="2" fill="#8a8478"/>
+        <rect x="-62" y="-92" width="124" height="38" rx="7" fill="#fffdf8" stroke="#0c6b58" stroke-width="3"/>
+        <text x="0" y="-67" text-anchor="middle" font-size="16" font-weight="700" fill="#0c6b58" font-family="Trebuchet MS, sans-serif">Donji Vakuf</text>
+      </g>
+      <!-- Kilometerstein: echter Tour-Stand -->
+      <g transform="translate(600,566)">
+        <path d="M-17 0 L-17 -28 Q-17 -38 0 -38 Q17 -38 17 -28 L17 0 Z" fill="#fffdf8" stroke="#c9c2b4" stroke-width="2"/>
+        <text x="0" y="-14" text-anchor="middle" font-size="11.5" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">km 1.096</text>
+      </g>
+      <!-- Polaroid am Wegesrand (letztes Foto) -->
+      <g transform="translate(880,566) rotate(-7)">
+        <rect x="-20" y="-52" width="40" height="48" rx="2" fill="#fffdf8" stroke="#d8d0c0" stroke-width="1.5"/>
+        <rect x="-16" y="-48" width="32" height="30" fill="#8fb6c4"/>
+        <path d="M-16 -28 Q-8 -36 0 -30 Q8 -25 16 -31 L16 -18 L-16 -18 Z" fill="#5d8a74"/>
+        <circle cx="8" cy="-42" r="4" fill="#f2a24b"/>
+        <rect x="-8" y="-56" width="16" height="7" fill="#e8d9a8" opacity="0.85" transform="rotate(4)"/>
+      </g>
+      <use href="#conifer" transform="translate(1050,566) scale(0.85)"/>
+    </g>
+
+    <g id="grassRow">
+      <path d="M0 640 L1200 640 L1200 700 L0 700 Z" fill="#a9c491"/>
+      <g fill="#eb8f34"><circle cx="120" cy="668" r="4"/><circle cx="480" cy="676" r="4"/><circle cx="890" cy="664" r="4"/></g>
+      <g fill="#fffdf8"><circle cx="300" cy="672" r="3.4"/><circle cx="680" cy="662" r="3.4"/><circle cx="1060" cy="678" r="3.4"/></g>
+      <g stroke="#8db07e" stroke-width="3" stroke-linecap="round">
+        <path d="M200 664 q3 -12 0 -18"/><path d="M208 666 q-3 -10 2 -16"/>
+        <path d="M580 670 q3 -12 0 -18"/><path d="M960 668 q-3 -12 1 -18"/>
+      </g>
+    </g>
+
+    <g id="wheel">
+      <circle cx="0" cy="0" r="26" fill="none" stroke="#2b2b2b" stroke-width="4.5"/>
+      <g class="spokes" stroke="#8a8478" stroke-width="1.6">
+        <line x1="-24" y1="0" x2="24" y2="0"/><line x1="0" y1="-24" x2="0" y2="24"/>
+        <line x1="-17" y1="-17" x2="17" y2="17"/><line x1="-17" y1="17" x2="17" y2="-17"/>
+      </g>
+      <circle cx="0" cy="0" r="3.4" fill="#2b2b2b"/>
+    </g>
+  </defs>
+
+  <!-- Himmel -->
+  <rect width="1200" height="700" fill="url(#sky)"/>
+  <g class="sun-group">
+    <circle cx="600" cy="145" r="130" fill="url(#sunGlow)"/>
+    <circle cx="600" cy="145" r="50" fill="#f2a24b"/>
+  </g>
+
+  <!-- Nacht -->
+  <rect class="night-veil" width="1200" height="700" fill="#122032" opacity="0" style="mix-blend-mode: multiply;"/>
+  <g class="stars" fill="#fdf0d5">
+    <circle class="star" cx="140" cy="90" r="2.2"/><circle class="star" cx="330" cy="60" r="1.7"/>
+    <circle class="star" cx="520" cy="120" r="2"/><circle class="star" cx="700" cy="70" r="1.6"/>
+    <circle class="star" cx="860" cy="140" r="2.2"/><circle class="star" cx="1020" cy="80" r="1.8"/>
+    <circle class="star" cx="1130" cy="170" r="2"/><circle class="star" cx="430" cy="180" r="1.5"/>
+    <circle class="star" cx="940" cy="220" r="1.5"/><circle class="star" cx="240" cy="230" r="1.7"/>
+    <circle class="star" cx="600" cy="250" r="1.8"/><circle class="star" cx="760" cy="180" r="1.5"/>
+  </g>
+  <g class="moon">
+    <mask id="moonMask">
+      <circle cx="640" cy="140" r="42" fill="white"/>
+      <circle cx="658" cy="126" r="36" fill="black"/>
+    </mask>
+    <circle cx="640" cy="140" r="42" fill="#f6ecd4" mask="url(#moonMask)"/>
+  </g>
+
+  <!-- Wolken -->
+  <g class="loop-clouds" opacity="0.9">
+    <g><use href="#cloud" x="180" y="105"/><use href="#cloud" x="540" y="65"/><use href="#cloud" x="760" y="120"/><use href="#cloud" x="1040" y="85"/></g>
+    <g transform="translate(1200,0)"><use href="#cloud" x="180" y="105"/><use href="#cloud" x="540" y="65"/><use href="#cloud" x="760" y="120"/><use href="#cloud" x="1040" y="85"/></g>
+  </g>
+  <!-- Zusatzwolken bei Bewoelkung/Regen -->
+  <g class="extra-clouds">
+    <use href="#cloudDark" x="300" y="90"/><use href="#cloudDark" x="640" y="60"/>
+    <use href="#cloudDark" x="920" y="110"/><use href="#cloudDark" x="120" y="150"/>
+  </g>
+
+  <!-- Bergketten -->
+  <g class="loop-mtn-far">
+    <g><use href="#mtnFarPath" fill="#b3c4b0"/></g>
+    <g transform="translate(1200,0)"><use href="#mtnFarPath" fill="#b3c4b0"/></g>
+  </g>
+  <g class="loop-mtn">
+    <g><use href="#mtnPath" fill="#93ab90"/></g>
+    <g transform="translate(1200,0)"><use href="#mtnPath" fill="#93ab90"/></g>
+  </g>
+
+  <!-- Voraus-Vignette: Mostar in 143 km (naechstes grosses Highlight) -->
+  <g transform="translate(1010,435)" opacity="0.92">
+    <path d="M-44 22 L-44 6 Q-44 -2 -36 -2 L-30 -2 Q0 -30 30 -2 L36 -2 Q44 -2 44 6 L44 22 Z" fill="none" stroke="#7d9383" stroke-width="5"/>
+    <path d="M-30 -2 Q0 -30 30 -2" fill="none" stroke="#7d9383" stroke-width="5"/>
+    <rect x="-44" y="-14" width="9" height="14" fill="#7d9383"/>
+    <rect x="35" y="-14" width="9" height="14" fill="#7d9383"/>
+    <rect x="-58" y="30" width="116" height="24" rx="12" fill="rgba(255,253,248,0.9)"/>
+    <text x="0" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">Mostar · 143 km</text>
+  </g>
+
+  <!-- Huegel -->
+  <g class="loop-hills">
+    <g><use href="#hillsPath" fill="#8fb287"/></g>
+    <g transform="translate(1200,0)"><use href="#hillsPath" fill="#8fb287"/></g>
+  </g>
+  <rect y="522" width="1200" height="48" fill="#9dbb8f"/>
+
+  <!-- Fluss -->
+  <g class="loop-river" transform="translate(0,524)">
+    <g><use href="#riverBand"/></g>
+    <g transform="translate(1200,0)"><use href="#riverBand"/></g>
+  </g>
+
+  <!-- Baumreihe + Dorf -->
+  <g class="loop-treeline">
+    <g><use href="#treeRow"/></g>
+    <g transform="translate(1200,0)"><use href="#treeRow"/></g>
+  </g>
+
+  <!-- Grenz-Countdown: Montenegro in 224 km (fest am Horizont rechts) -->
+  <g transform="translate(1105,505)">
+    <rect x="-4" y="-58" width="5" height="58" fill="#8a8478"/>
+    <g stroke="#8a8478" stroke-width="1">
+      <path d="M1 -56 h30 v10 h-30 Z" fill="#C40308"/>
+      <path d="M1 -46 h30 v10 h-30 Z" fill="#D4AF37"/>
+    </g>
+    <rect x="-52" y="-36" width="104" height="22" rx="11" fill="rgba(255,253,248,0.9)"/>
+    <text x="0" y="-21" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a5ca7" font-family="Trebuchet MS, sans-serif">🇲🇪 in 224 km</text>
+  </g>
+
+  <!-- Strasse -->
+  <rect y="566" width="1200" height="74" fill="#4d4a45"/>
+  <rect y="566" width="1200" height="4" fill="#3c3936"/>
+  <g class="loop-dashes" stroke="#f4e6c8" stroke-width="5" stroke-dasharray="42 58">
+    <line x1="0" y1="604" x2="1200" y2="604"/>
+    <line x1="1200" y1="604" x2="2400" y2="604"/>
+  </g>
+
+  <!-- Requisiten -->
+  <g class="loop-props">
+    <g><use href="#props"/></g>
+    <g transform="translate(1200,0)"><use href="#props"/></g>
+  </g>
+
+  <!-- ── Radfahrer 1 (Timo) — Trikot: Bosnien 🇧🇦 ── -->
+  <g class="riders">
+  <g transform="translate(455,618)">
+    <use href="#wheel"/><use href="#wheel" x="80"/>
+    <g stroke="#0c6b58" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M0 0 L32 -8 L18 -50 L0 0"/><path d="M32 -8 L62 -50"/>
+      <path d="M18 -50 L62 -50"/><path d="M62 -50 L80 0"/>
+      <path d="M18 -50 L12 -60"/><path d="M62 -50 L66 -60"/>
+    </g>
+    <path d="M4 -60 L22 -60" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M66 -60 L74 -62" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <g class="crank" transform="translate(32,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#2b2b2b" stroke-width="4"/>
+      <rect x="-6" y="-16" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+      <rect x="-6" y="11" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+    </g>
+    <g class="rider-bob">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 13 -58; 30 13 -58; -24 13 -58" keyTimes="0;0.5;1" dur="0.82s" begin="-0.41s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M13 -58 L30 -34" stroke="#3d4a50" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 30 -34; -14 30 -34; 38 30 -34" keyTimes="0;0.5;1" dur="0.82s" begin="-0.41s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M30 -34 L32 -10" stroke="#3d4a50" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- Trikot: Bosnien — blau mit gelbem Dreieck -->
+      <path d="M13 -58 Q30 -80 52 -88" stroke="#1e4a9e" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M24 -70 L40 -83 L26 -83 Z" fill="#f4c430"/>
+      <circle cx="20" cy="-66" r="1.4" fill="#fffdf8"/>
+      <circle cx="30" cy="-77" r="1.4" fill="#fffdf8"/>
+      <circle cx="63" cy="-94" r="10.5" fill="#e8b48c"/>
+      <path d="M51.5 -95 a11.5 11.5 0 0 1 23 -2 l-4 2 Z" fill="#0c6b58"/>
+      <path d="M51.5 -95 a11.5 10 0 0 1 12 -10 l1 4 Z" fill="#0c6b58"/>
+      <path d="M50 -84 Q60 -72 68 -61" stroke="#e8b48c" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 15 -56; 30 15 -56; -24 15 -56" keyTimes="0;0.5;1" dur="0.82s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M15 -56 L34 -34" stroke="#2b3a41" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 34 -34; -14 34 -34; 38 34 -34" keyTimes="0;0.5;1" dur="0.82s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M34 -34 L35 -8" stroke="#2b3a41" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ── Radfahrer 2 (Tino) ── -->
+  <g transform="translate(620,618) scale(0.97)">
+    <use href="#wheel"/><use href="#wheel" x="80"/>
+    <g stroke="#eb8f34" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M0 0 L32 -8 L18 -50 L0 0"/><path d="M32 -8 L62 -50"/>
+      <path d="M18 -50 L62 -50"/><path d="M62 -50 L80 0"/>
+      <path d="M18 -50 L12 -60"/><path d="M62 -50 L66 -60"/>
+    </g>
+    <path d="M4 -60 L22 -60" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M66 -60 L74 -62" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <g class="crank" transform="translate(32,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#2b2b2b" stroke-width="4"/>
+      <rect x="-6" y="-16" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+      <rect x="-6" y="11" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+    </g>
+    <g class="rider-bob rider-bob--b">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 13 -58; 30 13 -58; -24 13 -58" keyTimes="0;0.5;1" dur="0.82s" begin="-0.66s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M13 -58 L30 -34" stroke="#3d4a50" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 30 -34; -14 30 -34; 38 30 -34" keyTimes="0;0.5;1" dur="0.82s" begin="-0.66s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M30 -34 L32 -10" stroke="#3d4a50" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+      <path d="M13 -58 Q30 -80 52 -88" stroke="#1e4a9e" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M24 -70 L40 -83 L26 -83 Z" fill="#f4c430"/>
+      <circle cx="20" cy="-66" r="1.4" fill="#fffdf8"/>
+      <circle cx="30" cy="-77" r="1.4" fill="#fffdf8"/>
+      <circle cx="63" cy="-94" r="10.5" fill="#d9a273"/>
+      <path d="M51.5 -95 a11.5 11.5 0 0 1 23 -2 l-4 2 Z" fill="#eb8f34"/>
+      <path d="M51.5 -95 a11.5 10 0 0 1 12 -10 l1 4 Z" fill="#eb8f34"/>
+      <path d="M50 -84 Q60 -72 68 -61" stroke="#d9a273" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 15 -56; 30 15 -56; -24 15 -56" keyTimes="0;0.5;1" dur="0.82s" begin="-0.26s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M15 -56 L34 -34" stroke="#2b3a41" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 34 -34; -14 34 -34; 38 34 -34" keyTimes="0;0.5;1" dur="0.82s" begin="-0.26s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M34 -34 L35 -8" stroke="#2b3a41" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+  </g>
+
+  <!-- Regen -->
+  <g class="rain">
+    <g stroke="#7fa3b8" stroke-width="2.2" stroke-linecap="round" opacity="0.7">
+      <g class="raindrop"><line x1="100" y1="-40" x2="94" y2="-16"/><line x1="300" y1="-90" x2="294" y2="-66"/><line x1="520" y1="-30" x2="514" y2="-6"/><line x1="720" y1="-110" x2="714" y2="-86"/><line x1="940" y1="-50" x2="934" y2="-26"/><line x1="1140" y1="-95" x2="1134" y2="-71"/></g>
+      <g class="raindrop" style="animation-delay:-0.23s"><line x1="180" y1="-70" x2="174" y2="-46"/><line x1="420" y1="-25" x2="414" y2="-1"/><line x1="620" y1="-85" x2="614" y2="-61"/><line x1="840" y1="-35" x2="834" y2="-11"/><line x1="1040" y1="-100" x2="1034" y2="-76"/></g>
+      <g class="raindrop" style="animation-delay:-0.46s"><line x1="60" y1="-105" x2="54" y2="-81"/><line x1="260" y1="-45" x2="254" y2="-21"/><line x1="480" y1="-115" x2="474" y2="-91"/><line x1="680" y1="-55" x2="674" y2="-31"/><line x1="900" y1="-120" x2="894" y2="-96"/><line x1="1120" y1="-40" x2="1114" y2="-16"/></g>
+    </g>
+    <g stroke="#7fa3b8" stroke-width="2.2" stroke-linecap="round" opacity="0.7" transform="translate(0,240)">
+      <g class="raindrop"><line x1="140" y1="-40" x2="134" y2="-16"/><line x1="360" y1="-90" x2="354" y2="-66"/><line x1="560" y1="-30" x2="554" y2="-6"/><line x1="780" y1="-110" x2="774" y2="-86"/><line x1="980" y1="-50" x2="974" y2="-26"/></g>
+      <g class="raindrop" style="animation-delay:-0.35s"><line x1="220" y1="-70" x2="214" y2="-46"/><line x1="460" y1="-25" x2="454" y2="-1"/><line x1="660" y1="-85" x2="654" y2="-61"/><line x1="880" y1="-35" x2="874" y2="-11"/><line x1="1080" y1="-100" x2="1074" y2="-76"/></g>
+    </g>
+  </g>
+
+  <!-- Nebel -->
+  <g class="fog">
+    <rect y="380" width="1200" height="200" fill="#e8e4da" opacity="0.55"/>
+    <rect y="430" width="1200" height="100" fill="#efece4" opacity="0.5"/>
+  </g>
+
+  <!-- Vordergrund -->
+  <g class="loop-grass">
+    <g><use href="#grassRow"/></g>
+    <g transform="translate(1200,0)"><use href="#grassRow"/></g>
+  </g>
+
+  <!-- Nachtschleier ueber der Landschaft -->
+  <rect class="night-veil" x="0" y="290" width="1200" height="410" fill="url(#veilFadeP)" style="mix-blend-mode: multiply;"/>
+
+  <!-- Nachtlager -->
+  <g class="camp" transform="translate(540,560) scale(0.88)">
+    <path d="M-60 0 L0 -66 L60 0 Z" fill="#a35a3c"/>
+    <path d="M-14 0 L0 -46 L14 0 Z" fill="#7a4028"/>
+    <circle class="fire-glow" cx="110" cy="-8" r="26" fill="#f5a94d" opacity="0.4"/>
+    <path d="M104 -4 q6 -16 12 0 q4 8 -6 10 q-10 -2 -6 -10" fill="#eb8f34"/>
+    <g stroke="#6b5138" stroke-width="4" stroke-linecap="round">
+      <line x1="98" y1="4" x2="122" y2="-2"/><line x1="100" y1="-2" x2="121" y2="5"/>
+    </g>
+  </g>
+</svg>
+</div>
+
+<!-- Daten-HUD: alles hier kommt in v1 live aus den Services -->
+<div class="hud-top">
+  <span class="chip chip--live"><span class="dot"></span><span id="chipState">in Bewegung</span></span>
+  <span class="chip" id="chipSpeed">19 km/h</span>
+  <span class="chip">🇧🇦 Donji Vakuf</span>
+  <span class="chip" id="chipWeather">…°C</span>
+  <span class="chip">52 % · heute 64 km</span>
+  <span class="chip" id="chipFresh">vor 1 Min</span>
+</div>
+
+<div class="hud">
+  <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
+  <span class="hud__label">Daten-Mockup · km 1.096 · Bosnien</span>
+  <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
+</div>
+
+<script>
+  const scene = document.getElementById("scene");
+  const btn = document.getElementById("toggleNight");
+
+  // Simulierte Live-Position: km 1096 (52 %), echt aus route-data.json abgeleitet
+  const SIM = { lat: 44.24317, lon: 17.2959 };
+
+  // Manueller Tag/Nacht-Umschalter (Override der Automatik)
+  let nightOverride = null;
+  btn.addEventListener("click", () => {
+    nightOverride = !scene.classList.contains("scene--night");
+    applyNight(nightOverride);
+  });
+
+  function applyNight(night) {
+    scene.classList.toggle("scene--night", night);
+    btn.textContent = night ? "☀️" : "🌙";
+    document.getElementById("chipState").textContent = night ? "schläft 🌙" : "in Bewegung";
+    document.getElementById("chipSpeed").style.display = night ? "none" : "";
+    if (lastWeather) applyWeather(lastWeather.code, lastWeather.temperature);
+  }
+
+  // ── Echtes Wetter fuer die Simulations-Position (Open-Meteo, live) ──
+  // ?wx=rain|overcast|fog|clear und ?mode=day|night erzwingen Zustaende zum Testen.
+  const params = new URLSearchParams(location.search);
+
+  let lastWeather = null;
+
+  function applyWeather(code, temperature) {
+    lastWeather = { code, temperature };
+    scene.classList.remove("scene--rain", "scene--overcast", "scene--fog");
+    const isNight = scene.classList.contains("scene--night");
+    let icon = isNight ? "🌙" : "☀️";
+    if (code >= 51 && code <= 99) { scene.classList.add("scene--rain"); icon = "🌧"; }
+    else if (code >= 45 && code <= 48) { scene.classList.add("scene--fog"); icon = "🌫"; }
+    else if (code >= 2) { scene.classList.add("scene--overcast"); icon = isNight ? "☁️" : "⛅"; }
+    document.getElementById("chipWeather").textContent =
+      `${icon} ${temperature != null ? Math.round(temperature) + "°C" : ""}`.trim();
+  }
+
+  const forcedWx = params.get("wx");
+  const forcedMode = params.get("mode");
+
+  if (forcedWx) {
+    applyWeather({ rain: 61, overcast: 3, fog: 45, clear: 0 }[forcedWx] ?? 0, 21);
+  }
+  if (forcedMode) {
+    applyNight(forcedMode === "night");
+    nightOverride = forcedMode === "night";
+  }
+
+  if (!forcedWx || !forcedMode) {
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${SIM.lat}&longitude=${SIM.lon}&current=temperature_2m,weather_code,is_day&timezone=auto`)
+      .then((r) => r.json())
+      .then(({ current }) => {
+        if (!forcedWx) applyWeather(current.weather_code, current.temperature_2m);
+        if (!forcedMode && nightOverride === null) applyNight(current.is_day === 0);
+      })
+      .catch(() => { if (!forcedWx) applyWeather(0, 22); });
+  }
+
+  // ── GPS-Leben: Tempo streut leicht, Frische-Anzeige tickt ──
+  let lastFixMin = 1;
+  setInterval(() => {
+    const kph = 17 + Math.round(Math.random() * 5);
+    document.getElementById("chipSpeed").textContent = `${kph} km/h`;
+  }, 4000);
+  setInterval(() => {
+    lastFixMin = lastFixMin >= 3 ? 1 : lastFixMin + 1;
+    document.getElementById("chipFresh").textContent = `vor ${lastFixMin} Min`;
+  }, 30000);
+</script>
+</body>
+</html>
