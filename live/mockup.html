@@ -92,6 +92,63 @@
     background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
     border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex-shrink: 0;
   }
+  /* ── Momente-Buehne: Voraus & Erinnerungen gross im Himmel ── */
+  .moment-stage {
+    position: fixed; left: 0; right: 0;
+    top: calc(104px + env(safe-area-inset-top));
+    display: flex; justify-content: center;
+    pointer-events: none; z-index: 5;
+  }
+  .moment {
+    position: absolute;
+    width: min(76vw, 320px);
+    opacity: 0;
+    transform: translateY(18px) rotate(-2deg) scale(0.94);
+    transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.18, 0.7, 0.3, 1.12);
+  }
+  .moment.show {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  .moment--photo {
+    background: #fffdf8; border-radius: 6px;
+    padding: 10px 10px 12px;
+    box-shadow: 0 18px 42px rgba(29, 35, 38, 0.28);
+    transform: translateY(18px) rotate(-4.5deg) scale(0.94);
+  }
+  .moment--photo.show { transform: translateY(0) rotate(-2.5deg) scale(1); }
+  .moment--photo img {
+    display: block; width: 100%; aspect-ratio: 4 / 3;
+    object-fit: cover; border-radius: 3px; background: #e9e2d2;
+  }
+  .moment--photo .tape {
+    position: absolute; top: -10px; left: 50%;
+    width: 74px; height: 22px; transform: translateX(-50%) rotate(3deg);
+    background: rgba(232, 217, 168, 0.85); border-radius: 2px;
+  }
+  .moment--card {
+    background: rgba(255, 253, 248, 0.96);
+    border-radius: 22px; padding: 16px 18px 15px;
+    box-shadow: 0 18px 42px rgba(29, 35, 38, 0.24);
+    text-align: center;
+  }
+  .moment__eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #58656b; margin-bottom: 6px;
+  }
+  .moment__eyebrow--ahead { color: #eb8f34; }
+  .moment__eyebrow--border { color: #8a5ca7; }
+  .moment__title { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; color: #1f2a2f; }
+  .moment__meta { font-size: 13.5px; color: #58656b; margin-top: 3px; font-weight: 600; }
+  .moment__caption {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 9px; padding: 0 2px;
+    font-size: 12.5px; font-weight: 700; color: #58656b;
+  }
+  .moment__flags { font-size: 42px; line-height: 1.15; margin: 4px 0 2px; }
+  .moment__flags .arrow { font-size: 24px; color: #8a5ca7; vertical-align: middle; margin: 0 8px; }
+  .moment__art { display: block; width: 100%; height: auto; margin: 6px 0 4px; }
+
   @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
 </style>
 </head>
@@ -222,9 +279,10 @@
 
   <!-- Himmel -->
   <rect width="1200" height="700" fill="url(#sky)"/>
+  <!-- Sonne oben links im Portrait-Band — die Bildmitte gehoert der Momente-Buehne -->
   <g class="sun-group">
-    <circle cx="600" cy="145" r="130" fill="url(#sunGlow)"/>
-    <circle cx="600" cy="145" r="50" fill="#f2a24b"/>
+    <circle cx="490" cy="100" r="95" fill="url(#sunGlow)"/>
+    <circle cx="490" cy="100" r="38" fill="#f2a24b"/>
   </g>
 
   <!-- Nacht -->
@@ -239,10 +297,10 @@
   </g>
   <g class="moon">
     <mask id="moonMask">
-      <circle cx="640" cy="140" r="42" fill="white"/>
-      <circle cx="658" cy="126" r="36" fill="black"/>
+      <circle cx="495" cy="100" r="36" fill="white"/>
+      <circle cx="511" cy="88" r="31" fill="black"/>
     </mask>
-    <circle cx="640" cy="140" r="42" fill="#f6ecd4" mask="url(#moonMask)"/>
+    <circle cx="495" cy="100" r="36" fill="#f6ecd4" mask="url(#moonMask)"/>
   </g>
 
   <!-- Wolken -->
@@ -266,16 +324,6 @@
     <g transform="translate(1200,0)"><use href="#mtnPath" fill="#93ab90"/></g>
   </g>
 
-  <!-- Voraus-Vignette: Mostar in 143 km (naechstes grosses Highlight) -->
-  <g transform="translate(1010,435)" opacity="0.92">
-    <path d="M-44 22 L-44 6 Q-44 -2 -36 -2 L-30 -2 Q0 -30 30 -2 L36 -2 Q44 -2 44 6 L44 22 Z" fill="none" stroke="#7d9383" stroke-width="5"/>
-    <path d="M-30 -2 Q0 -30 30 -2" fill="none" stroke="#7d9383" stroke-width="5"/>
-    <rect x="-44" y="-14" width="9" height="14" fill="#7d9383"/>
-    <rect x="35" y="-14" width="9" height="14" fill="#7d9383"/>
-    <rect x="-58" y="30" width="116" height="24" rx="12" fill="rgba(255,253,248,0.9)"/>
-    <text x="0" y="46" text-anchor="middle" font-size="13" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">Mostar · 143 km</text>
-  </g>
-
   <!-- Huegel -->
   <g class="loop-hills">
     <g><use href="#hillsPath" fill="#8fb287"/></g>
@@ -293,17 +341,6 @@
   <g class="loop-treeline">
     <g><use href="#treeRow"/></g>
     <g transform="translate(1200,0)"><use href="#treeRow"/></g>
-  </g>
-
-  <!-- Grenz-Countdown: Montenegro in 224 km (fest am Horizont rechts) -->
-  <g transform="translate(1105,505)">
-    <rect x="-4" y="-58" width="5" height="58" fill="#8a8478"/>
-    <g stroke="#8a8478" stroke-width="1">
-      <path d="M1 -56 h30 v10 h-30 Z" fill="#C40308"/>
-      <path d="M1 -46 h30 v10 h-30 Z" fill="#D4AF37"/>
-    </g>
-    <rect x="-52" y="-36" width="104" height="22" rx="11" fill="rgba(255,253,248,0.9)"/>
-    <text x="0" y="-21" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a5ca7" font-family="Trebuchet MS, sans-serif">🇲🇪 in 224 km</text>
   </g>
 
   <!-- Strasse -->
@@ -460,6 +497,42 @@
   <span class="chip" id="chipFresh">vor 1 Min</span>
 </div>
 
+<!-- Momente-Buehne: Voraus-Meilensteine und echte Fotos im Wechsel -->
+<div class="moment-stage" id="momentStage">
+  <div class="moment moment--card" data-moment="poi">
+    <p class="moment__eyebrow moment__eyebrow--ahead">Voraus · Nächstes Highlight</p>
+    <svg class="moment__art" viewBox="0 0 280 108" aria-hidden="true">
+      <rect width="280" height="108" rx="12" fill="#f7ecd7"/>
+      <circle cx="228" cy="30" r="16" fill="#f2a24b" opacity="0.85"/>
+      <path d="M28 74 Q70 40 112 60 L112 108 L28 108 Z" fill="#c9bda4" opacity="0.5"/>
+      <path d="M168 62 Q210 38 252 70 L252 108 L168 108 Z" fill="#c9bda4" opacity="0.5"/>
+      <!-- Stari Most -->
+      <g stroke="#8a7a5e" stroke-width="7" fill="none" stroke-linecap="round">
+        <path d="M75 78 Q140 30 205 78"/>
+      </g>
+      <path d="M75 78 Q140 30 205 78" transform="translate(0,10)" stroke="#8a7a5e" stroke-width="4" fill="none" opacity="0.5"/>
+      <rect x="64" y="52" width="13" height="30" rx="2" fill="#8a7a5e"/>
+      <rect x="203" y="52" width="13" height="30" rx="2" fill="#8a7a5e"/>
+      <path d="M64 52 L70.5 42 L77 52 Z" fill="#8a7a5e"/>
+      <path d="M203 52 L209.5 42 L216 52 Z" fill="#8a7a5e"/>
+      <!-- Neretva -->
+      <rect x="0" y="88" width="280" height="20" fill="#7fb4c9" opacity="0.75"/>
+      <g stroke="#e6f2f5" stroke-width="2" stroke-linecap="round" opacity="0.8">
+        <line x1="100" y1="96" x2="126" y2="96"/><line x1="160" y1="100" x2="182" y2="100"/>
+      </g>
+    </svg>
+    <p class="moment__title">Stari Most, Mostar</p>
+    <p class="moment__meta">in 143 km · UNESCO-Welterbe</p>
+  </div>
+
+  <div class="moment moment--card" data-moment="border">
+    <p class="moment__eyebrow moment__eyebrow--border">Voraus · Grenzübergang</p>
+    <p class="moment__flags">🇧🇦<span class="arrow">→</span>🇲🇪</p>
+    <p class="moment__title">Montenegro</p>
+    <p class="moment__meta">in 224 km · Land 8 von 10</p>
+  </div>
+</div>
+
 <div class="hud">
   <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
   <span class="hud__label">Daten-Mockup · km 1.096 · Bosnien</span>
@@ -526,6 +599,74 @@
       })
       .catch(() => { if (!forcedWx) applyWeather(0, 22); });
   }
+
+  // ── Momente-Buehne: Voraus-Karten + echte Fotos aus der Galerie ──
+  const stage = document.getElementById("momentStage");
+  const GALLERY_HOST = "https://zweiaufachse.thefinks.de";
+  const FALLBACK_PHOTOS = [
+    { thumbUrl: "/bilderupload/thumbs/s/IMG_3860.JPG", date: "2025-06-03T12:41:38" },
+    { thumbUrl: "/bilderupload/thumbs/s/IMG_3848.JPG", date: "2025-06-02T10:12:00" },
+  ];
+
+  function createPhotoMoment(photo) {
+    const el = document.createElement("div");
+    el.className = "moment moment--photo";
+    const dateLabel = photo.date
+      ? new Date(photo.date).toLocaleDateString("de-DE", { day: "numeric", month: "long" })
+      : "unterwegs";
+    el.innerHTML = `
+      <span class="tape"></span>
+      <img src="${GALLERY_HOST}${photo.thumbUrl}" alt="Foto von unterwegs" />
+      <div class="moment__caption"><span>📷 Erinnerung</span><span>${dateLabel}</span></div>
+    `;
+    // Laedt das Bild nicht (Funkloch, Serverproblem), faellt die Karte
+    // stumm aus der Rotation — nie ein kaputtes Polaroid zeigen.
+    el.querySelector("img").addEventListener("error", () => { el.dataset.dead = "1"; });
+    stage.appendChild(el);
+    return el;
+  }
+
+  function startMomentCarousel(photos) {
+    const poiCard = stage.querySelector('[data-moment="poi"]');
+    const borderCard = stage.querySelector('[data-moment="border"]');
+    const photoCards = photos.slice(0, 4).map(createPhotoMoment);
+
+    // Reihenfolge: Erinnerung und Voraus im Wechsel
+    const sequence = [];
+    const ahead = [poiCard, borderCard];
+    const maxLen = Math.max(photoCards.length, ahead.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (photoCards[i]) sequence.push(photoCards[i]);
+      if (ahead[i % ahead.length] && i < ahead.length) sequence.push(ahead[i]);
+    }
+    if (!sequence.length) sequence.push(poiCard, borderCard);
+
+    const SHOW_MS = 6000;
+    const GAP_MS = 900;
+    let idx = 0;
+
+    function next() {
+      let card = null;
+      for (let tries = 0; tries < sequence.length; tries++) {
+        const candidate = sequence[idx % sequence.length];
+        idx += 1;
+        if (candidate.dataset.dead !== "1") {
+          card = candidate;
+          break;
+        }
+      }
+      if (!card) return;
+      card.classList.add("show");
+      setTimeout(() => card.classList.remove("show"), SHOW_MS);
+      setTimeout(next, SHOW_MS + GAP_MS);
+    }
+    setTimeout(next, 1800);
+  }
+
+  fetch(`${GALLERY_HOST}/bilderupload/list.php`)
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((photos) => startMomentCarousel(photos.filter((p) => p.thumbUrl)))
+    .catch(() => startMomentCarousel(FALLBACK_PHOTOS));
 
   // ── GPS-Leben: Tempo streut leicht, Frische-Anzeige tickt ──
   let lastFixMin = 1;
