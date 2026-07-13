@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Living Scene · Variante A · Travel-Poster</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #f7f1e7; }
+  body { font-family: "Avenir Next", "Trebuchet MS", sans-serif; }
+
+  .scene-wrap { position: fixed; inset: 0; }
+  svg.scene { width: 100%; height: 100%; display: block; }
+
+  /* ── Parallax-Loops ── */
+  .loop-clouds   { animation: slide 75s linear infinite; }
+  .loop-mtn-far  { animation: slide 200s linear infinite; }
+  .loop-mtn      { animation: slide 140s linear infinite; }
+  .loop-hills    { animation: slide 55s linear infinite; }
+  .loop-treeline { animation: slide 26s linear infinite; }
+  .loop-props    { animation: slide 14s linear infinite; }
+  .loop-dashes   { animation: slide 1.6s linear infinite; }
+  .loop-grass    { animation: slide 9s linear infinite; }
+  @keyframes slide { to { transform: translateX(-1200px); } }
+
+  /* Raeder/Kurbel drehen um die eigene Mitte (bbox ist symmetrisch) */
+  .spokes, .crank { animation: spin 0.8s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .rider-bob { animation: bob 0.4s ease-in-out infinite alternate; }
+  .rider-bob--b { animation-delay: -0.2s; }
+  @keyframes bob { to { transform: translateY(-1.6px); } }
+
+  .balloon { animation: balloon 6s ease-in-out infinite alternate; }
+  @keyframes balloon { to { transform: translateY(-14px); } }
+
+  .birds { animation: birds 38s linear infinite; }
+  @keyframes birds { from { transform: translate(1250px, 40px); } to { transform: translate(-300px, -30px); } }
+
+  /* ── Tag / Nacht ── */
+  .night-veil, .stars, .moon, .camp { opacity: 0; transition: opacity 1.4s ease; }
+  .sun-group, .riders { transition: opacity 1.3s ease; }
+  .scene--night .night-veil, .scene--night .stars, .scene--night .moon, .scene--night .camp { opacity: 1; }
+  .scene--night .sun-group, .scene--night .riders { opacity: 0; }
+  .scene--night [class^="loop-"], .scene--night .birds, .scene--night .balloon { animation-play-state: paused; }
+  .star { animation: twinkle 2.6s ease-in-out infinite; }
+  .star:nth-child(3n) { animation-delay: 0.9s; }
+  .star:nth-child(3n+1) { animation-delay: 1.7s; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+  .fire-glow { animation: fireglow 1.1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes fireglow { from { transform: scale(0.92); } to { transform: scale(1.08); } }
+
+  /* ── HUD ── */
+  .hud {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    color: #1f2a2f;
+  }
+  .hud__label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
+    padding: 8px 14px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hud button, .hud a {
+    font: inherit; font-size: 16px; text-decoration: none; color: inherit;
+    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
+    border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex-shrink: 0;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<div class="scene-wrap">
+<svg class="scene" id="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-label="Timo und Tino radeln durch eine Landschaft">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf0d5"/>
+      <stop offset="0.55" stop-color="#f9e3bd"/>
+      <stop offset="1" stop-color="#f4d9a8"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0" stop-color="#f5a94d" stop-opacity="0.85"/>
+      <stop offset="0.55" stop-color="#f5a94d" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#f5a94d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="veilFadeP" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#122032" stop-opacity="0"/>
+      <stop offset="0.18" stop-color="#122032" stop-opacity="1"/>
+    </linearGradient>
+
+    <g id="cloud">
+      <ellipse cx="0" cy="0" rx="46" ry="16" fill="#fffdf8"/>
+      <ellipse cx="-24" cy="6" rx="28" ry="12" fill="#fffdf8"/>
+      <ellipse cx="26" cy="7" rx="30" ry="12" fill="#fffdf8"/>
+    </g>
+
+    <path id="mtnFarPath" d="M0 400 L140 320 L300 385 L460 305 L620 390 L780 315 L940 385 L1100 320 L1200 370 L1200 480 L0 480 Z"/>
+    <path id="mtnPath" d="M0 440 L90 350 L170 415 L260 320 L330 400 L420 305 L470 350 L520 320 L610 420 L700 340 L790 425 L880 330 L960 400 L1050 345 L1130 415 L1200 360 L1200 500 L0 500 Z"/>
+    <path id="mtnSnow" d="M420 305 L400 335 L412 330 L424 342 L438 328 L452 338 L440 305 Z M260 320 L245 345 L258 338 L270 350 L282 335 L272 320 Z"/>
+    <path id="hillsPath" d="M0 480 Q150 405 320 462 Q480 512 640 448 Q800 392 960 458 Q1090 508 1200 462 L1200 560 L0 560 Z"/>
+
+    <g id="treeRow">
+      <g transform="translate(70,505)"><rect x="-3" y="0" width="6" height="22" fill="#6b5138"/><ellipse cx="0" cy="-16" rx="20" ry="24" fill="#5d8a74"/></g>
+      <g transform="translate(240,512)"><rect x="-2.5" y="0" width="5" height="16" fill="#6b5138"/><ellipse cx="0" cy="-22" rx="10" ry="30" fill="#4d7a63"/></g>
+      <g transform="translate(300,510)"><rect x="-2.5" y="0" width="5" height="14" fill="#6b5138"/><ellipse cx="0" cy="-18" rx="9" ry="26" fill="#5d8a74"/></g>
+      <g transform="translate(520,506)"><rect x="-3" y="0" width="6" height="20" fill="#6b5138"/><ellipse cx="0" cy="-15" rx="18" ry="21" fill="#65937c"/></g>
+      <g transform="translate(710,512)"><rect x="-2.5" y="0" width="5" height="15" fill="#6b5138"/><ellipse cx="0" cy="-20" rx="10" ry="28" fill="#4d7a63"/></g>
+      <g transform="translate(900,507)"><rect x="-3" y="0" width="6" height="20" fill="#6b5138"/><ellipse cx="0" cy="-16" rx="19" ry="23" fill="#5d8a74"/></g>
+      <g transform="translate(1080,511)"><rect x="-2.5" y="0" width="5" height="16" fill="#6b5138"/><ellipse cx="0" cy="-21" rx="10" ry="29" fill="#65937c"/></g>
+    </g>
+
+    <g id="props">
+      <g transform="translate(180,556)">
+        <rect x="-3" y="-58" width="6" height="58" rx="2" fill="#8a8478"/>
+        <rect x="-52" y="-92" width="104" height="38" rx="7" fill="#fffdf8" stroke="#0c6b58" stroke-width="3"/>
+        <text x="0" y="-67" text-anchor="middle" font-size="16" font-weight="700" fill="#0c6b58" font-family="Trebuchet MS, sans-serif">Volos 2107</text>
+      </g>
+      <g transform="translate(560,556)">
+        <path d="M-14 0 L-14 -26 Q-14 -36 0 -36 Q14 -36 14 -26 L14 0 Z" fill="#fffdf8" stroke="#c9c2b4" stroke-width="2"/>
+        <text x="0" y="-12" text-anchor="middle" font-size="12" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">km 0</text>
+      </g>
+      <g transform="translate(920,556)">
+        <rect x="30" y="-70" width="34" height="70" rx="4" fill="#e9e2d2" stroke="#c9c2b4" stroke-width="2"/>
+        <rect x="30" y="-70" width="34" height="16" rx="4" fill="#d03a2b" opacity="0.75"/>
+        <rect x="-4" y="-46" width="8" height="46" fill="#8a8478"/>
+        <g transform="translate(0,-44) rotate(-18)">
+          <rect x="0" y="-4" width="86" height="8" rx="4" fill="#fffdf8" stroke="#d03a2b" stroke-width="2" stroke-dasharray="14 12"/>
+        </g>
+        <rect x="-40" y="-84" width="4" height="84" fill="#8a8478"/>
+        <path d="M-36 -82 h24 v14 h-24 Z" fill="#2b2b2b"/>
+        <path d="M-36 -77.3 h24 v4.6 h-24 Z" fill="#d03a2b"/>
+        <path d="M-36 -72.6 h24 v4.6 h-24 Z" fill="#e8b23a"/>
+      </g>
+      <g transform="translate(760,556)"><ellipse cx="0" cy="-8" rx="18" ry="11" fill="#7ba86f"/><ellipse cx="14" cy="-5" rx="12" ry="8" fill="#8db07e"/></g>
+    </g>
+
+    <g id="grassRow">
+      <path d="M0 640 L1200 640 L1200 700 L0 700 Z" fill="#a9c491"/>
+      <g fill="#eb8f34"><circle cx="120" cy="668" r="4"/><circle cx="480" cy="676" r="4"/><circle cx="890" cy="664" r="4"/></g>
+      <g fill="#fffdf8"><circle cx="300" cy="672" r="3.4"/><circle cx="680" cy="662" r="3.4"/><circle cx="1060" cy="678" r="3.4"/></g>
+      <g stroke="#8db07e" stroke-width="3" stroke-linecap="round">
+        <path d="M200 664 q3 -12 0 -18"/><path d="M208 666 q-3 -10 2 -16"/>
+        <path d="M580 670 q3 -12 0 -18"/><path d="M960 668 q-3 -12 1 -18"/>
+      </g>
+    </g>
+
+    <g id="wheel">
+      <circle cx="0" cy="0" r="26" fill="none" stroke="#2b2b2b" stroke-width="4.5"/>
+      <g class="spokes" stroke="#8a8478" stroke-width="1.6">
+        <line x1="-24" y1="0" x2="24" y2="0"/><line x1="0" y1="-24" x2="0" y2="24"/>
+        <line x1="-17" y1="-17" x2="17" y2="17"/><line x1="-17" y1="17" x2="17" y2="-17"/>
+      </g>
+      <circle cx="0" cy="0" r="3.4" fill="#2b2b2b"/>
+    </g>
+  </defs>
+
+  <!-- Himmel -->
+  <rect width="1200" height="700" fill="url(#sky)"/>
+  <g class="sun-group">
+    <circle cx="600" cy="150" r="140" fill="url(#sunGlow)"/>
+    <circle cx="600" cy="150" r="54" fill="#f2a24b"/>
+  </g>
+
+  <!-- Heissluftballon -->
+  <g class="balloon">
+    <g transform="translate(880,215)">
+      <path d="M0 -34 a30 34 0 1 1 0.1 0 Z" fill="#d03a2b"/>
+      <path d="M-11 -34 a11 34 0 1 1 22 0 a11 34 0 1 1 -22 0" fill="#e8b23a" opacity="0.85"/>
+      <path d="M-13 24 L13 24 L8 36 L-8 36 Z" fill="#6b5138"/>
+      <line x1="-11" y1="22" x2="-8" y2="34" stroke="#6b5138" stroke-width="2"/>
+      <line x1="11" y1="22" x2="8" y2="34" stroke="#6b5138" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- Nacht -->
+  <rect class="night-veil" width="1200" height="700" fill="#122032" opacity="0" style="mix-blend-mode: multiply;"/>
+  <g class="stars" fill="#fdf0d5">
+    <circle class="star" cx="140" cy="90" r="2.2"/><circle class="star" cx="330" cy="60" r="1.7"/>
+    <circle class="star" cx="520" cy="120" r="2"/><circle class="star" cx="700" cy="70" r="1.6"/>
+    <circle class="star" cx="860" cy="140" r="2.2"/><circle class="star" cx="1020" cy="80" r="1.8"/>
+    <circle class="star" cx="1130" cy="170" r="2"/><circle class="star" cx="430" cy="180" r="1.5"/>
+    <circle class="star" cx="940" cy="220" r="1.5"/><circle class="star" cx="240" cy="230" r="1.7"/>
+    <circle class="star" cx="600" cy="250" r="1.8"/><circle class="star" cx="760" cy="180" r="1.5"/>
+  </g>
+  <g class="moon">
+    <mask id="moonMask">
+      <circle cx="640" cy="140" r="42" fill="white"/>
+      <circle cx="658" cy="126" r="36" fill="black"/>
+    </mask>
+    <circle cx="640" cy="140" r="42" fill="#f6ecd4" mask="url(#moonMask)"/>
+  </g>
+
+  <!-- Voegel -->
+  <g class="birds" stroke="#5b6b70" stroke-width="2.4" fill="none" stroke-linecap="round">
+    <path d="M0 100 q7 -8 14 0 q7 -8 14 0"/>
+    <path d="M46 82 q6 -7 12 0 q6 -7 12 0"/>
+  </g>
+
+  <!-- Wolken -->
+  <g class="loop-clouds" opacity="0.9">
+    <g><use href="#cloud" x="180" y="105"/><use href="#cloud" x="540" y="65"/><use href="#cloud" x="760" y="120"/><use href="#cloud" x="1040" y="85"/></g>
+    <g transform="translate(1200,0)"><use href="#cloud" x="180" y="105"/><use href="#cloud" x="540" y="65"/><use href="#cloud" x="760" y="120"/><use href="#cloud" x="1040" y="85"/></g>
+  </g>
+
+  <!-- Bergketten -->
+  <g class="loop-mtn-far">
+    <g><use href="#mtnFarPath" fill="#c3cfc0"/></g>
+    <g transform="translate(1200,0)"><use href="#mtnFarPath" fill="#c3cfc0"/></g>
+  </g>
+  <g class="loop-mtn">
+    <g><use href="#mtnPath" fill="#a9bcae"/><use href="#mtnSnow" fill="#fffdf8"/></g>
+    <g transform="translate(1200,0)"><use href="#mtnPath" fill="#a9bcae"/><use href="#mtnSnow" fill="#fffdf8"/></g>
+  </g>
+
+  <!-- Huegel -->
+  <g class="loop-hills">
+    <g><use href="#hillsPath" fill="#8fb287"/></g>
+    <g transform="translate(1200,0)"><use href="#hillsPath" fill="#8fb287"/></g>
+  </g>
+  <rect y="520" width="1200" height="60" fill="#9dbb8f"/>
+
+  <!-- Baumreihe -->
+  <g class="loop-treeline">
+    <g><use href="#treeRow"/></g>
+    <g transform="translate(1200,0)"><use href="#treeRow"/></g>
+  </g>
+
+  <!-- Strasse -->
+  <rect y="556" width="1200" height="84" fill="#4d4a45"/>
+  <rect y="556" width="1200" height="4" fill="#3c3936"/>
+  <g class="loop-dashes" stroke="#f4e6c8" stroke-width="5" stroke-dasharray="42 58">
+    <line x1="0" y1="598" x2="1200" y2="598"/>
+    <line x1="1200" y1="598" x2="2400" y2="598"/>
+  </g>
+
+  <!-- Requisiten -->
+  <g class="loop-props">
+    <g><use href="#props"/></g>
+    <g transform="translate(1200,0)"><use href="#props"/></g>
+  </g>
+
+  <!-- ── Radfahrer 1 (Timo, gruenes Rad) ── -->
+  <g class="riders">
+  <g transform="translate(455,612)">
+    <use href="#wheel"/><use href="#wheel" x="80"/>
+    <g stroke="#0c6b58" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M0 0 L32 -8 L18 -50 L0 0"/><path d="M32 -8 L62 -50"/>
+      <path d="M18 -50 L62 -50"/><path d="M62 -50 L80 0"/>
+      <path d="M18 -50 L12 -60"/><path d="M62 -50 L66 -60"/>
+    </g>
+    <path d="M4 -60 L22 -60" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M66 -60 L74 -62" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <g class="crank" transform="translate(32,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#2b2b2b" stroke-width="4"/>
+      <rect x="-6" y="-16" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+      <rect x="-6" y="11" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+    </g>
+    <g class="rider-bob">
+      <!-- hinteres Bein: Rotation per SMIL um explizite Gelenkpunkte -->
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 13 -58; 30 13 -58; -24 13 -58" keyTimes="0;0.5;1" dur="0.8s" begin="-0.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M13 -58 L30 -34" stroke="#3d4a50" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 30 -34; -14 30 -34; 38 30 -34" keyTimes="0;0.5;1" dur="0.8s" begin="-0.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M30 -34 L32 -10" stroke="#3d4a50" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- Rumpf: Trikot = Deutschlandflagge -->
+      <path d="M13 -58 Q30 -80 52 -88" stroke="#2b2b2b" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M26 -73 Q38 -83 52 -88" stroke="#d03a2b" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M40 -82 Q46 -86 52 -88" stroke="#e8b23a" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <!-- Kopf + Helm -->
+      <circle cx="63" cy="-94" r="10.5" fill="#e8b48c"/>
+      <path d="M51.5 -95 a11.5 11.5 0 0 1 23 -2 l-4 2 Z" fill="#0c6b58"/>
+      <path d="M51.5 -95 a11.5 10 0 0 1 12 -10 l1 4 Z" fill="#0c6b58"/>
+      <!-- Arm -->
+      <path d="M50 -84 Q60 -72 68 -61" stroke="#e8b48c" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <!-- vorderes Bein -->
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 15 -56; 30 15 -56; -24 15 -56" keyTimes="0;0.5;1" dur="0.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M15 -56 L34 -34" stroke="#2b3a41" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 34 -34; -14 34 -34; 38 34 -34" keyTimes="0;0.5;1" dur="0.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M34 -34 L35 -8" stroke="#2b3a41" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ── Radfahrer 2 (Tino, oranges Rad) ── -->
+  <g transform="translate(620,612) scale(0.97)">
+    <use href="#wheel"/><use href="#wheel" x="80"/>
+    <g stroke="#eb8f34" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M0 0 L32 -8 L18 -50 L0 0"/><path d="M32 -8 L62 -50"/>
+      <path d="M18 -50 L62 -50"/><path d="M62 -50 L80 0"/>
+      <path d="M18 -50 L12 -60"/><path d="M62 -50 L66 -60"/>
+    </g>
+    <path d="M4 -60 L22 -60" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M66 -60 L74 -62" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+    <g class="crank" transform="translate(32,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#2b2b2b" stroke-width="4"/>
+      <rect x="-6" y="-16" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+      <rect x="-6" y="11" width="12" height="5" rx="2.5" fill="#2b2b2b"/>
+    </g>
+    <g class="rider-bob rider-bob--b">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 13 -58; 30 13 -58; -24 13 -58" keyTimes="0;0.5;1" dur="0.8s" begin="-0.65s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M13 -58 L30 -34" stroke="#3d4a50" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 30 -34; -14 30 -34; 38 30 -34" keyTimes="0;0.5;1" dur="0.8s" begin="-0.65s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M30 -34 L32 -10" stroke="#3d4a50" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+      <path d="M13 -58 Q30 -80 52 -88" stroke="#2b2b2b" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M26 -73 Q38 -83 52 -88" stroke="#d03a2b" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M40 -82 Q46 -86 52 -88" stroke="#e8b23a" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <circle cx="63" cy="-94" r="10.5" fill="#d9a273"/>
+      <path d="M51.5 -95 a11.5 11.5 0 0 1 23 -2 l-4 2 Z" fill="#eb8f34"/>
+      <path d="M51.5 -95 a11.5 10 0 0 1 12 -10 l1 4 Z" fill="#eb8f34"/>
+      <path d="M50 -84 Q60 -72 68 -61" stroke="#d9a273" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-24 15 -56; 30 15 -56; -24 15 -56" keyTimes="0;0.5;1" dur="0.8s" begin="-0.25s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M15 -56 L34 -34" stroke="#2b3a41" stroke-width="10" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 34 -34; -14 34 -34; 38 34 -34" keyTimes="0;0.5;1" dur="0.8s" begin="-0.25s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M34 -34 L35 -8" stroke="#2b3a41" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+  </g>
+
+  <!-- Vordergrund -->
+  <g class="loop-grass">
+    <g><use href="#grassRow"/></g>
+    <g transform="translate(1200,0)"><use href="#grassRow"/></g>
+  </g>
+
+  <!-- Landschafts-Abdunklung bei Nacht (nach allen Landschichten) -->
+  <rect class="night-veil" x="0" y="290" width="1200" height="410" fill="url(#veilFadeP)" style="mix-blend-mode: multiply;"/>
+
+  <!-- Nachtlager (nach dem Nachtschleier, damit das Feuer leuchtet) -->
+  <g class="camp" transform="translate(540,552) scale(0.88)">
+    <path d="M-60 0 L0 -66 L60 0 Z" fill="#a35a3c"/>
+    <path d="M-14 0 L0 -46 L14 0 Z" fill="#7a4028"/>
+    <circle class="fire-glow" cx="110" cy="-8" r="26" fill="#f5a94d" opacity="0.4"/>
+    <path d="M104 -4 q6 -16 12 0 q4 8 -6 10 q-10 -2 -6 -10" fill="#eb8f34"/>
+    <g stroke="#6b5138" stroke-width="4" stroke-linecap="round">
+      <line x1="98" y1="4" x2="122" y2="-2"/><line x1="100" y1="-2" x2="121" y2="5"/>
+    </g>
+  </g>
+</svg>
+</div>
+
+<div class="hud">
+  <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
+  <span class="hud__label" id="stateLabel">Variante A · Travel-Poster</span>
+  <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
+</div>
+
+<script>
+  const scene = document.getElementById("scene");
+  const btn = document.getElementById("toggleNight");
+  const label = document.getElementById("stateLabel");
+  btn.addEventListener("click", () => {
+    const night = scene.classList.toggle("scene--night");
+    btn.textContent = night ? "☀️" : "🌙";
+    label.textContent = night ? "🌙 Gute Nacht, Timo & Tino" : "Variante A · Travel-Poster";
+  });
+</script>
+</body>
+</html>

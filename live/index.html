@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Living Scene · Art-Direction-Auswahl</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    color: #1f2a2f;
+    background:
+      radial-gradient(circle at top left, rgba(235, 143, 52, 0.22), transparent 32%),
+      radial-gradient(circle at top right, rgba(12, 107, 88, 0.18), transparent 34%),
+      linear-gradient(180deg, #fff9f0 0%, #f7f1e7 48%, #f2efe8 100%);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px calc(40px + env(safe-area-inset-bottom));
+  }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: 0.14em;
+    font-size: 12px; font-weight: 700; color: #58656b;
+  }
+  h1 { font-size: clamp(26px, 6vw, 36px); letter-spacing: -0.03em; margin: 6px 0 10px; }
+  .lead { color: #58656b; max-width: 480px; text-align: center; font-size: 15px; line-height: 1.5; }
+  .cards { display: grid; gap: 18px; width: min(100%, 480px); margin-top: 30px; }
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    border-radius: 24px; overflow: hidden;
+    background: #fffdf8; box-shadow: 0 18px 40px rgba(29, 35, 38, 0.1);
+    transition: transform 0.18s ease;
+  }
+  .card:active { transform: scale(0.98); }
+  .card__preview { height: 150px; position: relative; overflow: hidden; }
+  .card__preview svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .card__body { padding: 16px 20px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card__body h2 { font-size: 19px; letter-spacing: -0.02em; }
+  .card__body p { font-size: 13.5px; color: #58656b; margin-top: 3px; }
+  .card__go { font-size: 22px; color: #0c6b58; flex-shrink: 0; }
+  .back { margin-top: 34px; font-size: 14px; color: #58656b; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <p class="eyebrow">Living Scene · Prototyp</p>
+  <h1>Welcher Stil soll es werden?</h1>
+  <p class="lead">
+    Zwei Richtungen für die animierte Live-Szene von Timo &amp; Tino.
+    Beide zeigen dieselbe Idee — Fahrt, Landschaft, Tag &amp; Nacht (🌙 antippen!) —
+    aber mit ganz unterschiedlichem Charakter.
+  </p>
+
+  <div class="cards">
+    <a class="card" href="./poster.html">
+      <div class="card__preview">
+        <svg viewBox="0 0 480 150" preserveAspectRatio="xMidYMid slice">
+          <rect width="480" height="150" fill="#f9e3bd"/>
+          <circle cx="120" cy="40" r="26" fill="#f2a24b"/>
+          <path d="M0 90 L60 55 L120 88 L190 48 L260 90 L330 58 L400 88 L480 62 L480 150 L0 150 Z" fill="#a9bcae"/>
+          <path d="M0 110 Q120 88 240 106 Q360 122 480 102 L480 150 L0 150 Z" fill="#8fb287"/>
+          <rect y="126" width="480" height="24" fill="#4d4a45"/>
+          <line x1="0" y1="138" x2="480" y2="138" stroke="#f4e6c8" stroke-width="3" stroke-dasharray="18 22"/>
+          <circle cx="330" cy="128" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5"/>
+          <circle cx="362" cy="128" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5"/>
+          <path d="M330 128 L344 124 L338 108 Z M344 124 L356 108 M338 108 L356 108 M356 108 L362 128" stroke="#0c6b58" stroke-width="2.5" fill="none"/>
+          <path d="M337 110 Q346 100 354 97" stroke="#d03a2b" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <circle cx="357" cy="94" r="4.5" fill="#e8b48c"/>
+        </svg>
+      </div>
+      <div class="card__body">
+        <div>
+          <h2>Variante A · Travel-Poster</h2>
+          <p>Ruhig, warm, elegant — wie ein Reiseplakat in App-Farben.</p>
+        </div>
+        <span class="card__go">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="./comic.html">
+      <div class="card__preview">
+        <svg viewBox="0 0 480 150" preserveAspectRatio="xMidYMid slice">
+          <rect width="480" height="150" fill="#8fd3f4"/>
+          <g transform="translate(110,42)">
+            <circle r="22" fill="#ffd93b" stroke="#27323a" stroke-width="3"/>
+            <circle cx="-7" cy="-3" r="2.2" fill="#27323a"/><circle cx="7" cy="-3" r="2.2" fill="#27323a"/>
+            <path d="M-8 5 Q0 13 8 5" stroke="#27323a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </g>
+          <path d="M0 96 Q120 62 240 92 Q360 118 480 88 L480 150 L0 150 Z" fill="#6bc24a" stroke="#27323a" stroke-width="3"/>
+          <rect y="124" width="480" height="26" fill="#5a5a5a"/>
+          <path d="M0 124 L480 124" stroke="#27323a" stroke-width="3"/>
+          <line x1="0" y1="138" x2="480" y2="138" stroke="#fff" stroke-width="4" stroke-dasharray="20 24"/>
+          <circle cx="330" cy="126" r="11" fill="none" stroke="#27323a" stroke-width="4"/>
+          <circle cx="364" cy="126" r="11" fill="none" stroke="#27323a" stroke-width="4"/>
+          <path d="M330 126 L346 121 L340 104 Z M346 121 L358 104 M340 104 L358 104 M358 104 L364 126" stroke="#0c8a6a" stroke-width="3.5" fill="none"/>
+          <path d="M339 106 Q348 96 356 93" stroke="#e84e3d" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <circle cx="360" cy="87" r="8" fill="#f2c29b" stroke="#27323a" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="card__body">
+        <div>
+          <h2>Variante B · Comic</h2>
+          <p>Verspielt, frech, mit großen Köpfen, Hund und Sprechblase.</p>
+        </div>
+        <span class="card__go">→</span>
+      </div>
+    </a>
+  </div>
+
+  <a class="back" href="/">← zurück zur App</a>
+</body>
+</html>

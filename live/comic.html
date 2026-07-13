@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Living Scene · Variante B · Comic</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #8fd3f4; }
+  body { font-family: "Avenir Next", "Trebuchet MS", sans-serif; }
+
+  .scene-wrap { position: fixed; inset: 0; }
+  svg.scene { width: 100%; height: 100%; display: block; }
+
+  /* ── Parallax-Loops ── */
+  .loop-clouds   { animation: slide 60s linear infinite; }
+  .loop-hills-far{ animation: slide 90s linear infinite; }
+  .loop-hills    { animation: slide 40s linear infinite; }
+  .loop-props    { animation: slide 11s linear infinite; }
+  .loop-dashes   { animation: slide 1.2s linear infinite; }
+  .loop-grass    { animation: slide 7s linear infinite; }
+  @keyframes slide { to { transform: translateX(-1200px); } }
+
+  .spokes, .crank { animation: spin 0.65s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sun-rays { animation: spin 24s linear infinite; }
+
+  .rider-bob { animation: bob 0.33s ease-in-out infinite alternate; }
+  .rider-bob--b { animation-delay: -0.16s; }
+  @keyframes bob { to { transform: translateY(-2.6px); } }
+
+  .bubble { animation: bubble 2.4s ease-in-out infinite alternate; }
+  @keyframes bubble { to { transform: translateY(-7px); } }
+
+  .dog { animation: dogrun 0.5s ease-in-out infinite alternate; }
+  @keyframes dogrun { to { transform: translateY(-4px); } }
+  .dog-leg { animation: dogleg 0.25s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: top center; }
+  .dog-leg--b { animation-delay: -0.125s; }
+  @keyframes dogleg { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+  .dog-tail { animation: tail 0.3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: bottom left; }
+  @keyframes tail { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+
+  .sweat { animation: sweat 0.9s ease-out infinite; }
+  .sweat--2 { animation-delay: 0.45s; }
+  @keyframes sweat {
+    0% { transform: translate(0, 0); opacity: 0.9; }
+    100% { transform: translate(-16px, -12px); opacity: 0; }
+  }
+
+  /* ── Tag / Nacht ── */
+  .night-veil, .stars, .moon, .camp { opacity: 0; transition: opacity 1.4s ease; }
+  .sun-group, .riders, .dog, .bubble { transition: opacity 1.3s ease; }
+  .scene--night .night-veil, .scene--night .stars, .scene--night .moon, .scene--night .camp { opacity: 1; }
+  .scene--night .sun-group, .scene--night .riders, .scene--night .dog, .scene--night .bubble { opacity: 0; }
+  .scene--night [class^="loop-"] { animation-play-state: paused; }
+  .star { animation: twinkle 2.2s ease-in-out infinite; }
+  .star:nth-child(3n) { animation-delay: 0.8s; }
+  .star:nth-child(3n+1) { animation-delay: 1.5s; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .fire-glow { animation: fireglow 1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes fireglow { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+  .zzz { animation: zzz 2.8s ease-in-out infinite; opacity: 0; }
+  .zzz--2 { animation-delay: 0.9s; }
+  .zzz--3 { animation-delay: 1.8s; }
+  @keyframes zzz {
+    0% { transform: translate(0,0); opacity: 0; }
+    25% { opacity: 1; }
+    100% { transform: translate(14px, -26px); opacity: 0; }
+  }
+
+  /* ── HUD ── */
+  .hud {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    color: #27323a;
+  }
+  .hud__label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(8px);
+    padding: 8px 14px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hud button, .hud a {
+    font: inherit; font-size: 16px; text-decoration: none; color: inherit;
+    background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(8px);
+    border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex-shrink: 0;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<div class="scene-wrap">
+<svg class="scene" id="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-label="Timo und Tino radeln als Comicfiguren durch eine Landschaft">
+  <defs>
+    <linearGradient id="skyC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ecbf2"/>
+      <stop offset="1" stop-color="#c8ecfb"/>
+    </linearGradient>
+    <linearGradient id="veilFadeC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#152238" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#152238" stop-opacity="1"/>
+    </linearGradient>
+
+    <g id="cloudC">
+      <g fill="#ffffff" stroke="#27323a" stroke-width="4.5" stroke-linejoin="round">
+        <path d="M-40 10 a18 18 0 0 1 2 -34 a22 22 0 0 1 42 -8 a20 20 0 0 1 34 14 a15 15 0 0 1 -4 28 Z"/>
+      </g>
+    </g>
+
+    <path id="hillsFarC" d="M0 470 Q120 380 260 448 Q400 512 540 430 Q690 350 830 440 Q970 522 1100 448 Q1160 418 1200 440 L1200 560 L0 560 Z"/>
+    <path id="hillsC" d="M0 505 Q160 430 330 495 Q500 552 660 486 Q820 425 980 495 Q1100 542 1200 498 L1200 580 L0 580 Z"/>
+
+    <g id="propsC">
+      <!-- Wackeliges Ortsschild -->
+      <g transform="translate(200,556) rotate(-3)">
+        <rect x="-4" y="-62" width="8" height="62" rx="3" fill="#8a6d4a" stroke="#27323a" stroke-width="3"/>
+        <rect x="-58" y="-100" width="116" height="42" rx="10" fill="#ffd93b" stroke="#27323a" stroke-width="4"/>
+        <text x="0" y="-71" text-anchor="middle" font-size="17" font-weight="800" fill="#27323a" font-family="Trebuchet MS, sans-serif">Volos 2107 km</text>
+      </g>
+      <!-- Grinsender Kilometerstein -->
+      <g transform="translate(580,556)">
+        <path d="M-16 0 L-16 -28 Q-16 -40 0 -40 Q16 -40 16 -28 L16 0 Z" fill="#f2f2f2" stroke="#27323a" stroke-width="3.5"/>
+        <circle cx="-6" cy="-28" r="2" fill="#27323a"/><circle cx="6" cy="-28" r="2" fill="#27323a"/>
+        <path d="M-6 -20 Q0 -14 6 -20" stroke="#27323a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <text x="0" y="-6" text-anchor="middle" font-size="10" font-weight="800" fill="#27323a" font-family="Trebuchet MS, sans-serif">km 0</text>
+      </g>
+      <!-- Grenzhaeuschen -->
+      <g transform="translate(930,556)">
+        <rect x="26" y="-76" width="40" height="76" rx="6" fill="#fff" stroke="#27323a" stroke-width="4"/>
+        <rect x="26" y="-76" width="40" height="18" rx="6" fill="#e84e3d" stroke="#27323a" stroke-width="4"/>
+        <rect x="-4" y="-50" width="9" height="50" fill="#8a6d4a" stroke="#27323a" stroke-width="3"/>
+        <g transform="translate(0,-47) rotate(-22)">
+          <rect x="0" y="-5" width="92" height="10" rx="5" fill="#fff" stroke="#e84e3d" stroke-width="3" stroke-dasharray="15 13"/>
+        </g>
+        <rect x="-44" y="-92" width="5" height="92" fill="#8a6d4a" stroke="#27323a" stroke-width="2"/>
+        <g stroke="#27323a" stroke-width="2">
+          <path d="M-39 -90 h28 v16 h-28 Z" fill="#2b2b2b"/>
+          <path d="M-39 -84.7 h28 v5.3 h-28 Z" fill="#e84e3d"/>
+          <path d="M-39 -79.4 h28 v5.4 h-28 Z" fill="#ffd93b"/>
+        </g>
+      </g>
+      <!-- Comic-Baum -->
+      <g transform="translate(760,556)">
+        <rect x="-5" y="-26" width="10" height="26" rx="3" fill="#8a6d4a" stroke="#27323a" stroke-width="3"/>
+        <circle cx="0" cy="-44" r="24" fill="#6bc24a" stroke="#27323a" stroke-width="4"/>
+        <circle cx="-16" cy="-34" r="14" fill="#7ecf57" stroke="#27323a" stroke-width="3"/>
+        <circle cx="16" cy="-36" r="13" fill="#7ecf57" stroke="#27323a" stroke-width="3"/>
+      </g>
+      <!-- Blumen -->
+      <g transform="translate(420,556)">
+        <line x1="0" y1="0" x2="0" y2="-16" stroke="#3f8f2f" stroke-width="3"/>
+        <circle cx="0" cy="-20" r="6" fill="#e84e3d" stroke="#27323a" stroke-width="2.5"/>
+      </g>
+    </g>
+
+    <g id="grassC">
+      <path d="M0 640 L1200 640 L1200 700 L0 700 Z" fill="#6bc24a"/>
+      <path d="M0 640 L1200 640" stroke="#27323a" stroke-width="4"/>
+      <g>
+        <g transform="translate(150,668)"><line x1="0" y1="0" x2="0" y2="-14" stroke="#3f8f2f" stroke-width="3"/><circle cx="0" cy="-18" r="7" fill="#ffd93b" stroke="#27323a" stroke-width="2.5"/><circle cx="0" cy="-18" r="2.5" fill="#c47a1e"/></g>
+        <g transform="translate(500,674)"><line x1="0" y1="0" x2="0" y2="-12" stroke="#3f8f2f" stroke-width="3"/><circle cx="0" cy="-16" r="6" fill="#fff" stroke="#27323a" stroke-width="2.5"/><circle cx="0" cy="-16" r="2" fill="#ffd93b"/></g>
+        <g transform="translate(870,666)"><line x1="0" y1="0" x2="0" y2="-14" stroke="#3f8f2f" stroke-width="3"/><circle cx="0" cy="-18" r="7" fill="#e84e3d" stroke="#27323a" stroke-width="2.5"/></g>
+      </g>
+    </g>
+
+    <!-- Comic-Rad: dickere Reifen, Outline -->
+    <g id="wheelC">
+      <circle cx="0" cy="0" r="27" fill="none" stroke="#27323a" stroke-width="7"/>
+      <g class="spokes" stroke="#8a8478" stroke-width="2">
+        <line x1="-23" y1="0" x2="23" y2="0"/><line x1="0" y1="-23" x2="0" y2="23"/>
+        <line x1="-16" y1="-16" x2="16" y2="16"/><line x1="-16" y1="16" x2="16" y2="-16"/>
+      </g>
+      <circle cx="0" cy="0" r="4.5" fill="#27323a"/>
+    </g>
+  </defs>
+
+  <!-- Himmel -->
+  <rect width="1200" height="700" fill="url(#skyC)"/>
+
+  <!-- Sonne mit Gesicht -->
+  <g class="sun-group">
+    <g transform="translate(600,150)">
+      <g class="sun-rays" stroke="#ffb830" stroke-width="9" stroke-linecap="round">
+        <line x1="0" y1="-72" x2="0" y2="-94"/><line x1="0" y1="72" x2="0" y2="94"/>
+        <line x1="-72" y1="0" x2="-94" y2="0"/><line x1="72" y1="0" x2="94" y2="0"/>
+        <line x1="-51" y1="-51" x2="-67" y2="-67"/><line x1="51" y1="51" x2="67" y2="67"/>
+        <line x1="-51" y1="51" x2="-67" y2="67"/><line x1="51" y1="-51" x2="67" y2="-67"/>
+      </g>
+      <circle r="58" fill="#ffd93b" stroke="#27323a" stroke-width="4.5"/>
+      <circle cx="-18" cy="-8" r="5" fill="#27323a"/>
+      <circle cx="18" cy="-8" r="5" fill="#27323a"/>
+      <path d="M-22 14 Q0 34 22 14" stroke="#27323a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <circle cx="-30" cy="8" r="7" fill="#ff9d76" opacity="0.7"/>
+      <circle cx="30" cy="8" r="7" fill="#ff9d76" opacity="0.7"/>
+    </g>
+  </g>
+
+  <!-- Nacht -->
+  <rect class="night-veil" width="1200" height="700" fill="#152238" opacity="0" style="mix-blend-mode: multiply;"/>
+  <g class="stars" fill="#fff8d9">
+    <circle class="star" cx="150" cy="100" r="3"/><circle class="star" cx="340" cy="70" r="2.2"/>
+    <circle class="star" cx="530" cy="130" r="2.6"/><circle class="star" cx="710" cy="80" r="2"/>
+    <circle class="star" cx="870" cy="150" r="3"/><circle class="star" cx="1030" cy="90" r="2.4"/>
+    <circle class="star" cx="1140" cy="180" r="2.6"/><circle class="star" cx="440" cy="190" r="2"/>
+    <circle class="star" cx="950" cy="230" r="2"/><circle class="star" cx="250" cy="240" r="2.2"/>
+    <path d="M600 260 l3.5 7 7.5 1 -5.5 5.4 1.3 7.6 -6.8 -3.6 -6.8 3.6 1.3 -7.6 -5.5 -5.4 7.5 -1 Z" fill="#fff8d9"/>
+  </g>
+  <g class="moon">
+    <g transform="translate(640,140)">
+      <circle r="44" fill="#fff3c4" stroke="#27323a" stroke-width="4"/>
+      <circle cx="-14" cy="-6" r="6" fill="#e8d89a"/>
+      <circle cx="12" cy="12" r="9" fill="#e8d89a"/>
+      <circle cx="16" cy="-18" r="4" fill="#e8d89a"/>
+      <path d="M-14 8 a4 4 0 0 0 8 0" stroke="#27323a" stroke-width="3" fill="none"/>
+      <line x1="-18" y1="-2" x2="-10" y2="-2" stroke="#27323a" stroke-width="3" stroke-linecap="round"/>
+      <line x1="2" y1="-2" x2="10" y2="-2" stroke="#27323a" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Wolken -->
+  <g class="loop-clouds">
+    <g><use href="#cloudC" x="200" y="120"/><use href="#cloudC" x="520" y="70"/><use href="#cloudC" x="820" y="140"/><use href="#cloudC" x="1080" y="90"/></g>
+    <g transform="translate(1200,0)"><use href="#cloudC" x="200" y="120"/><use href="#cloudC" x="520" y="70"/><use href="#cloudC" x="820" y="140"/><use href="#cloudC" x="1080" y="90"/></g>
+  </g>
+
+  <!-- Huegel -->
+  <g class="loop-hills-far">
+    <g><use href="#hillsFarC" fill="#8ed468"/></g>
+    <g transform="translate(1200,0)"><use href="#hillsFarC" fill="#8ed468"/></g>
+  </g>
+  <g class="loop-hills">
+    <g><use href="#hillsC" fill="#6bc24a" stroke="#27323a" stroke-width="4"/></g>
+    <g transform="translate(1200,0)"><use href="#hillsC" fill="#6bc24a" stroke="#27323a" stroke-width="4"/></g>
+  </g>
+  <rect y="540" width="1200" height="40" fill="#6bc24a"/>
+
+  <!-- Strasse -->
+  <rect y="556" width="1200" height="84" fill="#5a5a5a"/>
+  <path d="M0 556 L1200 556" stroke="#27323a" stroke-width="5"/>
+  <g class="loop-dashes" stroke="#fff" stroke-width="7" stroke-dasharray="48 62">
+    <line x1="0" y1="598" x2="1200" y2="598"/>
+    <line x1="1200" y1="598" x2="2400" y2="598"/>
+  </g>
+
+  <!-- Requisiten -->
+  <g class="loop-props">
+    <g><use href="#propsC"/></g>
+    <g transform="translate(1200,0)"><use href="#propsC"/></g>
+  </g>
+
+  <!-- Sprechblase -->
+  <g class="bubble">
+    <g transform="translate(600,428)">
+      <rect x="-105" y="-40" width="210" height="52" rx="26" fill="#fff" stroke="#27323a" stroke-width="4"/>
+      <path d="M-70 8 L-88 36 L-42 10 Z" fill="#fff" stroke="#27323a" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="-68" y="2" width="28" height="10" fill="#fff"/>
+      <text x="0" y="-8" text-anchor="middle" font-size="21" font-weight="800" fill="#27323a" font-family="Trebuchet MS, sans-serif">Nach Griechenland!</text>
+    </g>
+  </g>
+
+  <!-- ── Comic-Radfahrer 1 (Timo) ── -->
+  <g class="riders">
+  <g transform="translate(440,610)">
+    <use href="#wheelC"/><use href="#wheelC" x="82"/>
+    <g stroke="#0c8a6a" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M0 0 L34 -8 L20 -50 L0 0"/><path d="M34 -8 L64 -50"/>
+      <path d="M20 -50 L64 -50"/><path d="M64 -50 L82 0"/>
+      <path d="M20 -50 L13 -62"/><path d="M64 -50 L68 -62"/>
+    </g>
+    <path d="M4 -62 L23 -62" stroke="#27323a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M68 -62 L78 -64" stroke="#27323a" stroke-width="8" stroke-linecap="round"/>
+    <g class="crank" transform="translate(34,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#27323a" stroke-width="5"/>
+      <rect x="-7" y="-17" width="14" height="6" rx="3" fill="#27323a"/>
+      <rect x="-7" y="11" width="14" height="6" rx="3" fill="#27323a"/>
+    </g>
+    <g class="rider-bob">
+      <!-- hinteres Bein -->
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-26 14 -60; 32 14 -60; -26 14 -60" keyTimes="0;0.5;1" dur="0.65s" begin="-0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M14 -60 L32 -34" stroke="#3a63c4" stroke-width="13" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 32 -34; -14 32 -34; 38 32 -34" keyTimes="0;0.5;1" dur="0.65s" begin="-0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M32 -34 L34 -8" stroke="#3a63c4" stroke-width="10" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- Rumpf: Flaggen-Trikot mit Outline -->
+      <path d="M14 -60 Q32 -84 54 -92" stroke="#27323a" stroke-width="20" stroke-linecap="round" fill="none"/>
+      <path d="M15.5 -60.5 Q32 -84 53 -91" stroke="#2b2b2b" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <path d="M28 -75 Q40 -86 53 -91" stroke="#e84e3d" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <path d="M42 -85 Q48 -89 53 -91" stroke="#ffd93b" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <!-- Grosser Kopf -->
+      <g transform="translate(68,-104)">
+        <circle r="17" fill="#f2c29b" stroke="#27323a" stroke-width="3.5"/>
+        <path d="M-17 -4 a17 15 0 0 1 34 -1 l-3 -0.5 a14 8 0 0 0 -28 1 Z" fill="#0c8a6a" stroke="#27323a" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="5" cy="-1" r="2.6" fill="#27323a"/>
+        <circle cx="14" cy="-2" r="2.6" fill="#27323a"/>
+        <path d="M4 8 Q10 12 16 7" stroke="#27323a" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="-2" cy="6" r="4" fill="#ff9d76" opacity="0.75"/>
+      </g>
+      <!-- Arm -->
+      <path d="M52 -86 Q62 -74 70 -63" stroke="#f2c29b" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- vorderes Bein -->
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-26 16 -58; 32 16 -58; -26 16 -58" keyTimes="0;0.5;1" dur="0.65s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M16 -58 L36 -34" stroke="#2b4a9e" stroke-width="13" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 36 -34; -14 36 -34; 38 36 -34" keyTimes="0;0.5;1" dur="0.65s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M36 -34 L37 -6" stroke="#2b4a9e" stroke-width="10" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ── Comic-Radfahrer 2 (Tino) ── -->
+  <g transform="translate(625,610) scale(0.97)">
+    <use href="#wheelC"/><use href="#wheelC" x="82"/>
+    <g stroke="#e8792b" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M0 0 L34 -8 L20 -50 L0 0"/><path d="M34 -8 L64 -50"/>
+      <path d="M20 -50 L64 -50"/><path d="M64 -50 L82 0"/>
+      <path d="M20 -50 L13 -62"/><path d="M64 -50 L68 -62"/>
+    </g>
+    <path d="M4 -62 L23 -62" stroke="#27323a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M68 -62 L78 -64" stroke="#27323a" stroke-width="8" stroke-linecap="round"/>
+    <g class="crank" transform="translate(34,-8)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#27323a" stroke-width="5"/>
+      <rect x="-7" y="-17" width="14" height="6" rx="3" fill="#27323a"/>
+      <rect x="-7" y="11" width="14" height="6" rx="3" fill="#27323a"/>
+    </g>
+    <!-- Schweisstropfen -->
+    <g fill="#7ecbf2" stroke="#27323a" stroke-width="2">
+      <path class="sweat" d="M52 -122 q4 6 0 9 q-5 -3 0 -9"/>
+      <path class="sweat sweat--2" d="M60 -126 q4 6 0 9 q-5 -3 0 -9"/>
+    </g>
+    <g class="rider-bob rider-bob--b">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-26 14 -60; 32 14 -60; -26 14 -60" keyTimes="0;0.5;1" dur="0.65s" begin="-0.5s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M14 -60 L32 -34" stroke="#b03a8e" stroke-width="13" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 32 -34; -14 32 -34; 38 32 -34" keyTimes="0;0.5;1" dur="0.65s" begin="-0.5s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M32 -34 L34 -8" stroke="#b03a8e" stroke-width="10" stroke-linecap="round"/>
+        </g>
+      </g>
+      <path d="M14 -60 Q32 -84 54 -92" stroke="#27323a" stroke-width="20" stroke-linecap="round" fill="none"/>
+      <path d="M15.5 -60.5 Q32 -84 53 -91" stroke="#2b2b2b" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <path d="M28 -75 Q40 -86 53 -91" stroke="#e84e3d" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <path d="M42 -85 Q48 -89 53 -91" stroke="#ffd93b" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <g transform="translate(68,-104)">
+        <circle r="17" fill="#e0a87a" stroke="#27323a" stroke-width="3.5"/>
+        <path d="M-17 -4 a17 15 0 0 1 34 -1 l-3 -0.5 a14 8 0 0 0 -28 1 Z" fill="#e8792b" stroke="#27323a" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="5" cy="-1" r="2.6" fill="#27323a"/>
+        <circle cx="14" cy="-2" r="2.6" fill="#27323a"/>
+        <path d="M3 7 Q10 13 17 6" stroke="#27323a" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="-2" cy="6" r="4" fill="#e8825d" opacity="0.75"/>
+      </g>
+      <path d="M52 -86 Q62 -74 70 -63" stroke="#e0a87a" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-26 16 -58; 32 16 -58; -26 16 -58" keyTimes="0;0.5;1" dur="0.65s" begin="-0.18s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+        <path d="M16 -58 L36 -34" stroke="#8e2e72" stroke-width="13" stroke-linecap="round"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="38 36 -34; -14 36 -34; 38 36 -34" keyTimes="0;0.5;1" dur="0.65s" begin="-0.18s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+          <path d="M36 -34 L37 -6" stroke="#8e2e72" stroke-width="10" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+  </g>
+
+  <!-- Hund -->
+  <g class="dog">
+    <g transform="translate(310,616)">
+      <g class="dog-leg"><line x1="-14" y1="-14" x2="-14" y2="2" stroke="#27323a" stroke-width="5" stroke-linecap="round"/></g>
+      <g class="dog-leg dog-leg--b"><line x1="14" y1="-14" x2="14" y2="2" stroke="#27323a" stroke-width="5" stroke-linecap="round"/></g>
+      <ellipse cx="0" cy="-20" rx="24" ry="13" fill="#c98d4f" stroke="#27323a" stroke-width="3.5"/>
+      <g class="dog-tail"><path d="M-22 -26 Q-34 -36 -30 -44" stroke="#27323a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <g transform="translate(26,-32)">
+        <circle r="11" fill="#c98d4f" stroke="#27323a" stroke-width="3.5"/>
+        <path d="M-6 -9 L-11 -20 L0 -12 Z" fill="#8a6d4a" stroke="#27323a" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M5 -10 L9 -21 L13 -9 Z" fill="#8a6d4a" stroke="#27323a" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="4" cy="-2" r="2" fill="#27323a"/>
+        <circle cx="11" cy="0" r="2.6" fill="#27323a"/>
+        <path d="M10 6 q4 6 8 3" stroke="#e84e3d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Vordergrund -->
+  <g class="loop-grass">
+    <g><use href="#grassC"/></g>
+    <g transform="translate(1200,0)"><use href="#grassC"/></g>
+  </g>
+
+  <!-- Landschafts-Abdunklung bei Nacht (nach allen Landschichten) -->
+  <rect class="night-veil" x="0" y="390" width="1200" height="310" fill="url(#veilFadeC)" style="mix-blend-mode: multiply;"/>
+
+  <!-- Nachtlager (nach dem Nachtschleier, damit das Feuer leuchtet) -->
+  <g class="camp">
+    <g transform="translate(540,552) scale(0.95)">
+      <path d="M-60 0 L0 -66 L60 0 Z" fill="#e8792b" stroke="#27323a" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-14 0 L0 -46 L14 0 Z" fill="#a04e14" stroke="#27323a" stroke-width="3"/>
+      <circle class="fire-glow" cx="112" cy="-10" r="28" fill="#ffd93b" opacity="0.4"/>
+      <path d="M105 -4 q7 -18 14 0 q5 9 -7 11 q-12 -2 -7 -11" fill="#e8792b" stroke="#27323a" stroke-width="2.5"/>
+      <g stroke="#8a6d4a" stroke-width="5" stroke-linecap="round">
+        <line x1="98" y1="4" x2="124" y2="-2"/><line x1="101" y1="-2" x2="123" y2="5"/>
+      </g>
+      <g fill="#fff" font-family="Trebuchet MS, sans-serif" font-weight="800">
+        <text class="zzz" x="30" y="-70" font-size="20">Z</text>
+        <text class="zzz zzz--2" x="42" y="-82" font-size="15">z</text>
+        <text class="zzz zzz--3" x="52" y="-92" font-size="11">z</text>
+      </g>
+    </g>
+  </g>
+</svg>
+</div>
+
+<div class="hud">
+  <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
+  <span class="hud__label" id="stateLabel">Variante B · Comic</span>
+  <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
+</div>
+
+<script>
+  const scene = document.getElementById("scene");
+  const btn = document.getElementById("toggleNight");
+  const label = document.getElementById("stateLabel");
+  btn.addEventListener("click", () => {
+    const night = scene.classList.toggle("scene--night");
+    btn.textContent = night ? "☀️" : "🌙";
+    label.textContent = night ? "🌙 Zzz… bis morgen früh!" : "Variante B · Comic";
+  });
+</script>
+</body>
+</html>
