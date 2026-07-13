@@ -53,6 +53,10 @@ Stand: 2026-07-13. Reihenfolge = Ausführungsreihenfolge. Jeder Block ist einzel
 
 ## Phase 3 — Go-Live-Checkliste (Konfiguration, kein Code)
 
+> **GEPARKT** — wird in einer separaten Session **„finale Verbindung mit Traccar"** abgearbeitet.
+> Stand beim Parken (13.07.2026): Phase 1 + 2 sind komplett umgesetzt, deployt und live verifiziert
+> (Commit `459e8a5`). Die App laeuft noch im Mock-Modus, bis diese Checkliste erledigt ist.
+
 - [ ] `src/config/locationProvider.local.js` mit Traccar-Daten **manuell per FTP** hochladen (ist gitignored; Deploy löscht sie nicht, da `dangerous-clean-slate: false`).
 - [ ] In Traccar einen **Read-only-Benutzer** anlegen und dessen Token verwenden (Token ist im Client lesbar).
 - [ ] Traccar-CORS für die App-Domain prüfen.

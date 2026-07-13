@@ -22,9 +22,9 @@ const CATEGORY_MAP = [
   { test: (t) => t.boundary === "national_park" || t.leisure === "nature_reserve",   category: "Nationalpark",      score: 0.9  },
   { test: (t) => t.tourism === "museum",                                             category: "Kulturort",         score: 0.7  },
   { test: (t) => t.tourism === "artwork",                                            category: "Kulturort",         score: 0.55 },
-  { test: (t) => HISTORIC_SET.has(t.historic),                                      category: "Sehenswuerdigkeit", score: 0.72 },
-  { test: (t) => t.historic && t.tourism === "attraction",                           category: "Sehenswuerdigkeit", score: 0.68 },
-  { test: (t) => t.tourism === "attraction",                                         category: "Sehenswuerdigkeit", score: 0.6  },
+  { test: (t) => HISTORIC_SET.has(t.historic),                                      category: "Sehenswürdigkeit", score: 0.72 },
+  { test: (t) => t.historic && t.tourism === "attraction",                           category: "Sehenswürdigkeit", score: 0.68 },
+  { test: (t) => t.tourism === "attraction",                                         category: "Sehenswürdigkeit", score: 0.6  },
   { test: (t) => t.amenity === "place_of_worship",                                  category: "Kulturort",         score: 0.6  },
   { test: (t) => t.tourism === "alpine_hut",                                        category: "Etappenort",        score: 0.65 },
 ];

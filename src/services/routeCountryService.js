@@ -1,3 +1,9 @@
+export const COUNTRY_NAMES = {
+  DE: "Deutschland", AT: "Österreich", IT: "Italien",
+  SI: "Slowenien", HR: "Kroatien", BA: "Bosnien & Herzegowina",
+  ME: "Montenegro", AL: "Albanien", MK: "Nordmazedonien", GR: "Griechenland",
+};
+
 // Bounding boxes ordered by expected route traversal.
 // When a point matches multiple boxes, the smallest-area box wins (most specific country).
 const COUNTRY_BOXES = [

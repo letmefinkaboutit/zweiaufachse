@@ -1,12 +1,7 @@
 import { tripMeta } from "../data/mockData.js";
 import { createElevationFigure, createRouteMapFigure, createRouteMilestones } from "../components/routeCards.js";
 import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
-
-const COUNTRY_NAMES = {
-  DE: "Deutschland", AT: "Österreich", IT: "Italien",
-  SI: "Slowenien", HR: "Kroatien", BA: "Bosnien & Herzegowina",
-  ME: "Montenegro", AL: "Albanien", MK: "Nordmazedonien", GR: "Griechenland",
-};
+import { COUNTRY_NAMES } from "../services/routeCountryService.js";
 
 const ICON_CHECK = `<svg class="rp-check-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3,8 7,12 13,4"/></svg>`;
 const ICON_PIN   = `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1C5.24 1 3 3.24 3 6c0 3.9 5 9 5 9s5-5.1 5-9c0-2.76-2.24-5-5-5zm0 6.8a1.8 1.8 0 1 1 0-3.6 1.8 1.8 0 0 1 0 3.6z"/></svg>`;
@@ -159,8 +154,10 @@ export function renderRoutePage(state = {}) {
 
   if (routeLoading) {
     return `
-      <div class="page-stack">
-        <p class="muted-text" style="padding:32px 20px">Route wird geladen…</p>
+      <div class="page-stack" aria-busy="true">
+        <div class="skeleton skeleton--block" style="height:140px"></div>
+        <div class="skeleton skeleton--block" style="height:180px"></div>
+        <div class="skeleton skeleton--block"></div>
       </div>
     `;
   }

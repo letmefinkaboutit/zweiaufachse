@@ -3,6 +3,62 @@ import { createNearbyOverpassTile, createForwardRouteTile } from "../components/
 import { createAudiencePoiContext } from "../services/poiService.js";
 import { computeMovementStatus } from "../services/routePositionService.js";
 import { createJourneyTimelineCard } from "../components/journeyTimeline.js";
+import { tripMeta } from "../data/mockData.js";
+
+// Einmal pro Sitzung: Entrance-Animation + Count-up nur beim ersten
+// Dashboard-Render mit echten Daten, nicht bei jedem Live-Refresh.
+let dashboardEnteredOnce = false;
+
+function getTripDayLabel() {
+  if (!tripMeta.startDate) return null;
+
+  const start = new Date(tripMeta.startDate);
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const day = Math.floor((today - start) / 86_400_000) + 1;
+
+  return day >= 1 ? `Tag ${day}` : null;
+}
+
+function createDashboardHero(state, animate) {
+  const { geocodeData, locationData, routeData, dailyStats } = state;
+
+  const progressRatio =
+    locationData?.routeMatch?.progressRatio ?? routeData?.currentProgress?.ratio ?? null;
+  const pct = progressRatio !== null ? Math.round(progressRatio * 100) : null;
+  const todayKm = dailyStats?.todayKm != null ? Math.round(dailyStats.todayKm) : null;
+  const dayLabel = getTripDayLabel();
+
+  const hasPlace = Boolean(geocodeData?.locationLabel);
+  const eyebrow = hasPlace ? "Timo & Tino sind jetzt in" : "Timo & Tino";
+  const place = hasPlace
+    ? `${geocodeData.flag ? `${geocodeData.flag} ` : ""}${geocodeData.locationLabel}`
+    : "unterwegs Richtung Griechenland";
+
+  const countFact = (value, suffix, label) => `
+    <div class="dash-hero__fact">
+      <strong${animate ? ` data-countup="${value}" data-countup-suffix="${suffix}"` : ""}>${value}${suffix}</strong>
+      <span>${label}</span>
+    </div>
+  `;
+
+  const facts = [
+    pct !== null ? countFact(pct, " %", "geschafft") : "",
+    todayKm !== null ? countFact(todayKm, " km", "heute") : "",
+    dayLabel ? `<div class="dash-hero__fact"><strong>${dayLabel}</strong><span>unterwegs</span></div>` : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  return `
+    <section class="dash-hero">
+      <p class="dash-hero__eyebrow">${eyebrow}</p>
+      <h2 class="dash-hero__place">${place}</h2>
+      ${facts ? `<div class="dash-hero__facts">${facts}</div>` : ""}
+    </section>
+  `;
+}
 
 // Ab diesem Fix-Alter gilt das Signal als veraltet (Nacht, Funkloch, Akku leer).
 const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000;
@@ -144,11 +200,17 @@ export function renderDashboardPage(state = {}) {
 
   const forwardTile = createForwardRouteTile(state.poiData, state.locationData, state.countrySegments, state.routeData, state.forwardLimit ?? 15);
 
+  const firstRender = !dashboardEnteredOnce && Boolean(state.routeData);
+  if (firstRender) {
+    dashboardEnteredOnce = true;
+  }
+
   return `
     <div class="dashboard-page">
+      ${createDashboardHero(state, firstRender)}
       ${createStatusChipBar(state)}
 
-      <div class="dashboard-main-grid">
+      <div class="dashboard-main-grid${firstRender ? " dashboard-main-grid--enter" : ""}">
         ${createJourneyTimelineCard(state.routeData, state.locationData, state.countrySegments, state.dailyStats)}
         ${routeMapTile}
         <div id="photo-tile-slot"></div>

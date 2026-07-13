@@ -1,3 +1,5 @@
+import { COUNTRY_NAMES } from "../services/routeCountryService.js";
+
 function createCategoryOptions(categories, selectedCategory) {
   return [
     `<option value="all"${selectedCategory === "all" ? " selected" : ""}>Alle Kategorien</option>`,
@@ -69,7 +71,7 @@ function getPoiBreadcrumbMeta(poi) {
         tone: "nature",
         label: viewerCategory,
       };
-    case "Sehenswuerdigkeit":
+    case "Sehenswürdigkeit":
     case "Highlight-Stadt":
     case "Kulturort":
       return {
@@ -86,7 +88,7 @@ function getPoiBreadcrumbMeta(poi) {
       };
     case "Grenze":
       return {
-        family: "Uebergang",
+        family: "Übergang",
         tone: "border",
         label: viewerCategory,
       };
@@ -269,7 +271,12 @@ export function createNearbyOverpassTile(overpassPois, locationData, unavailable
       ${unavailable
         ? `<p class="muted-text">Wikipedia-Dienst momentan nicht erreichbar.</p>`
         : loading
-          ? `<p class="muted-text">POIs werden geladen…</p>`
+          ? `<div aria-hidden="true">
+              <div class="skeleton skeleton--row"></div>
+              <div class="skeleton skeleton--row"></div>
+              <div class="skeleton skeleton--row"></div>
+              <div class="skeleton skeleton--row"></div>
+            </div>`
           : items.length
             ? `<div class="poi-compact-list">${items.map(createPoiCompactRow).join("")}</div>`
             : `<p class="muted-text">Keine POIs in der Nähe gefunden.</p>`
@@ -397,9 +404,28 @@ function createForwardLimitControl(limit) {
   `;
 }
 
+function renderBorderHero(border) {
+  const toName = COUNTRY_NAMES[border.toCode] ?? border.toCode;
+
+  return `
+    <div class="forward-border-hero">
+      <span class="forward-border-hero__flags">${border.fromFlag}<span class="forward-border-hero__arrow">→</span>${border.toFlag}</span>
+      <div class="forward-border-hero__text">
+        <strong>Nächste Grenze: ${toName}</strong>
+        <span>in ${fmtKmAhead(border.kmAhead)}</span>
+      </div>
+    </div>
+  `;
+}
+
 export function createForwardRouteTile(poiData, locationData, countrySegments, routeData, limit = 15) {
   const all = buildForwardItems(poiData, locationData, countrySegments, routeData);
-  const items = limit === Infinity ? all : all.slice(0, limit);
+
+  // Der naechste Grenzuebergang ist DER Meilenstein fuer die Daheimgebliebenen —
+  // prominent oben statt irgendwo in der Liste.
+  const nextBorder = all.find((item) => item.type === "border") ?? null;
+  const rest = nextBorder ? all.filter((item) => item !== nextBorder) : all;
+  const items = limit === Infinity ? rest : rest.slice(0, limit);
 
   return `
     <div class="dashboard-focus-card">
@@ -410,9 +436,12 @@ export function createForwardRouteTile(poiData, locationData, countrySegments, r
         </div>
         ${createForwardLimitControl(limit)}
       </div>
+      ${nextBorder ? renderBorderHero(nextBorder) : ""}
       ${items.length
         ? `<div class="forward-route-list">${items.map(renderForwardItem).join("")}</div>`
-        : `<p class="muted-text">Keine Highlights oder Grenzübergänge gefunden.</p>`
+        : nextBorder
+          ? ""
+          : `<p class="muted-text">Keine Highlights oder Grenzübergänge gefunden.</p>`
       }
     </div>
   `;

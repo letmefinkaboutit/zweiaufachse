@@ -12,6 +12,7 @@ import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 import { startPhotoService } from "../services/photoService.js";
 import { mountPhotoMapObserver } from "../services/photoMapService.js";
 import { mountPhotoTileObserver, updatePhotoTile } from "../components/cards.js";
+import { mountCountUpObserver } from "../utils/countUp.js";
 
 export async function createApp(root) {
   const router = createRouter(moduleRegistry);
@@ -45,6 +46,7 @@ export async function createApp(root) {
   mountMapObserver();
   mountPhotoTileObserver();
   mountPhotoMapObserver(() => state);
+  mountCountUpObserver();
 
   const photoServiceInstance = startPhotoService({
     onUpdate(photos) {
@@ -102,7 +104,16 @@ export async function createApp(root) {
   const IC_CAL = `<svg class="lc-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="1.5" y="3" width="13" height="11.5" rx="2"/><line x1="5" y1="1" x2="5" y2="4.5"/><line x1="11" y1="1" x2="11" y2="4.5"/><line x1="1.5" y1="7" x2="14.5" y2="7"/></svg>`;
   const IC_CLK = `<svg class="lc-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>`;
 
-  function updateLightboxDisplay() {
+  function preloadLightboxNeighbors() {
+    for (const neighborIndex of [lightboxIndex - 1, lightboxIndex + 1]) {
+      const neighbor = state.photoData[neighborIndex];
+      if (neighbor) {
+        new Image().src = neighbor.lightboxUrl ?? neighbor.url;
+      }
+    }
+  }
+
+  function updateLightboxDisplay(slideDirection = 0) {
     const dialog = document.getElementById('photo-lightbox');
     if (!dialog) return;
     const photo = state.photoData[lightboxIndex];
@@ -110,15 +121,31 @@ export async function createApp(root) {
 
     const img = dialog.querySelector('.photo-lightbox__img');
     const caption = dialog.querySelector('.photo-lightbox__caption');
-    if (img) img.src = photo.lightboxUrl ?? photo.url;
+    if (img) {
+      img.src = photo.lightboxUrl ?? photo.url;
+      if (slideDirection !== 0 && typeof img.animate === 'function'
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        img.animate(
+          [
+            { opacity: 0.25, transform: `translateX(${slideDirection * 28}px)` },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: 200, easing: 'ease-out' },
+        );
+      }
+    }
+    preloadLightboxNeighbors();
     if (!caption) return;
 
     const d = photo.date ? new Date(photo.date) : null;
+    const counterChip = state.photoData.length > 1
+      ? `<span class="lc-chip lc-chip--counter">${lightboxIndex + 1}/${state.photoData.length}</span>`
+      : '';
     const dateChip = d ? `<span class="lc-chip">${IC_CAL}${d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</span>` : '';
     const timeChip = d ? `<span class="lc-chip">${IC_CLK}${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>` : '';
     const locChip = photo.lat != null ? `<span class="lc-chip" id="lc-loc">${IC_PIN}<span class="lc-loc-text">…</span></span>` : '';
 
-    caption.innerHTML = `<div class="lc-chips">${dateChip}${timeChip}${locChip}</div>`;
+    caption.innerHTML = `<div class="lc-chips">${counterChip}${dateChip}${timeChip}${locChip}</div>`;
 
     if (photo.lat != null) {
       const capturedIndex = lightboxIndex;
@@ -141,7 +168,7 @@ export async function createApp(root) {
     const next = lightboxIndex + dir;
     if (next < 0 || next >= state.photoData.length) return;
     lightboxIndex = next;
-    updateLightboxDisplay();
+    updateLightboxDisplay(dir);
   }
 
   root.addEventListener('click', (e) => {

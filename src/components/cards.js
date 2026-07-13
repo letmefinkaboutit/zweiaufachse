@@ -135,7 +135,17 @@ function _renderPhotoTileContent(photos, photoLoading) {
   `;
 
   if (photoLoading) {
-    return header + `<p class="muted-text">Fotos werden geladen…</p>`;
+    return header + `
+      <div class="photo-tile-grid" aria-hidden="true">
+        <div class="skeleton skeleton--photo-hero"></div>
+        <div class="photo-tile-secondary">
+          <div class="skeleton skeleton--photo-small"></div>
+          <div class="skeleton skeleton--photo-small"></div>
+          <div class="skeleton skeleton--photo-small"></div>
+          <div class="skeleton skeleton--photo-small"></div>
+        </div>
+      </div>
+    `;
   }
 
   if (!photos?.length) {

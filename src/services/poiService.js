@@ -38,7 +38,7 @@ function deriveViewerCategory(poi) {
   }
 
   if (category.includes("unesco") || category.includes("landmark") || category.includes("fortress")) {
-    return "Sehenswuerdigkeit";
+    return "Sehenswürdigkeit";
   }
 
   if (category.includes("lake") || category.includes("nature") || subCategory.includes("viewpoint")) {
@@ -352,7 +352,7 @@ export function createAudiencePoiContext(allPois, locationData) {
         (poi.score >= 0.75 ||
           poi.viewerCategory === "Nationalpark" ||
           poi.viewerCategory === "Highlight-Stadt" ||
-          poi.viewerCategory === "Sehenswuerdigkeit"),
+          poi.viewerCategory === "Sehenswürdigkeit"),
     )
     .slice(0, 4);
 

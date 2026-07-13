@@ -27,7 +27,7 @@ function categoryColor(poi) {
     case "Naturhighlight":
     case "Aussichtspunkt":
       return "#3a8b37";
-    case "Sehenswuerdigkeit":
+    case "Sehenswürdigkeit":
     case "Highlight-Stadt":
     case "Kulturort":
       return "#c47a1e";

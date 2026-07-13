@@ -8,6 +8,7 @@ export function createRouter(modules = moduleRegistry) {
 
   let contentNode;
   let headerNode;
+  let navNode;
   let getState = () => ({});
 
   function normalizeHash(hash) {
@@ -41,6 +42,22 @@ export function createRouter(modules = moduleRegistry) {
     `;
   }
 
+  function renderNav() {
+    if (!navNode) return;
+    const activeRoute = normalizeHash(window.location.hash);
+    const resolvedRoute = pageMap.has(activeRoute) ? activeRoute : defaultRoute;
+
+    navNode.querySelectorAll("[data-nav-route]").forEach((item) => {
+      const isActive = item.dataset.navRoute === resolvedRoute;
+      item.classList.toggle("bottom-nav__item--active", isActive);
+      if (isActive) {
+        item.setAttribute("aria-current", "page");
+      } else {
+        item.removeAttribute("aria-current");
+      }
+    });
+  }
+
   function renderPage(options = {}) {
     if (!contentNode) return;
 
@@ -49,17 +66,29 @@ export function createRouter(modules = moduleRegistry) {
 
     if (!activeModule) return;
 
-    contentNode.innerHTML = activeModule.render(getState());
-    renderHeader();
+    const applyRender = () => {
+      contentNode.innerHTML = activeModule.render(getState());
+      renderHeader();
+      renderNav();
 
-    if (!options.preserveScroll) {
-      window.scrollTo({ top: 0, behavior: "auto" });
+      if (!options.preserveScroll) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+    };
+
+    // Weicher Uebergang nur beim Seitenwechsel — nicht bei den haeufigen
+    // Live-Refreshes, die wuerden sonst dauernd flackern.
+    if (options.viewTransition && typeof document.startViewTransition === "function") {
+      document.startViewTransition(applyRender);
+    } else {
+      applyRender();
     }
   }
 
-  function mount(contentTarget, _navTarget, stateGetter = () => ({})) {
+  function mount(contentTarget, navTarget, stateGetter = () => ({})) {
     contentNode = contentTarget;
     headerNode = document.querySelector("[data-app-header]");
+    navNode = navTarget;
     getState = stateGetter;
 
     if (!window.location.hash) {
@@ -70,7 +99,7 @@ export function createRouter(modules = moduleRegistry) {
     renderPage({ preserveScroll: false });
   }
 
-  window.addEventListener("hashchange", () => renderPage({ preserveScroll: false }));
+  window.addEventListener("hashchange", () => renderPage({ preserveScroll: false, viewTransition: true }));
 
   return {
     mount,

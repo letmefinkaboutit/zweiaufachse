@@ -457,17 +457,17 @@ export function createElevationFigure(routeData) {
     <article class="route-visual-card route-visual-card--profile">
       <div class="route-visual-card__header">
         <div>
-          <p class="section-intro__eyebrow">Hoehenprofil</p>
+          <p class="section-intro__eyebrow">Höhenprofil</p>
           <h3>Wie sich die Tour auf und ab bewegt</h3>
         </div>
         <span class="tag tag--success">${routeData.elevationGainLabel}</span>
       </div>
-      <svg viewBox="0 0 760 220" class="route-profile-svg" role="img" aria-label="Hoehenprofil">
+      <svg viewBox="0 0 760 220" class="route-profile-svg" role="img" aria-label="Höhenprofil">
         <rect x="0" y="0" width="760" height="220" rx="28" class="route-profile-svg__bg"></rect>
         <path d="${routeData.profileSvgPath}" class="route-profile-svg__line"></path>
       </svg>
       <div class="route-visual-card__footer">
-        <p><strong>Hoehenspanne:</strong> ${routeData.elevationSpanLabel}</p>
+        <p><strong>Höhenspanne:</strong> ${routeData.elevationSpanLabel}</p>
         <p><strong>Abstieg gesamt:</strong> ${routeData.elevationLossLabel}</p>
       </div>
     </article>
@@ -530,7 +530,7 @@ export function createRouteMilestones(routeData) {
 export function createRouteLoadingCard(message) {
   return `
     <section class="route-loading-card">
-      <p class="section-intro__eyebrow">Route laedt</p>
+      <p class="section-intro__eyebrow">Route lädt</p>
       <h2>${message}</h2>
       <p class="muted-text">Die GPX-Datei wird eingelesen und in Distanz-, Profil- und Fortschrittsdaten umgewandelt.</p>
     </section>
