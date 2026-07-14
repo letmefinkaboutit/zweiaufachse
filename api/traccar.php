@@ -52,7 +52,9 @@ if (
     exit;
 }
 
-function traccarGet(string $path, array $config): ?array
+// Gibt Status UND Daten zurueck, damit "Token falsch" von "nichts gefunden"
+// unterschieden werden kann.
+function traccarCall(string $path, array $config): array
 {
     $baseUrl = rtrim((string) $config['base_url'], '/');
     $auth    = $config['auth'] ?? [];
@@ -74,14 +76,24 @@ function traccarGet(string $path, array $config): ?array
     }
 
     $body   = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    if ($status < 200 || $status >= 300 || !is_string($body)) {
+    return [
+        'status' => $status,
+        'data'   => is_string($body) ? json_decode($body, true) : null,
+    ];
+}
+
+function traccarGet(string $path, array $config): ?array
+{
+    $result = traccarCall($path, $config);
+
+    if ($result['status'] < 200 || $result['status'] >= 300) {
         return null;
     }
 
-    return json_decode($body, true);
+    return $result['data'];
 }
 
 // ── Geraet aufloesen (gecacht) ──────────────────────────
@@ -89,24 +101,70 @@ $deviceId   = $cache['deviceId']   ?? null;
 $deviceName = $cache['deviceName'] ?? null;
 $deviceAt   = $cache['deviceAt']   ?? 0;
 
+$wantedUniqueId = (string) ($config['device']['unique_id'] ?? '');
+
 if ($deviceId === null || ($now - $deviceAt) > DEVICE_TTL) {
-    $device = $config['device'] ?? [];
-    $query  = !empty($device['device_id'])
-        ? '?id=' . rawurlencode((string) $device['device_id'])
-        : '?uniqueId=' . rawurlencode((string) ($device['unique_id'] ?? ''));
+    // Alle Geraete des Kontos holen und selbst suchen — praeziser als der
+    // uniqueId-Filter und liefert im Fehlerfall eine brauchbare Diagnose.
+    $call    = traccarCall('/devices', $config);
+    $devices = is_array($call['data']) ? $call['data'] : [];
 
-    $devices = traccarGet('/devices' . $query, $config);
-
-    if (!is_array($devices) || !count($devices)) {
+    if ($call['status'] === 401 || $call['status'] === 403) {
         echo json_encode([
             'configured' => false,
-            'reason'     => 'Traccar erreichbar, aber kein passendes Geraet gefunden (uniqueId pruefen).',
+            'reason'     => 'Traccar lehnt den Token ab (HTTP ' . $call['status'] . ') — TRACCAR_TOKEN pruefen.',
         ]);
         exit;
     }
 
-    $deviceId   = $devices[0]['id'] ?? null;
-    $deviceName = $devices[0]['name'] ?? 'Traccar';
+    if ($call['status'] < 200 || $call['status'] >= 300) {
+        echo json_encode([
+            'configured' => false,
+            'reason'     => 'Traccar antwortete mit HTTP ' . $call['status'] . '.',
+        ]);
+        exit;
+    }
+
+    $match = null;
+    foreach ($devices as $device) {
+        $unique = (string) ($device['uniqueId'] ?? '');
+        $id     = (string) ($device['id'] ?? '');
+
+        if ($unique === $wantedUniqueId || $id === $wantedUniqueId
+            || (!empty($config['device']['device_id']) && $id === (string) $config['device']['device_id'])) {
+            $match = $device;
+            break;
+        }
+    }
+
+    // Genau ein Geraet auf dem Konto? Dann ist die Sache eindeutig.
+    if ($match === null && count($devices) === 1) {
+        $match = $devices[0];
+    }
+
+    if ($match === null) {
+        echo json_encode([
+            'configured' => false,
+            'reason'     => count($devices)
+                ? 'Kein Geraet mit Kennung "' . $wantedUniqueId . '" gefunden.'
+                : 'Auf diesem Traccar-Konto ist noch kein Geraet angelegt. '
+                  . 'In Traccar Cloud ein Geraet mit der Kennung des iPhones anlegen.',
+            // Hilft beim Einrichten: welche Geraete gibt es wirklich?
+            'availableDevices' => array_map(
+                fn($d) => [
+                    'name'       => $d['name'] ?? null,
+                    'uniqueId'   => $d['uniqueId'] ?? null,
+                    'status'     => $d['status'] ?? null,
+                    'lastUpdate' => $d['lastUpdate'] ?? null,
+                ],
+                $devices
+            ),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $deviceId   = $match['id'] ?? null;
+    $deviceName = $match['name'] ?? 'Traccar';
     $deviceAt   = $now;
 }
 
