@@ -10,67 +10,155 @@
 <script src="../src/vendor/leaflet/leaflet.js" defer></script>
 <style>
   * { margin: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { height: 100%; }
   body {
     font-family: "Avenir Next", "Trebuchet MS", sans-serif;
     color: #1f2a2f;
     background:
       radial-gradient(circle at top left, rgba(235, 143, 52, 0.18), transparent 32%),
       linear-gradient(180deg, #fff9f0 0%, #f7f1e7 48%, #f2efe8 100%);
+    /* Genau ein Handy-Screen, dynamisch fuer jede Displaygroesse */
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* ── Sektion 1: die animierte Szene oben ── */
+  /* ── Die Szene fuellt den verfuegbaren Platz ── */
   .scene-wrap {
     position: relative;
-    height: min(62vh, 620px);
-    min-height: 430px;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
-    border-radius: 0 0 26px 26px;
-    box-shadow: 0 14px 34px rgba(29, 35, 38, 0.12);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 26px rgba(29, 35, 38, 0.12);
   }
   svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-  /* ── Sektionen darunter ── */
-  .bar {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 10px 14px;
+  /* Kleine Bedienelemente unten links in der Szene */
+  .scene-ctrl {
+    position: absolute; left: 12px; bottom: 14px; z-index: 6;
+    display: flex; gap: 6px;
   }
-  .bar__label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-    color: #58656b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .scene-ctrl a, .scene-ctrl button {
+    width: 34px; height: 34px; display: grid; place-items: center;
+    font: inherit; font-size: 14px; text-decoration: none; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.82); backdrop-filter: blur(6px);
+    border: none; border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(29, 35, 38, 0.14);
   }
-  .bar a, .bar button {
-    font: inherit; font-size: 15px; text-decoration: none; color: inherit;
-    background: rgba(255, 253, 248, 0.9); border: 1px solid rgba(31, 42, 47, 0.08);
-    border-radius: 999px; padding: 7px 13px; cursor: pointer; flex-shrink: 0;
-  }
-  .sections { padding: 0 14px calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
-  /* Filigrane Kennzahlen-Zeile: ergaenzt die Timeline, dupliziert sie nicht */
-  .boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .box {
-    background: rgba(255, 250, 244, 0.75); border-radius: 14px;
-    padding: 9px 10px 8px; border: 1px solid rgba(31, 42, 47, 0.06);
-  }
-  .box span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #58656b; }
-  .box strong { display: block; font-size: 15px; letter-spacing: -0.01em; margin-top: 1px; font-variant-numeric: tabular-nums; }
-  .box small { display: block; font-size: 10.5px; color: #58656b; margin-top: 1px; font-weight: 600; }
 
-  /* ── Minimap in der Szene (Videospiel-Stil), Klick = grosse Karte ── */
+  /* ── Gesamtfortschritt als Bottom-Bar (Tap = Tourstatus-Popup) ── */
+  .tour-progress {
+    position: relative; flex: 0 0 auto;
+    height: 16px; margin: 8px 12px 6px;
+    border-radius: 8px; overflow: hidden; cursor: pointer;
+    border: 1px solid rgba(31, 42, 47, 0.1);
+  }
+  .tour-progress__track { position: absolute; inset: 0; }
+  .tour-progress__veil {
+    position: absolute; top: 0; bottom: 0; right: 0;
+    background: rgba(247, 241, 231, 0.72);
+  }
+  .tour-progress__marker {
+    position: absolute; top: -1px; bottom: -1px; width: 3px;
+    background: #fffdf8; box-shadow: 0 0 5px rgba(0, 0, 0, 0.35);
+  }
+  .tour-progress__label {
+    position: absolute; top: 50%; transform: translate(8px, -50%);
+    font-size: 9.5px; font-weight: 800; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.92); padding: 1px 6px; border-radius: 7px;
+    pointer-events: none;
+  }
+
+  /* ── Kompakte Boxen-Zeile ── */
+  .boxes {
+    flex: 0 0 auto;
+    display: grid; grid-template-columns: 1fr 0.9fr 1.1fr; gap: 7px;
+    padding: 0 12px 8px;
+  }
+  .box {
+    position: relative;
+    background: rgba(255, 250, 244, 0.8); border-radius: 13px;
+    padding: 7px 9px 6px; border: 1px solid rgba(31, 42, 47, 0.06);
+    text-align: left; font: inherit; color: inherit; cursor: default;
+  }
+  button.box { cursor: pointer; }
+  .box span { display: block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #58656b; }
+  .box strong { display: block; font-size: 14px; letter-spacing: -0.01em; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .box small { display: block; font-size: 9.5px; color: #58656b; margin-top: 1px; font-weight: 600; }
+  .box__more {
+    position: absolute; right: 7px; top: 7px;
+    font-size: 11px; color: #8a938f;
+  }
+  .poi-row { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; font-weight: 600; color: #3d4a50; margin-top: 2px; }
+  .poi-row b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .poi-row em { font-style: normal; color: #58656b; flex-shrink: 0; }
+  .thumb-stack { position: relative; height: 40px; margin-top: 3px; }
+  .thumb-stack img {
+    position: absolute; width: 44px; height: 38px; object-fit: cover;
+    border-radius: 6px; border: 2px solid #fffdf8;
+    box-shadow: 0 2px 6px rgba(29, 35, 38, 0.18); background: #e9e2d2;
+  }
+  .thumb-stack img:nth-child(1) { left: 0; transform: rotate(-5deg); }
+  .thumb-stack img:nth-child(2) { left: 26px; transform: rotate(3deg); top: 1px; }
+  .thumb-stack img:nth-child(3) { left: 52px; transform: rotate(-2deg); }
+  .thumb-stack__count {
+    position: absolute; right: 0; bottom: 0;
+    font-size: 9px; font-weight: 800; color: #fffdf8;
+    background: #0c6b58; border-radius: 8px; padding: 1.5px 6px;
+  }
+
+  /* ── Popups (Album, Health, Tourstatus) ── */
+  .sheet {
+    position: fixed; inset: 0; z-index: 40;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(18, 32, 50, 0.55); backdrop-filter: blur(3px);
+    padding: 18px;
+  }
+  .sheet.open { display: flex; }
+  .sheet__card {
+    position: relative; width: min(94vw, 560px); max-height: 78vh;
+    overflow-y: auto; background: #fffdf8; border-radius: 22px;
+    padding: 18px 16px 16px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  }
+  .sheet__title { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 2px; }
+  .sheet__sub { font-size: 12px; color: #58656b; font-weight: 600; margin-bottom: 12px; }
+  .sheet__close {
+    position: absolute; top: 10px; right: 10px;
+    width: 34px; height: 34px; border: none; border-radius: 50%;
+    background: rgba(31, 42, 47, 0.06); color: #1f2a2f;
+    font-size: 15px; cursor: pointer;
+  }
+  .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; }
+  .health-list { display: grid; gap: 0; }
+  .health-list div {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 9px 2px; border-bottom: 1px solid rgba(31, 42, 47, 0.07);
+    font-size: 13.5px; font-weight: 600; color: #3d4a50;
+  }
+  .health-list div strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+
+  /* ── Minimap mit echten Topo-Kacheln, Klick = grosse Karte ── */
   .minimap {
-    position: absolute; right: 12px; bottom: 16px; z-index: 6;
+    position: absolute; right: 12px; bottom: 14px; z-index: 6;
     width: 104px; height: 104px; padding: 0; cursor: pointer;
-    background: rgba(255, 253, 248, 0.88); backdrop-filter: blur(6px);
-    border: 1.5px solid rgba(31, 42, 47, 0.12); border-radius: 16px;
+    background: rgba(255, 253, 248, 0.88);
+    border: 1.5px solid rgba(31, 42, 47, 0.14); border-radius: 16px;
     box-shadow: 0 8px 22px rgba(29, 35, 38, 0.22);
     overflow: hidden;
   }
-  .minimap svg { display: block; width: 100%; height: 100%; }
+  /* Die Mini-Leaflet-Karte ist reine Anzeige — Klicks gehen an den Button */
+  #minimapMap { position: absolute; inset: 0; pointer-events: none; }
+  #minimapMap .leaflet-control-container { display: none; }
   .minimap__hint {
-    position: absolute; right: 5px; bottom: 4px;
-    font-size: 11px; color: #58656b; pointer-events: none;
+    position: absolute; right: 5px; bottom: 3px; z-index: 800;
+    font-size: 11px; color: #1f2a2f; pointer-events: none;
+    background: rgba(255, 253, 248, 0.85); border-radius: 6px; padding: 0 3px;
   }
-  .mm-pulse { animation: mmpulse 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes mmpulse { from { transform: scale(0.5); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
 
   .map-modal {
     position: fixed; inset: 0; z-index: 40;
@@ -202,16 +290,16 @@
   .raindrop { animation: rainfall 0.55s linear infinite; }
   @keyframes rainfall { to { transform: translate(-40px, 340px); } }
 
-  /* ── Momente-Buehne (in der Szene verankert) ── */
+  /* ── Momente-Buehne: hoeher und kompakter, nimmt weniger Bild weg ── */
   .moment-stage {
     position: absolute; left: 0; right: 0;
-    top: calc(74px + env(safe-area-inset-top));
+    top: calc(62px + env(safe-area-inset-top));
     display: flex; justify-content: center;
     pointer-events: none; z-index: 5;
   }
   .moment {
     position: absolute;
-    width: min(67vw, 280px);
+    width: min(56vw, 235px);
     opacity: 0;
     transform: translateY(18px) rotate(-2deg) scale(0.94);
     transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.18, 0.7, 0.3, 1.12);
@@ -564,30 +652,7 @@
 
 <!-- Momente-Buehne -->
 <div class="moment-stage" id="momentStage">
-  <div class="moment moment--card" data-moment="poi">
-    <p class="moment__eyebrow moment__eyebrow--ahead">Voraus · Nächstes Highlight</p>
-    <svg class="moment__art" viewBox="0 0 280 108" aria-hidden="true">
-      <rect width="280" height="108" rx="12" fill="#f7ecd7"/>
-      <circle cx="228" cy="30" r="16" fill="#f2a24b" opacity="0.85"/>
-      <path d="M28 74 Q70 40 112 60 L112 108 L28 108 Z" fill="#c9bda4" opacity="0.5"/>
-      <path d="M168 62 Q210 38 252 70 L252 108 L168 108 Z" fill="#c9bda4" opacity="0.5"/>
-      <g stroke="#8a7a5e" stroke-width="7" fill="none" stroke-linecap="round">
-        <path d="M75 78 Q140 30 205 78"/>
-      </g>
-      <path d="M75 78 Q140 30 205 78" transform="translate(0,10)" stroke="#8a7a5e" stroke-width="4" fill="none" opacity="0.5"/>
-      <rect x="64" y="52" width="13" height="30" rx="2" fill="#8a7a5e"/>
-      <rect x="203" y="52" width="13" height="30" rx="2" fill="#8a7a5e"/>
-      <path d="M64 52 L70.5 42 L77 52 Z" fill="#8a7a5e"/>
-      <path d="M203 52 L209.5 42 L216 52 Z" fill="#8a7a5e"/>
-      <rect x="0" y="88" width="280" height="20" fill="#7fb4c9" opacity="0.75"/>
-      <g stroke="#e6f2f5" stroke-width="2" stroke-linecap="round" opacity="0.8">
-        <line x1="100" y1="96" x2="126" y2="96"/><line x1="160" y1="100" x2="182" y2="100"/>
-      </g>
-    </svg>
-    <p class="moment__title">Stari Most, Mostar</p>
-    <p class="moment__meta">in 143 km · UNESCO-Welterbe</p>
-  </div>
-
+  <!-- POI-Karte entfernt: naechste POI stehen unten in der Box (keine Redundanz) -->
   <div class="moment moment--card" data-moment="border">
     <p class="moment__eyebrow moment__eyebrow--border">Voraus · Grenzübergang</p>
     <p class="moment__flags">🇧🇦<span class="arrow">→</span>🇲🇪</p>
@@ -604,43 +669,86 @@
   <span class="chip" id="chipFresh">vor 1 Min</span>
 </div>
 
-<!-- Minimap wie im Videospiel: Klick oeffnet die grosse Karte -->
+<!-- Minimap wie im Videospiel (echte Topo-Kacheln): Klick oeffnet die grosse Karte -->
 <button class="minimap" id="minimap" aria-label="Karte vergrößern">
-  <svg id="minimapSvg" viewBox="0 0 108 108" aria-hidden="true"></svg>
+  <div id="minimapMap" aria-hidden="true"></div>
   <span class="minimap__hint">⤢</span>
 </button>
-</div><!-- /scene-wrap -->
 
-<div class="bar">
+<!-- Bedienelemente -->
+<div class="scene-ctrl">
   <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
-  <span class="bar__label">POV-Hybrid · km 1.096 · Bosnien</span>
   <button id="toggleStage" aria-label="Schilder- oder Kartenmodus">🪧</button>
   <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
 </div>
+</div><!-- /scene-wrap -->
 
-<main class="sections">
-  <!-- Sektion 2: schlanke Zusatz-Kennzahlen (ohne Dopplung zur Timeline) -->
-  <section class="boxes" aria-label="Tour-Kennzahlen">
-    <div class="box">
-      <span>Reisetag</span>
-      <strong>Tag 34</strong>
-      <small>seit 10. Juni</small>
-    </div>
-    <div class="box">
-      <span>Nächste Grenze</span>
-      <strong>🇲🇪 224 km</strong>
-      <small>Land 8 von 10</small>
-    </div>
-    <div class="box">
-      <span>Nächstes Highlight</span>
-      <strong>Mostar</strong>
-      <small>in 143 km · UNESCO</small>
-    </div>
-  </section>
+<!-- Gesamtfortschritt in Laenderfarben — Tap oeffnet den vollen Tourstatus -->
+<div class="tour-progress" id="tourProgress" role="button" tabindex="0" aria-label="Tourstatus öffnen">
+  <div class="tour-progress__track" id="tpTrack"></div>
+  <div class="tour-progress__veil" id="tpVeil"></div>
+  <div class="tour-progress__marker" id="tpMarker"></div>
+  <span class="tour-progress__label" id="tpLabel">52 %</span>
+</div>
 
-  <!-- Sektion 3: das echte Journey-Timeline-Modul der Haupt-App -->
-  <section id="jtSlot" aria-label="Tourstatus"></section>
-</main>
+<!-- Kompakte Boxen: Distanzen · Fotos · naechste POI -->
+<section class="boxes" aria-label="Tour-Schnellzugriff">
+  <button class="box" id="boxHealth">
+    <span>Distanz gesamt</span>
+    <strong>1.096 km</strong>
+    <small>heute 64 · gestern 71</small>
+    <em class="box__more">›</em>
+  </button>
+  <button class="box" id="boxAlbum">
+    <span>Fotos</span>
+    <div class="thumb-stack" id="thumbStack"></div>
+    <em class="box__more">›</em>
+  </button>
+  <div class="box">
+    <span>Nächste POI</span>
+    <div class="poi-row"><b>Rama-See</b><em>66 km</em></div>
+    <div class="poi-row"><b>Jablanica</b><em>95 km</em></div>
+    <div class="poi-row"><b>Mostar</b><em>143 km</em></div>
+  </div>
+</section>
+
+<!-- Popup: Touren- & Health-Daten -->
+<div class="sheet" id="healthSheet">
+  <div class="sheet__card">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Touren & Health</h3>
+    <p class="sheet__sub">Summen bis km 1.096 · Mockup-Daten</p>
+    <div class="health-list">
+      <div>Gesamtdistanz <strong>1.096 km</strong></div>
+      <div>Höhenmeter <strong>9.850 hm</strong></div>
+      <div>Fahrzeit gesamt <strong>61 h 20 min</strong></div>
+      <div>Ø Geschwindigkeit <strong>17,9 km/h</strong></div>
+      <div>Etappen <strong>24</strong></div>
+      <div>Kalorien <strong>≈ 48.300 kcal</strong></div>
+      <div>Längste Etappe <strong>94 km · Tag 12</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup: Foto-Album -->
+<div class="sheet" id="albumSheet">
+  <div class="sheet__card">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Fotoalbum</h3>
+    <p class="sheet__sub" id="albumCount">Fotos von unterwegs</p>
+    <div class="album-grid" id="albumGrid"></div>
+  </div>
+</div>
+
+<!-- Popup: Tourstatus (Original-Modul der Haupt-App) -->
+<div class="sheet" id="statusSheet">
+  <div class="sheet__card" style="width: min(94vw, 640px);">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Tourstatus</h3>
+    <p class="sheet__sub">Höhenprofil, Länder & Tageskilometer</p>
+    <div id="jtSlot"></div>
+  </div>
+</div>
 
 <!-- Grosse Karte als Popup (Klick auf die Minimap) -->
 <div class="map-modal" id="mapModal">
@@ -733,18 +841,18 @@
   }
 
   function startMomentCarousel(photos) {
-    const poiCard = stage.querySelector('[data-moment="poi"]');
     const borderCard = stage.querySelector('[data-moment="border"]');
     const photoCards = photos.slice(0, 4).map(createPhotoMoment);
 
     const sequence = [];
-    const ahead = [poiCard, borderCard];
+    const ahead = [borderCard].filter(Boolean);
     const maxLen = Math.max(photoCards.length, ahead.length);
     for (let i = 0; i < maxLen; i++) {
       if (photoCards[i]) sequence.push(photoCards[i]);
-      if (ahead[i % ahead.length] && i < ahead.length) sequence.push(ahead[i]);
+      if (i < ahead.length) sequence.push(ahead[i]);
     }
-    if (!sequence.length) sequence.push(poiCard, borderCard);
+    if (!sequence.length && borderCard) sequence.push(borderCard);
+    if (!sequence.length) return;
 
     const SHOW_MS = 6000;
     const GAP_MS = 900;
@@ -829,6 +937,10 @@
   billboardEl.addEventListener("animationiteration", renderNextBillboard);
 
   function initMoments(photos) {
+    // Fotos auch fuer Foto-Box + Album (Module-Script) bereitstellen
+    window.__photos = photos;
+    window.dispatchEvent(new CustomEvent("photos-ready", { detail: photos }));
+
     const photoMoments = photos.slice(0, 4).map((p) => ({
       type: "photo",
       url: `${GALLERY_HOST}${p.thumbUrl}`,
@@ -844,7 +956,7 @@
       img.src = m.url;
     });
 
-    const ahead = [{ type: "poi" }, { type: "border" }];
+    const ahead = [{ type: "border" }];
     bbSeq = [];
     for (let i = 0; i < Math.max(photoMoments.length, ahead.length); i++) {
       if (photoMoments[i]) bbSeq.push(photoMoments[i]);
@@ -922,29 +1034,76 @@
   document.getElementById("jtSlot").innerHTML =
     createJourneyTimelineCard(routeData, locationData, segments, { todayKm: 64, yesterdayKm: 71 });
 
-  // ── Minimap: Route als Miniatur, Klick = grosse Karte ──
-  const mmPoints = points.filter((_, i) => i % 24 === 0);
-  const lat0 = (data.bounds.minLat + data.bounds.maxLat) / 2;
-  const kx = Math.cos((lat0 * Math.PI) / 180);
-  const px = (p) => (p.lon - data.bounds.minLon) * kx;
-  const py = (p) => data.bounds.maxLat - p.lat;
-  const spanX = (data.bounds.maxLon - data.bounds.minLon) * kx;
-  const spanY = data.bounds.maxLat - data.bounds.minLat;
-  const S = 92 / Math.max(spanX, spanY);
-  const offX = (108 - spanX * S) / 2;
-  const offY = (108 - spanY * S) / 2;
-  const toXY = (p) => `${(offX + px(p) * S).toFixed(1)},${(offY + py(p) * S).toFixed(1)}`;
+  // ── Minimap: Mini-Leaflet mit topografischen OSM-Kacheln (reine Anzeige) ──
+  function initMinimap() {
+    if (!window.L) { setTimeout(initMinimap, 150); return; }
 
-  const mmSplit = Math.max(1, mmPoints.findIndex((p) => p.cumulativeDistanceMeters >= DONE_METERS));
-  const pos = { lat: SIM_POS.lat, lon: SIM_POS.lon };
-  const [posX, posY] = toXY(pos).split(",");
+    const mini = window.L.map("minimapMap", {
+      zoomControl: false, attributionControl: false,
+      dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+      touchZoom: false, boxZoom: false, keyboard: false, tapHold: false,
+      preferCanvas: true,
+    });
+    window.L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+      subdomains: "abc", maxZoom: 15,
+    }).addTo(mini);
 
-  document.getElementById("minimapSvg").innerHTML = `
-    <polyline points="${mmPoints.slice(mmSplit).map(toXY).join(" ")}" fill="none" stroke="#9aa7ab" stroke-width="2" stroke-linecap="round"/>
-    <polyline points="${mmPoints.slice(0, mmSplit + 1).map(toXY).join(" ")}" fill="none" stroke="#eb8f34" stroke-width="2.4" stroke-linecap="round"/>
-    <circle class="mm-pulse" cx="${posX}" cy="${posY}" r="6" fill="rgba(12,107,88,0.4)"/>
-    <circle cx="${posX}" cy="${posY}" r="3.4" fill="#0c6b58" stroke="#fffdf8" stroke-width="1.4"/>
-  `;
+    const mmPts = data.points.filter((_, i) => i % 24 === 0);
+    const mmSplit = Math.max(1, mmPts.findIndex((p) => p[3] >= DONE_METERS));
+    const toLL = (p) => [p[0], p[1]];
+    window.L.polyline(mmPts.slice(mmSplit).map(toLL), { color: "#5b6b70", weight: 2, opacity: 0.85 }).addTo(mini);
+    window.L.polyline(mmPts.slice(0, mmSplit + 1).map(toLL), { color: "#eb8f34", weight: 2.5, opacity: 0.95 }).addTo(mini);
+    window.L.circleMarker([SIM_POS.lat, SIM_POS.lon], {
+      radius: 4, color: "#fffdf8", weight: 1.5, fillColor: "#0c6b58", fillOpacity: 1,
+    }).addTo(mini);
+
+    mini.fitBounds([
+      [data.bounds.minLat, data.bounds.minLon],
+      [data.bounds.maxLat, data.bounds.maxLon],
+    ], { padding: [4, 4] });
+  }
+  initMinimap();
+
+  // ── Gesamtfortschritt als Bottom-Bar in Laenderfarben ──
+  const pctDone = +(progressRatio * 100).toFixed(1);
+  const stops = segments
+    .map((s) => `${s.color} ${(s.fromPercent * 100).toFixed(2)}% ${(s.toPercent * 100).toFixed(2)}%`)
+    .join(", ");
+  document.getElementById("tpTrack").style.background = `linear-gradient(90deg, ${stops})`;
+  document.getElementById("tpVeil").style.width = `${(100 - pctDone).toFixed(1)}%`;
+  document.getElementById("tpMarker").style.left = `calc(${pctDone}% - 1.5px)`;
+  const tpLabel = document.getElementById("tpLabel");
+  tpLabel.textContent = `${Math.round(pctDone)} %`;
+  tpLabel.style.left = `${pctDone}%`;
+
+  // ── Popups: Tourstatus / Health / Album ──
+  function wireSheet(sheetId, openerEl) {
+    const sheet = document.getElementById(sheetId);
+    openerEl?.addEventListener("click", () => sheet.classList.add("open"));
+    sheet.querySelector("[data-close]").addEventListener("click", () => sheet.classList.remove("open"));
+    sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.classList.remove("open"); });
+  }
+  wireSheet("statusSheet", document.getElementById("tourProgress"));
+  wireSheet("healthSheet", document.getElementById("boxHealth"));
+  wireSheet("albumSheet", document.getElementById("boxAlbum"));
+
+  // ── Foto-Box + Album aus der echten Galerie ──
+  function fillPhotos(photos) {
+    const withThumb = photos.filter((p) => p.thumbUrl);
+    const host = "https://zweiaufachse.thefinks.de";
+
+    document.getElementById("thumbStack").innerHTML =
+      withThumb.slice(0, 3).map((p) => `<img src="${host}${p.thumbUrl}" alt="" loading="lazy" />`).join("") +
+      `<span class="thumb-stack__count">${withThumb.length}</span>`;
+
+    document.getElementById("albumGrid").innerHTML = withThumb
+      .slice(0, 24)
+      .map((p) => `<img src="${host}${p.thumbUrl}" alt="Foto von unterwegs" loading="lazy" />`)
+      .join("");
+    document.getElementById("albumCount").textContent = `${withThumb.length} Fotos von unterwegs`;
+  }
+  if (window.__photos) fillPhotos(window.__photos);
+  else window.addEventListener("photos-ready", (e) => fillPhotos(e.detail), { once: true });
 
   // ── Grosse Karte im Popup, Leaflet lazy beim ersten Oeffnen ──
   const modal = document.getElementById("mapModal");
