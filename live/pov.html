@@ -33,11 +33,13 @@
     animation-delay: var(--delay, 0s);
     opacity: 0;
   }
+  /* Mittelstreifen: streckt sich vor allem in die Laenge — sonst wird aus
+     der Fahrbahnmarkierung in der Naehe ein breiter Balken */
   @keyframes flydash {
-    0%   { transform: scale(0.08); opacity: 0; }
-    8%   { opacity: 0.9; }
-    62%  { transform: scale(1.8); }
-    100% { transform: scale(13); opacity: 0.9; }
+    0%   { transform: scale(0.08, 0.08); opacity: 0; }
+    8%   { opacity: 0.7; }
+    62%  { transform: scale(1.3, 1.9); }
+    100% { transform: scale(4.5, 13); opacity: 0.7; }
   }
 
   /* ── Modul-Schild: kommt heran, haelt kurz lesbar, zieht vorbei ── */
@@ -107,13 +109,13 @@
   /* ── Momente-Buehne ── */
   .moment-stage {
     position: fixed; left: 0; right: 0;
-    top: calc(104px + env(safe-area-inset-top));
+    top: calc(80px + env(safe-area-inset-top));
     display: flex; justify-content: center;
     pointer-events: none; z-index: 5;
   }
   .moment {
     position: absolute;
-    width: min(76vw, 320px);
+    width: min(67vw, 280px);
     opacity: 0;
     transform: translateY(18px) rotate(-2deg) scale(0.94);
     transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.18, 0.7, 0.3, 1.12);
@@ -525,7 +527,7 @@
 <div class="hud">
   <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
   <span class="hud__label">POV-Mockup · km 1.096 · Bosnien</span>
-  <button id="toggleStage" aria-label="Schilder- oder Kartenmodus">🃏</button>
+  <button id="toggleStage" aria-label="Schilder- oder Kartenmodus">🪧</button>
   <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
 </div>
 
@@ -647,10 +649,9 @@
     setTimeout(next, 1800);
   }
 
-  // ── Alternative Praesentation: Modul-Schilder an der Strecke ──
-  // Gleicher Rotations-Gedanke wie die Karten, aber diegetisch: man faehrt
-  // an den Inhalten vorbei. Umschalten per 🪧/🃏-Button.
-  document.body.classList.add("mode-billboard");
+  // ── Praesentation: Karten-Modus als Standard (Entscheidung Daniel),
+  // Schilder-Modus bleibt zum Vergleich per 🪧/🃏-Button erreichbar. ──
+  document.body.classList.add("mode-cards");
   const stageBtn = document.getElementById("toggleStage");
   stageBtn.addEventListener("click", () => {
     const cardsNow = document.body.classList.toggle("mode-cards");
