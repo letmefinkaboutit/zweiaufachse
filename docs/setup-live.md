@@ -1,6 +1,6 @@
 # Go-Live: Traccar & Strava verbinden
 
-Die Live-Ansicht (`/live/pov.html`) ist vollstaendig verdrahtet — sie enthaelt
+Die Live-Ansicht (Startseite `/`) ist vollstaendig verdrahtet — sie enthaelt
 keine erfundenen Werte mehr. Alles kommt aus echten Quellen:
 
 | Modul | Quelle | Status |
@@ -92,7 +92,7 @@ return [
     'client_id'     => '123456',
     'client_secret' => '…',
     'refresh_token' => '…',
-    'trip_start'    => '2026-07-20',  // = tripMeta.startDate
+    'trip_start'    => '2026-07-19',  // = tripMeta.startDate
 ];
 ```
 
@@ -103,8 +103,8 @@ Test: `https://zweiaufachse.thefinks.de/api/strava.php` muss
 
 ## 3. Restliche Schalter
 
-- `tripMeta.startDate` in `src/data/mockData.js` auf den echten Starttag setzen
-  (steuert "Tag N" und trennt Tour-Fahrten von "vergangenen Touren").
+- ✅ `tripMeta.startDate` steht auf **2026-07-19** (Sonntag) — muss mit
+  `trip_start` in der Strava-Config uebereinstimmen.
 - `.htaccess` auf dem Webspace: `Cache-Control: no-cache` fuer `*.js`/`*.css`/`*.json`.
 - Temporaere Deploy-Versionsanzeige (unten rechts) am Tour-Ende entfernen:
   `index.html`, Ende von `src/styles/app.css`, Workflow-Step "Stamp deploy version".
