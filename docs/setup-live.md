@@ -5,13 +5,13 @@ keine erfundenen Werte mehr. Alles kommt aus echten Quellen:
 
 | Modul | Quelle | Status |
 |---|---|---|
-| Live-Position, Tempo, Zustand | **Traccar** | ⬜ Setup offen |
+| Live-Position, Tempo, Zustand | **Traccar** (via `api/traccar.php`) | ⬜ Config hochladen |
 | Route, Fortschritt, Grenzen | `src/route/route-data.json` | ✅ live |
 | Ortsname (Schild + Chip) | Nominatim (OSM) | ✅ live |
 | Wetter (Szene + Chip) | Open-Meteo | ✅ live |
 | Fotos (Slider, Box, Album) | `bilderupload/list.php` | ✅ live |
 | Naechste POI | `src/poi/pois.min.json` | ✅ live |
-| Tageskilometer heute | **Traccar**-Verlauf | ⬜ mit Traccar |
+| Tageskilometer heute | **Traccar** (Summary-Report) | ⬜ Config hochladen |
 | Tageskilometer abgeschlossen | **Strava** | ⬜ Setup offen |
 | Health & vergangene Touren | **Strava** | ⬜ Setup offen |
 
@@ -20,36 +20,42 @@ Solange Traccar/Strava fehlen, zeigt die App das ehrlich an
 
 ---
 
-## 1. Traccar
+## 1. Traccar (Traccar Cloud, über den PHP-Proxy)
 
-### Auf dem Server
-1. Read-only-Benutzer anlegen (der Token ist im Browser lesbar!).
-2. API-Token erzeugen: *Einstellungen → Benutzer → Token*.
-3. CORS fuer `https://zweiaufachse.thefinks.de` erlauben.
-4. Report-Rechte pruefen — `tourStatsService` nutzt
-   `GET /api/reports/summary` fuer die heutigen Kilometer.
+Die App spricht **nicht** direkt mit Traccar, sondern über `api/traccar.php`
+auf dem Webspace. Vorteile: der Token bleibt auf dem Server, es gibt kein
+CORS-Problem, und die Tageskilometer werden serverseitig berechnet und gecacht.
 
-### Auf dem iPhone
-- **Traccar Client** installieren, Server-URL eintragen.
+> **Die App schaltet automatisch um.** Sobald `api/traccar-config.php` auf dem
+> Server liegt, laeuft sie mit echtem GPS — kein Code-Deploy noetig. Fehlt die
+> Datei, zeigt sie die Startposition mit dem Hinweis
+> "📡 GPS noch nicht verbunden".
+
+### a) Auf dem iPhone
+- **Traccar Client** installieren, Server-URL `https://server.traccar.org` eintragen.
 - Sendeintervall **30–60 s**, Genauigkeit "High".
-- Geraet in Traccar mit `uniqueId` wiederfinden.
+- Die **Geraete-Kennung** (uniqueId) aus der App notieren.
 
-### In der App
-`src/config/locationProvider.local.js` anlegen (gitignored, **manuell per FTP**
-hochladen — der Deploy loescht sie nicht):
+### b) In Traccar Cloud
+- Geraet mit dieser uniqueId anlegen (falls es sich nicht selbst meldet).
+- API-Token erzeugen: *Einstellungen → Benutzer → eigenen Benutzer öffnen → Token*.
 
-```js
-export default {
-  activeProvider: "traccar",
-  traccar: {
-    enabled: true,
-    refreshIntervalMs: 30000,
-    baseUrl: "https://dein-traccar-server.de/api",
-    auth: { mode: "bearer", token: "DEIN-READONLY-TOKEN" },
-    device: { deviceId: null, uniqueId: "DEINE-GERAETE-ID" },
-  },
-};
+### c) Auf dem Webspace
+`api/traccar-config.php` anlegen (Vorlage: `api/traccar-config.example.php`)
+und **manuell per FTP** hochladen (gitignored, der Deploy loescht sie nicht):
+
+```php
+return [
+    'base_url' => 'https://server.traccar.org/api',
+    'auth'     => ['mode' => 'bearer', 'token' => 'DEIN-TOKEN'],
+    'device'   => ['unique_id' => 'DEINE-GERAETE-KENNUNG'],
+    'timezone' => 'Europe/Berlin',
+];
 ```
+
+Test: `https://zweiaufachse.thefinks.de/api/traccar.php` muss
+`{"configured":true,"position":{…},"daily":{…}}` liefern.
+Danach die App neu laden — die Fahrer stehen an der echten Position.
 
 ---
 

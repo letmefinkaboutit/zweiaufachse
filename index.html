@@ -624,6 +624,7 @@
 <!-- HUD -->
 <div class="hud-top">
   <span class="chip chip--live" id="chipState"><span class="dot"></span><span id="chipStateText">Verbinde…</span></span>
+  <span class="chip chip--stale" id="chipNoGps" hidden>📡 GPS noch nicht verbunden</span>
   <span class="chip" id="chipDay" hidden></span>
   <span class="chip" id="chipPlace" hidden></span>
   <span class="chip" id="chipWeather" hidden></span>
@@ -903,6 +904,10 @@
   function renderScene() {
     const loc = state.locationData;
     const match = loc?.routeMatch;
+
+    // Solange Traccar nicht eingerichtet ist, laeuft der Mock — das sagen wir
+    // offen, statt die Startposition als Live-Signal auszugeben.
+    $("chipNoGps").hidden = loc?.providerType !== "mock";
 
     // Tempo: Traccar liefert speedKph, sonst aus zwei Fixes berechnet
     const movement = computeMovementStatus(loc, state.previousLocationData);
