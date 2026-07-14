@@ -274,6 +274,20 @@
   .scene--night .hands { opacity: 0; }
   .fly-billboard { transition: opacity 1.2s ease; }
   .scene--night .fly-billboard { opacity: 0 !important; }
+
+  /* ── Pause/Rast am Tag: Raeder geparkt, Picknick statt Fahrt ── */
+  .rest { opacity: 0; transition: opacity 1.2s ease; }
+  .scene--pause .rest { opacity: 1; }
+  .scene--pause .timo, .scene--pause .hands { opacity: 0; }
+  .scene--pause .fly-billboard { opacity: 0 !important; }
+  .scene--pause .fly, .scene--pause .fly-dash, .scene--pause .fly-billboard,
+  .scene--pause .calf-l, .scene--pause .calf-r, .scene--pause .cockpit { animation-play-state: paused; }
+  .steam { animation: steam 2.6s ease-in-out infinite; }
+  @keyframes steam {
+    0% { transform: translateY(0); opacity: 0; }
+    30% { opacity: 0.7; }
+    100% { transform: translateY(-24px); opacity: 0; }
+  }
   .star { animation: twinkle 2.6s ease-in-out infinite; }
   .star:nth-child(3n) { animation-delay: 0.9s; }
   .star:nth-child(3n+1) { animation-delay: 1.7s; }
@@ -583,6 +597,45 @@
     </g>
   </g>
 
+  <!-- ── Pause/Rast am Tag: Picknick am Strassenrand ── -->
+  <g class="rest">
+    <!-- Picknickdecke (auf der Wiese links, perspektivisch weiter hinten) -->
+    <g transform="translate(150,800) scale(0.72)">
+      <path d="M-70 0 L70 0 L96 34 L-96 34 Z" fill="#c9704a"/>
+      <g stroke="#f4e6c8" stroke-width="3" opacity="0.5">
+        <line x1="-46" y1="0" x2="-64" y2="34"/><line x1="0" y1="0" x2="0" y2="34"/><line x1="46" y1="0" x2="64" y2="34"/>
+        <line x1="-79" y1="11" x2="79" y2="11"/><line x1="-87" y1="23" x2="87" y2="23"/>
+      </g>
+    </g>
+    <!-- Timo sitzt mit Kaffeebecher, Helm ab -->
+    <g transform="translate(134,792) scale(0.72)">
+      <path d="M-20 12 Q-28 24 -8 26 L30 26 Q46 24 36 10 L26 6 Z" fill="#2b3a41"/>
+      <path d="M-6 -34 Q14 -42 24 -26 L20 6 Q0 14 -14 4 Z" fill="#1e4a9e"/>
+      <path d="M2 -28 L19 -14 L19 -28 Z" fill="#f4c430"/>
+      <circle cx="4" cy="-48" r="13" fill="#e8b48c"/>
+      <path d="M-9 -51 a13 9 0 0 1 26 -3 l-1 -6 a13 8 0 0 0 -24 3 Z" fill="#6b5138"/>
+      <path d="M22 -22 Q34 -20 38 -8" stroke="#e8b48c" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <rect x="33" y="-12" width="13" height="14" rx="3" fill="#fffdf8" stroke="#d8d0c0" stroke-width="1"/>
+      <g stroke="#c9c2b4" stroke-width="2.4" fill="none" stroke-linecap="round">
+        <path class="steam" d="M37 -16 q3 -6 0 -10"/>
+        <path class="steam" style="animation-delay: 1.3s" d="M43 -16 q-3 -6 0 -10"/>
+      </g>
+      <circle cx="-34" cy="18" r="10" fill="#0c6b58"/>
+      <rect x="-56" y="4" width="9" height="20" rx="4" fill="#8fb6c4"/>
+    </g>
+    <!-- Beide Raeder lehnen auf der Wiese rechts -->
+    <g transform="translate(576,792) scale(0.62)" opacity="0.95">
+      <circle cx="0" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <circle cx="74" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <path d="M0 0 L30 -8 L17 -45 L0 0 M30 -8 L57 -45 M17 -45 L57 -45 M57 -45 L74 0" stroke="#0c6b58" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(622,812) scale(0.54)" opacity="0.9">
+      <circle cx="0" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <circle cx="74" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <path d="M0 0 L30 -8 L17 -45 L0 0 M30 -8 L57 -45 M17 -45 L57 -45 M57 -45 L74 0" stroke="#eb8f34" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+
   <!-- ── Regen (faellt schraeg auf uns zu) ── -->
   <g class="rain">
     <g stroke="#7fa3b8" stroke-width="3" stroke-linecap="round" opacity="0.65">
@@ -750,6 +803,13 @@
   </div>
 </div>
 
+<!-- Lightbox: 1:1 aus der Live-Standardansicht der Haupt-App -->
+<dialog id="photo-lightbox" class="photo-lightbox">
+  <button class="photo-lightbox__close" data-lightbox-close aria-label="Schließen">&#x2715;</button>
+  <img class="photo-lightbox__img" src="" alt="" />
+  <p class="photo-lightbox__caption"></p>
+</dialog>
+
 <!-- Grosse Karte als Popup (Klick auf die Minimap) -->
 <div class="map-modal" id="mapModal">
   <div class="map-modal__card">
@@ -765,19 +825,28 @@
   // Simulierte Live-Position: km 1096 (52 %), echt aus route-data.json abgeleitet
   const SIM = { lat: 44.24317, lon: 17.2959 };
 
-  let nightOverride = null;
-  btn.addEventListener("click", () => {
-    nightOverride = !scene.classList.contains("scene--night");
-    applyNight(nightOverride);
-  });
+  // Drei Zustaende: Fahrt (Tag) → Pause (Rast am Tag) → Nacht (schlafen).
+  // In v1 kommt der Zustand aus den Traccar-Daten (Bewegung + Uhrzeit).
+  const MODES = ["day", "pause", "night"];
+  let modeOverride = null;
+  let curMode = "day";
 
-  function applyNight(night) {
-    scene.classList.toggle("scene--night", night);
-    btn.textContent = night ? "☀️" : "🌙";
-    document.getElementById("chipState").textContent = night ? "schläft 🌙" : "in Bewegung";
-    document.getElementById("dispSpeed").textContent = night ? "--" : "19";
+  function applyMode(mode) {
+    curMode = MODES.includes(mode) ? mode : "day";
+    scene.classList.toggle("scene--night", curMode === "night");
+    scene.classList.toggle("scene--pause", curMode === "pause");
+    // Der Button zeigt jeweils den naechsten Zustand im Zyklus
+    btn.textContent = curMode === "day" ? "☕" : curMode === "pause" ? "🌙" : "☀️";
+    document.getElementById("chipState").textContent =
+      curMode === "night" ? "schläft 🌙" : curMode === "pause" ? "Pause ☕" : "in Bewegung";
+    document.getElementById("dispSpeed").textContent = curMode === "day" ? "19" : "--";
     if (lastWeather) applyWeather(lastWeather.code, lastWeather.temperature);
   }
+
+  btn.addEventListener("click", () => {
+    modeOverride = MODES[(MODES.indexOf(curMode) + 1) % MODES.length];
+    applyMode(modeOverride);
+  });
 
   // ── Echtes Wetter (Open-Meteo). ?wx= und ?mode= erzwingen Zustaende. ──
   const params = new URLSearchParams(location.search);
@@ -802,8 +871,8 @@
     applyWeather({ rain: 61, overcast: 3, fog: 45, clear: 0 }[forcedWx] ?? 0, 21);
   }
   if (forcedMode) {
-    applyNight(forcedMode === "night");
-    nightOverride = forcedMode === "night";
+    applyMode(forcedMode);
+    modeOverride = forcedMode;
   }
 
   if (!forcedWx || !forcedMode) {
@@ -811,7 +880,7 @@
       .then((r) => r.json())
       .then(({ current }) => {
         if (!forcedWx) applyWeather(current.weather_code, current.temperature_2m);
-        if (!forcedMode && nightOverride === null) applyNight(current.is_day === 0);
+        if (!forcedMode && modeOverride === null && current.is_day === 0) applyMode("night");
       })
       .catch(() => { if (!forcedWx) applyWeather(0, 22); });
   }
@@ -824,25 +893,37 @@
     { thumbUrl: "/bilderupload/thumbs/s/IMG_3848.JPG", date: "2025-06-02T10:12:00" },
   ];
 
-  function createPhotoMoment(photo) {
+  // Ortsnamen fuer Fotos (Nominatim, gecacht, hoeflich sequenziell)
+  const geoCache = new Map();
+  async function reverseGeo(lat, lon) {
+    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    if (geoCache.has(key)) return geoCache.get(key);
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`);
+    if (!res.ok) throw new Error("geo");
+    const a = (await res.json()).address ?? {};
+    const label = a.city || a.town || a.village || a.hamlet || a.municipality || "unterwegs";
+    geoCache.set(key, label);
+    return label;
+  }
+  window.__reverseGeo = reverseGeo;
+
+  function createPhotoMoment(m) {
     const el = document.createElement("div");
     el.className = "moment moment--photo";
-    const dateLabel = photo.date
-      ? new Date(photo.date).toLocaleDateString("de-DE", { day: "numeric", month: "long" })
-      : "unterwegs";
     el.innerHTML = `
       <span class="tape"></span>
-      <img src="${GALLERY_HOST}${photo.thumbUrl}" alt="Foto von unterwegs" />
-      <div class="moment__caption"><span>📷 Erinnerung</span><span>${dateLabel}</span></div>
+      <img src="${m.url}" alt="Foto von heute" />
+      <div class="moment__caption"><span>📍 <span data-loc>${m.locLabel}</span></span><span>${m.hoursLabel}</span></div>
     `;
-    el.querySelector("img").addEventListener("error", () => { el.dataset.dead = "1"; });
+    el.querySelector("img").addEventListener("error", () => { el.dataset.dead = "1"; m.dead = true; });
     stage.appendChild(el);
+    m.el = el;
     return el;
   }
 
-  function startMomentCarousel(photos) {
+  function startMomentCarousel(photoMoments) {
     const borderCard = stage.querySelector('[data-moment="border"]');
-    const photoCards = photos.slice(0, 4).map(createPhotoMoment);
+    const photoCards = photoMoments.map(createPhotoMoment);
 
     const sequence = [];
     const ahead = [borderCard].filter(Boolean);
@@ -896,8 +977,8 @@
       return `
         <rect x="-34" y="-26" width="68" height="62" rx="3" fill="#fffdf8" stroke="#d8d0c0" stroke-width="1"/>
         <image href="${m.url}" x="-30" y="-22" width="60" height="42" preserveAspectRatio="xMidYMid slice"/>
-        <text x="-30" y="31" font-size="6" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">📷</text>
-        <text x="30" y="31" text-anchor="end" font-size="6" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">Erinnerung · ${m.dateLabel}</text>
+        <text x="-30" y="31" font-size="6" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">📍 ${m.locLabel}</text>
+        <text x="30" y="31" text-anchor="end" font-size="6" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif">${m.hoursLabel}</text>
       `;
     }
     if (m.type === "border") {
@@ -941,20 +1022,45 @@
     window.__photos = photos;
     window.dispatchEvent(new CustomEvent("photos-ready", { detail: photos }));
 
-    const photoMoments = photos.slice(0, 4).map((p) => ({
-      type: "photo",
-      url: `${GALLERY_HOST}${p.thumbUrl}`,
-      dateLabel: p.date
-        ? new Date(p.date).toLocaleDateString("de-DE", { day: "numeric", month: "long" })
-        : "unterwegs",
-      dead: false,
-    }));
+    // Nur die Bilder des aktuellen Kalendertages (Simulation: der juengste
+    // Tag in der Galerie gilt als "heute", "jetzt" = letztes Foto + 3 Std)
+    const dated = photos.filter((p) => p.thumbUrl && p.date);
+    const today = dated[0]?.date?.slice(0, 10);
+    const todays = dated.filter((p) => p.date.slice(0, 10) === today).slice(0, 5);
+    const simNow = todays.length
+      ? Math.max(...todays.map((p) => new Date(p.date).getTime())) + 3 * 3600e3
+      : Date.now();
+
+    const photoMoments = todays.map((p) => {
+      const hours = Math.max(1, Math.round((simNow - new Date(p.date).getTime()) / 3600e3));
+      return {
+        type: "photo",
+        url: `${GALLERY_HOST}${p.thumbUrl}`,
+        lat: p.lat, lon: p.lon,
+        hoursLabel: `vor ${hours} Std`,
+        locLabel: "…",
+        dead: false,
+      };
+    });
     // Vorladen; kaputte Bilder fallen stumm aus der Rotation
     photoMoments.forEach((m) => {
       const img = new Image();
-      img.addEventListener("error", () => { m.dead = true; });
+      img.addEventListener("error", () => { m.dead = true; if (m.el) m.el.dataset.dead = "1"; });
       img.src = m.url;
     });
+    // Ortsnamen nachladen und Karten aktualisieren
+    (async () => {
+      for (const m of photoMoments) {
+        if (m.lat == null) { m.locLabel = "unterwegs"; }
+        else {
+          try { m.locLabel = await reverseGeo(m.lat, m.lon); }
+          catch { m.locLabel = "unterwegs"; }
+          await new Promise((r) => setTimeout(r, 1100));
+        }
+        const locEl = m.el?.querySelector("[data-loc]");
+        if (locEl) locEl.textContent = m.locLabel;
+      }
+    })();
 
     const ahead = [{ type: "border" }];
     bbSeq = [];
@@ -965,7 +1071,7 @@
     if (!bbSeq.length) bbSeq = ahead;
 
     renderNextBillboard();
-    startMomentCarousel(photos);
+    startMomentCarousel(photoMoments);
   }
 
   fetch(`${GALLERY_HOST}/bilderupload/list.php`)
@@ -981,7 +1087,7 @@
   // ── GPS-Leben: Tempo auf dem Radcomputer streut, Frische tickt ──
   let lastFixMin = 1;
   setInterval(() => {
-    if (scene.classList.contains("scene--night")) return;
+    if (curMode !== "day") return;
     const kph = 17 + Math.round(Math.random() * 5);
     document.getElementById("dispSpeed").textContent = String(kph);
   }, 4000);
@@ -1044,8 +1150,9 @@
       touchZoom: false, boxZoom: false, keyboard: false, tapHold: false,
       preferCanvas: true,
     });
-    window.L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      subdomains: "abc", maxZoom: 15,
+    // Gleicher Look wie die grosse Popup-Karte (Live-Standardansicht der App)
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd", maxZoom: 19,
     }).addTo(mini);
 
     const mmPts = data.points.filter((_, i) => i % 24 === 0);
@@ -1088,22 +1195,93 @@
   wireSheet("albumSheet", document.getElementById("boxAlbum"));
 
   // ── Foto-Box + Album aus der echten Galerie ──
+  const host = "https://zweiaufachse.thefinks.de";
+  let albumPhotos = [];
+
   function fillPhotos(photos) {
-    const withThumb = photos.filter((p) => p.thumbUrl);
-    const host = "https://zweiaufachse.thefinks.de";
+    albumPhotos = photos.filter((p) => p.thumbUrl);
 
     document.getElementById("thumbStack").innerHTML =
-      withThumb.slice(0, 3).map((p) => `<img src="${host}${p.thumbUrl}" alt="" loading="lazy" />`).join("") +
-      `<span class="thumb-stack__count">${withThumb.length}</span>`;
+      albumPhotos.slice(0, 3).map((p) => `<img src="${host}${p.thumbUrl}" alt="" loading="lazy" />`).join("") +
+      `<span class="thumb-stack__count">${albumPhotos.length}</span>`;
 
-    document.getElementById("albumGrid").innerHTML = withThumb
+    document.getElementById("albumGrid").innerHTML = albumPhotos
       .slice(0, 24)
-      .map((p) => `<img src="${host}${p.thumbUrl}" alt="Foto von unterwegs" loading="lazy" />`)
+      .map((p, i) => `<img src="${host}${p.thumbUrl}" data-idx="${i}" alt="Foto von unterwegs" loading="lazy" style="cursor:pointer" />`)
       .join("");
-    document.getElementById("albumCount").textContent = `${withThumb.length} Fotos von unterwegs`;
+    document.getElementById("albumCount").textContent = `${albumPhotos.length} Fotos von unterwegs`;
   }
   if (window.__photos) fillPhotos(window.__photos);
   else window.addEventListener("photos-ready", (e) => fillPhotos(e.detail), { once: true });
+
+  // ── Lightbox (wie in der Haupt-App): Klick auf Albumbild oeffnet gross ──
+  const lightbox = document.getElementById("photo-lightbox");
+  let lbIdx = 0;
+
+  function lightboxUrl(p) {
+    return host + (p.lightboxUrl ?? p.thumbUrl);
+  }
+
+  function showLightbox(slideDir = 0) {
+    const p = albumPhotos[lbIdx];
+    if (!p) return;
+    const img = lightbox.querySelector(".photo-lightbox__img");
+    img.src = lightboxUrl(p);
+    if (slideDir !== 0 && typeof img.animate === "function") {
+      img.animate(
+        [{ opacity: 0.25, transform: `translateX(${slideDir * 28}px)` }, { opacity: 1, transform: "none" }],
+        { duration: 200, easing: "ease-out" },
+      );
+    }
+    const d = p.date ? new Date(p.date) : null;
+    lightbox.querySelector(".photo-lightbox__caption").innerHTML = `<div class="lc-chips">
+      <span class="lc-chip lc-chip--counter">${lbIdx + 1}/${albumPhotos.length}</span>
+      ${d ? `<span class="lc-chip">${d.toLocaleDateString("de-DE", { day: "2-digit", month: "long" })}</span>` : ""}
+      ${d ? `<span class="lc-chip">${d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</span>` : ""}
+      ${p.lat != null ? `<span class="lc-chip">📍 <span id="lbLoc">…</span></span>` : ""}
+    </div>`;
+    if (p.lat != null) {
+      const captured = lbIdx;
+      window.__reverseGeo?.(p.lat, p.lon)
+        .then((loc) => {
+          if (captured !== lbIdx) return;
+          const el = document.getElementById("lbLoc");
+          if (el) el.textContent = loc;
+        })
+        .catch(() => document.getElementById("lbLoc")?.closest(".lc-chip")?.remove());
+    }
+    for (const n of [lbIdx - 1, lbIdx + 1]) {
+      if (albumPhotos[n]) new Image().src = lightboxUrl(albumPhotos[n]);
+    }
+  }
+
+  function navLightbox(dir) {
+    const next = lbIdx + dir;
+    if (next < 0 || next >= albumPhotos.length) return;
+    lbIdx = next;
+    showLightbox(dir);
+  }
+
+  document.getElementById("albumGrid").addEventListener("click", (e) => {
+    const img = e.target.closest("img[data-idx]");
+    if (!img) return;
+    lbIdx = Number(img.dataset.idx);
+    showLightbox();
+    lightbox.showModal();
+  });
+  lightbox.querySelector("[data-lightbox-close]").addEventListener("click", () => lightbox.close());
+  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) lightbox.close(); });
+  document.addEventListener("keydown", (e) => {
+    if (!lightbox.open) return;
+    if (e.key === "ArrowRight") navLightbox(1);
+    if (e.key === "ArrowLeft") navLightbox(-1);
+  });
+  let lbTouchX = 0;
+  lightbox.addEventListener("touchstart", (e) => { lbTouchX = e.touches[0].clientX; }, { passive: true });
+  lightbox.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - lbTouchX;
+    if (Math.abs(dx) > 40) navLightbox(dx < 0 ? 1 : -1);
+  });
 
   // ── Grosse Karte im Popup, Leaflet lazy beim ersten Oeffnen ──
   const modal = document.getElementById("mapModal");

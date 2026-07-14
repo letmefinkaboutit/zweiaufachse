@@ -10,13 +10,14 @@ header('Access-Control-Allow-Origin: *');
 //   zeigt die URL auf das Original — die App funktioniert immer.
 
 const URL_PREFIX   = '/bilderupload/iPhone/Recents/';
-const THUMB_PREFIX = '/bilderupload/thumbs/';
+// v2: Orientierungs-Heuristik gegen veraltete EXIF-Tags (Neugenerierung)
+const THUMB_PREFIX = '/bilderupload/thumbs/v2/';
 const THUMB_SIZES  = ['s' => 480, 'l' => 1600];
 const MAX_THUMB_OPS = 12;
 const JPEG_QUALITY  = 82;
 
 $photoDir  = __DIR__ . '/iPhone/Recents/';
-$thumbBase = __DIR__ . '/thumbs';
+$thumbBase = __DIR__ . '/thumbs/v2';
 $cacheFile = __DIR__ . '/exif-cache.json';
 
 if (!is_dir($photoDir)) {
@@ -184,13 +185,13 @@ function createThumb(string $srcPath, string $dstPath, int $maxDim, int $orienta
 
     // EXIF-Orientierung einbacken — Thumbnails verlieren die EXIF-Daten,
     // daher muss die Drehung im Pixelbild landen.
+    // Heuristik: Tag 6/8 gehoert zu quer gespeicherten Sensor-Pixeln.
+    // Sind die Rohpixel schon hochkant, ist das Tag veraltet (Pixel wurden
+    // beim Uebertragen bereits gedreht) — dann NICHT nochmal drehen.
     if ($orientation === 3) {
         $src = imagerotate($src, 180, 0);
-    } elseif ($orientation === 6) {
-        $src = imagerotate($src, -90, 0);
-        [$width, $height] = [$height, $width];
-    } elseif ($orientation === 8) {
-        $src = imagerotate($src, 90, 0);
+    } elseif (($orientation === 6 || $orientation === 8) && $width > $height) {
+        $src = imagerotate($src, $orientation === 6 ? -90 : 90, 0);
         [$width, $height] = [$height, $width];
     }
 
