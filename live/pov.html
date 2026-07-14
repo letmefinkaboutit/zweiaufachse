@@ -3,14 +3,84 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Living Scene · POV-Mockup · km 1.096</title>
+<title>Living Scene · POV-Hybrid · km 1.096</title>
+<link rel="stylesheet" href="../src/vendor/leaflet/leaflet.css" />
+<script src="../src/vendor/leaflet/leaflet.js" defer></script>
 <style>
   * { margin: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: #f7f1e7; }
-  body { font-family: "Avenir Next", "Trebuchet MS", sans-serif; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    color: #1f2a2f;
+    background:
+      radial-gradient(circle at top left, rgba(235, 143, 52, 0.18), transparent 32%),
+      linear-gradient(180deg, #fff9f0 0%, #f7f1e7 48%, #f2efe8 100%);
+  }
 
-  .scene-wrap { position: fixed; inset: 0; }
-  svg.scene { width: 100%; height: 100%; display: block; }
+  /* ── Sektion 1: die animierte Szene oben ── */
+  .scene-wrap {
+    position: relative;
+    height: min(62vh, 620px);
+    min-height: 430px;
+    overflow: hidden;
+    border-radius: 0 0 26px 26px;
+    box-shadow: 0 14px 34px rgba(29, 35, 38, 0.12);
+  }
+  svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* ── Sektionen darunter ── */
+  .bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 14px;
+  }
+  .bar__label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: #58656b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bar a, .bar button {
+    font: inherit; font-size: 15px; text-decoration: none; color: inherit;
+    background: rgba(255, 253, 248, 0.9); border: 1px solid rgba(31, 42, 47, 0.08);
+    border-radius: 999px; padding: 7px 13px; cursor: pointer; flex-shrink: 0;
+  }
+  .sections { padding: 0 14px calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 14px; }
+  .boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .box {
+    background: rgba(255, 250, 244, 0.92); border-radius: 18px;
+    padding: 12px 12px 11px; box-shadow: 0 10px 26px rgba(29, 35, 38, 0.07);
+  }
+  .box span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #58656b; }
+  .box strong { display: block; font-size: 19px; letter-spacing: -0.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .box small { display: block; font-size: 11.5px; color: #58656b; margin-top: 2px; font-weight: 600; }
+  .panel {
+    background: rgba(255, 250, 244, 0.92); border-radius: 22px;
+    padding: 16px 16px 14px; box-shadow: 0 12px 30px rgba(29, 35, 38, 0.08);
+  }
+  .panel__eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #58656b;
+  }
+  .panel h3 { font-size: 17.5px; letter-spacing: -0.02em; margin: 2px 0 10px; }
+  .timeline-svg { display: block; width: 100%; height: auto; }
+  #map {
+    height: 300px; border-radius: 14px; overflow: hidden;
+    background: #e9e2d2;
+  }
+  .live-pos-marker { position: relative; width: 32px; height: 32px; }
+  .live-pos-marker__dot {
+    position: absolute; left: 10px; top: 10px; width: 12px; height: 12px;
+    border-radius: 50%; background: #0c6b58; border: 2.5px solid #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  }
+  .live-pos-marker__pulse {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(12, 107, 88, 0.35);
+    animation: mappulse 2s ease-out infinite;
+  }
+  @keyframes mappulse { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+  @media (min-width: 760px) {
+    .sections { max-width: 860px; margin: 0 auto; grid-template-columns: 1fr 1fr; }
+    .boxes { grid-column: 1 / -1; }
+  }
 
   /* ── Pseudo-3D: alles skaliert vom Fluchtpunkt (400,560) weg ── */
   .fly {
@@ -106,10 +176,10 @@
   .raindrop { animation: rainfall 0.55s linear infinite; }
   @keyframes rainfall { to { transform: translate(-40px, 340px); } }
 
-  /* ── Momente-Buehne ── */
+  /* ── Momente-Buehne (in der Szene verankert) ── */
   .moment-stage {
-    position: fixed; left: 0; right: 0;
-    top: calc(80px + env(safe-area-inset-top));
+    position: absolute; left: 0; right: 0;
+    top: calc(74px + env(safe-area-inset-top));
     display: flex; justify-content: center;
     pointer-events: none; z-index: 5;
   }
@@ -158,11 +228,11 @@
   .moment__flags .arrow { font-size: 24px; color: #8a5ca7; vertical-align: middle; margin: 0 8px; }
   .moment__art { display: block; width: 100%; height: auto; margin: 6px 0 4px; }
 
-  /* ── HUD ── */
+  /* ── HUD (in der Szene verankert) ── */
   .hud-top {
-    position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 0; right: 0;
+    position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 0; right: 0;
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
-    padding: 0 12px; pointer-events: none;
+    padding: 0 12px; pointer-events: none; z-index: 6;
   }
   .chip {
     font-size: 12.5px; font-weight: 700; color: #1f2a2f;
@@ -177,22 +247,6 @@
     animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .hud {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    color: #1f2a2f; z-index: 6;
-  }
-  .hud__label {
-    font-size: 11.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
-    padding: 8px 14px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .hud button, .hud a {
-    font: inherit; font-size: 16px; text-decoration: none; color: inherit;
-    background: rgba(255, 253, 248, 0.85); backdrop-filter: blur(8px);
-    border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex-shrink: 0;
-  }
   @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
 </style>
 </head>
@@ -241,9 +295,10 @@
 
   <!-- ── Himmel ── -->
   <rect width="800" height="1200" fill="url(#sky)"/>
+  <!-- Sonne tiefer: die Szene ist jetzt eine Sektion, oben wird beschnitten -->
   <g class="sun-group">
-    <circle cx="235" cy="130" r="100" fill="url(#sunGlow)"/>
-    <circle cx="235" cy="130" r="40" fill="#f2a24b"/>
+    <circle cx="170" cy="290" r="95" fill="url(#sunGlow)"/>
+    <circle cx="170" cy="290" r="38" fill="#f2a24b"/>
   </g>
   <g class="cloud-drift" opacity="0.9">
     <use href="#cloud" x="560" y="140"/><use href="#cloud" x="900" y="90"/>
@@ -257,18 +312,18 @@
   <!-- Nachthimmel -->
   <rect class="night-veil" width="800" height="1200" fill="#122032" opacity="0" style="mix-blend-mode: multiply;"/>
   <g class="stars" fill="#fdf0d5">
-    <circle class="star" cx="150" cy="100" r="2.2"/><circle class="star" cx="320" cy="70" r="1.7"/>
-    <circle class="star" cx="480" cy="140" r="2"/><circle class="star" cx="620" cy="80" r="1.6"/>
-    <circle class="star" cx="200" cy="230" r="1.8"/><circle class="star" cx="560" cy="260" r="1.6"/>
-    <circle class="star" cx="410" cy="180" r="1.5"/><circle class="star" cx="680" cy="200" r="2"/>
-    <circle class="star" cx="290" cy="330" r="1.5"/><circle class="star" cx="520" cy="380" r="1.4"/>
+    <circle class="star" cx="150" cy="240" r="2.2"/><circle class="star" cx="320" cy="215" r="1.7"/>
+    <circle class="star" cx="480" cy="275" r="2"/><circle class="star" cx="620" cy="225" r="1.6"/>
+    <circle class="star" cx="240" cy="360" r="1.8"/><circle class="star" cx="560" cy="390" r="1.6"/>
+    <circle class="star" cx="410" cy="310" r="1.5"/><circle class="star" cx="680" cy="330" r="2"/>
+    <circle class="star" cx="90" cy="420" r="1.5"/><circle class="star" cx="740" cy="430" r="1.4"/>
   </g>
   <g class="moon">
     <mask id="moonMaskPov">
-      <circle cx="250" cy="130" r="36" fill="white"/>
-      <circle cx="266" cy="118" r="31" fill="black"/>
+      <circle cx="180" cy="290" r="34" fill="white"/>
+      <circle cx="195" cy="279" r="29" fill="black"/>
     </mask>
-    <circle cx="250" cy="130" r="36" fill="#f6ecd4" mask="url(#moonMaskPov)"/>
+    <circle cx="180" cy="290" r="34" fill="#f6ecd4" mask="url(#moonMaskPov)"/>
   </g>
 
   <!-- ── Horizont: bosnische Bergketten + Dorf ── -->
@@ -480,7 +535,6 @@
     </g>
   </g>
 </svg>
-</div>
 
 <!-- Momente-Buehne -->
 <div class="moment-stage" id="momentStage">
@@ -523,13 +577,87 @@
   <span class="chip" id="chipWeather">…°C</span>
   <span class="chip" id="chipFresh">vor 1 Min</span>
 </div>
+</div><!-- /scene-wrap -->
 
-<div class="hud">
+<div class="bar">
   <a href="./index.html" aria-label="Zurück zur Auswahl">←</a>
-  <span class="hud__label">POV-Mockup · km 1.096 · Bosnien</span>
+  <span class="bar__label">POV-Hybrid · km 1.096 · Bosnien</span>
   <button id="toggleStage" aria-label="Schilder- oder Kartenmodus">🪧</button>
   <button id="toggleNight" aria-label="Tag/Nacht umschalten">🌙</button>
 </div>
+
+<main class="sections">
+  <!-- Sektion 2: statische Info-Boxen -->
+  <section class="boxes" aria-label="Tour-Kennzahlen">
+    <div class="box">
+      <span>Heute</span>
+      <strong>64 km</strong>
+      <small>gestern 71 km</small>
+    </div>
+    <div class="box">
+      <span>Fortschritt</span>
+      <strong>52 %</strong>
+      <small>1.096 von 2.107 km</small>
+    </div>
+    <div class="box">
+      <span>Reisetag</span>
+      <strong>Tag 34</strong>
+      <small>seit 10. Juni</small>
+    </div>
+  </section>
+
+  <!-- Sektion 3: Tourstatus — Hoehenprofil + Laender-Abschnitte -->
+  <section class="panel">
+    <p class="panel__eyebrow">Tourstatus</p>
+    <h3>Höhenprofil &amp; Länder</h3>
+    <svg class="timeline-svg" viewBox="0 0 700 160" role="img" aria-label="Höhenprofil mit Länderabschnitten und Live-Position">
+      <!-- Fortschritts-Tönung -->
+      <rect x="0" y="16" width="364" height="92" fill="#0c6b58" opacity="0.07"/>
+      <!-- Höhenprofil -->
+      <path d="M0 108 L0 95 L40 90 L70 84 L92 52 L105 42 L122 58 L142 46 L158 38 L175 60 L195 76 L215 70 L235 66 L255 84 L273 92 L288 98 L303 90 L322 74 L342 62 L362 68 L380 58 L398 78 L420 64 L440 56 L458 50 L475 62 L492 70 L508 58 L528 54 L548 78 L568 86 L585 74 L602 64 L625 60 L648 82 L672 92 L700 96 L700 108 Z" fill="#d9d2c2"/>
+      <!-- Länderbänder (echte Segment-Anteile aus route-data) -->
+      <g>
+        <rect x="0" y="112" width="66" height="18" fill="#1a1a1a"/>
+        <rect x="66" y="112" width="45" height="18" fill="#ED2939"/>
+        <rect x="111" y="112" width="46" height="18" fill="#009246"/>
+        <rect x="157" y="112" width="31" height="18" fill="#ED2939"/>
+        <rect x="188" y="112" width="85" height="18" fill="#003DA5"/>
+        <rect x="273" y="112" width="30" height="18" fill="#FF0000"/>
+        <rect x="303" y="112" width="136" height="18" fill="#002395"/>
+        <rect x="439" y="112" width="66" height="18" fill="#D4AF37"/>
+        <rect x="505" y="112" width="97" height="18" fill="#E41E20"/>
+        <rect x="602" y="112" width="98" height="18" fill="#0D5EAF"/>
+      </g>
+      <g font-size="11" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji',sans-serif">
+        <text x="33" y="126">🇩🇪</text>
+        <text x="88" y="126">🇦🇹</text>
+        <text x="134" y="126">🇮🇹</text>
+        <text x="230" y="126">🇸🇮</text>
+        <text x="288" y="126">🇭🇷</text>
+        <text x="371" y="126">🇧🇦</text>
+        <text x="472" y="126">🇲🇪</text>
+        <text x="553" y="126">🇦🇱</text>
+        <text x="651" y="126">🇬🇷</text>
+      </g>
+      <!-- Live-Marker bei 52 % -->
+      <line x1="364" y1="24" x2="364" y2="132" stroke="#0c6b58" stroke-width="2" opacity="0.55" stroke-dasharray="3 3"/>
+      <circle cx="364" cy="66" r="9" fill="#0c6b58" opacity="0.2"/>
+      <circle cx="364" cy="66" r="5" fill="#0c6b58" stroke="#fffdf8" stroke-width="2"/>
+      <rect x="326" y="4" width="76" height="18" rx="9" fill="#0c6b58"/>
+      <text x="364" y="17" text-anchor="middle" font-size="11" font-weight="700" fill="#fffdf8" font-family="Trebuchet MS, sans-serif">km 1.096</text>
+      <!-- Achsen-Labels -->
+      <text x="0" y="150" font-size="10.5" font-weight="600" fill="#8a938f" font-family="Trebuchet MS, sans-serif">Schorndorf</text>
+      <text x="700" y="150" text-anchor="end" font-size="10.5" font-weight="600" fill="#8a938f" font-family="Trebuchet MS, sans-serif">Volos · 2.107 km</text>
+    </svg>
+  </section>
+
+  <!-- Sektion 4: die echte Live-Karte -->
+  <section class="panel">
+    <p class="panel__eyebrow">Live-Karte</p>
+    <h3>Wo sind sie gerade?</h3>
+    <div id="map"></div>
+  </section>
+</main>
 
 <script>
   const scene = document.getElementById("scene");
@@ -741,6 +869,59 @@
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((photos) => initMoments(photos.filter((p) => p.thumbUrl)))
     .catch(() => initMoments(FALLBACK_PHOTOS));
+
+  // ── Echte Live-Karte: reale Route aus route-data.json, Split bei km 1.096 ──
+  const DONE_METERS = 1_096_000;
+
+  function initLiveMap() {
+    if (!window.L || !document.getElementById("map")) return;
+
+    const map = window.L.map("map", { zoomControl: true, attributionControl: false, preferCanvas: true });
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd", maxZoom: 19,
+    }).addTo(map);
+    window.L.control.attribution({ prefix: false })
+      .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
+      .addTo(map);
+
+    fetch("../src/route/route-data.json")
+      .then((r) => r.json())
+      .then((data) => {
+        // Jeden 4. Punkt reicht fuer die Uebersicht
+        const pts = data.points.filter((_, i) => i % 4 === 0);
+        const splitIdx = Math.max(1, pts.findIndex((p) => p[3] >= DONE_METERS));
+        const toLL = (p) => [p[0], p[1]];
+
+        window.L.polyline(pts.slice(splitIdx).map(toLL), {
+          color: "#90a4ae", weight: 3.5, opacity: 0.75, lineCap: "round",
+        }).addTo(map);
+        window.L.polyline(pts.slice(0, splitIdx + 1).map(toLL), {
+          color: "#eb8f34", weight: 3.5, opacity: 0.9, lineCap: "round",
+        }).addTo(map);
+
+        const icon = window.L.divIcon({
+          className: "",
+          html: `<div class="live-pos-marker"><div class="live-pos-marker__pulse"></div><div class="live-pos-marker__dot"></div></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+        window.L.marker([SIM.lat, SIM.lon], { icon, zIndexOffset: 1000 }).addTo(map);
+
+        map.fitBounds([
+          [data.bounds.minLat, data.bounds.minLon],
+          [data.bounds.maxLat, data.bounds.maxLon],
+        ], { padding: [14, 14] });
+      })
+      .catch(() => {
+        map.setView([SIM.lat, SIM.lon], 8);
+      });
+  }
+  window.addEventListener("load", initLiveMap);
+
+  // Desktop/Querformat: ganze Szene zeigen statt nur das Cockpit
+  if (window.innerWidth > window.innerHeight) {
+    scene.setAttribute("preserveAspectRatio", "xMidYMax meet");
+  }
 
   // ── GPS-Leben: Tempo auf dem Radcomputer streut, Frische tickt ──
   let lastFixMin = 1;
