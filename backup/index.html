@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Timo & Tino on Tour - eine mobile-first Reise-App für Familie und Freunde."
+    />
+    <title>Timo & Tino on Tour</title>
+    <meta name="theme-color" content="#0c6b58" />
+    <link rel="manifest" href="../manifest.json" />
+    <link rel="apple-touch-icon" href="../src/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="../src/assets/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="T&T Tour" />
+    <link rel="stylesheet" href="../src/vendor/leaflet/leaflet.css" />
+    <script src="../src/vendor/leaflet/leaflet.js" defer></script>
+    <link rel="stylesheet" href="../src/styles/app.css?v=20260427f" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app-shell">
+        <section class="route-loading-card">
+          <p class="section-intro__eyebrow">Startet</p>
+          <h2>Timo & Tino on Tour wird geladen.</h2>
+          <p class="muted-text">Wenn dieser Text stehen bleibt, ist beim JavaScript-Start etwas schiefgelaufen.</p>
+        </section>
+      </div>
+    </div>
+    <script type="module">
+      const root = document.querySelector("#app");
+
+      const renderStartupError = (message) => {
+        if (!root) {
+          return;
+        }
+
+        root.innerHTML = `
+          <div class="app-shell">
+            <section class="route-loading-card">
+              <p class="section-intro__eyebrow">Startfehler</p>
+              <h2>Die Web-App konnte nicht geladen werden.</h2>
+              <p class="muted-text">${message}</p>
+            </section>
+          </div>
+        `;
+      };
+
+      // Nur waehrend des Starts aktiv: sobald die App laeuft ("app-ready"),
+      // darf ein spaeterer unbehandelter Fehler die UI nicht mehr ersetzen.
+      const onStartupError = (event) => {
+        renderStartupError(event?.error?.message || event.message || "Unbekannter Browserfehler");
+      };
+
+      const onStartupRejection = (event) => {
+        const reason = event.reason;
+        renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
+      };
+
+      window.addEventListener("error", onStartupError);
+      window.addEventListener("unhandledrejection", onStartupRejection);
+      window.addEventListener(
+        "app-ready",
+        () => {
+          window.removeEventListener("error", onStartupError);
+          window.removeEventListener("unhandledrejection", onStartupRejection);
+        },
+        { once: true },
+      );
+
+      import("../src/main.js?v=20260713a").catch((error) => {
+        renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
+        console.error(error);
+      });
+    </script>
+  </body>
+</html>

@@ -1,84 +1,1411 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <meta
-      name="description"
-      content="Timo & Tino on Tour - eine mobile-first Reise-App für Familie und Freunde."
-    />
-    <title>Timo & Tino on Tour</title>
-    <meta name="theme-color" content="#0c6b58" />
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="./src/assets/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="./src/assets/icon.svg" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="T&T Tour" />
-    <link rel="stylesheet" href="./src/vendor/leaflet/leaflet.css" />
-    <script src="./src/vendor/leaflet/leaflet.js" defer></script>
-    <link rel="stylesheet" href="./src/styles/app.css?v=20260427f" />
-  </head>
-  <body>
-    <div id="app">
-      <div class="app-shell">
-        <section class="route-loading-card">
-          <p class="section-intro__eyebrow">Startet</p>
-          <h2>Timo & Tino on Tour wird geladen.</h2>
-          <p class="muted-text">Wenn dieser Text stehen bleibt, ist beim JavaScript-Start etwas schiefgelaufen.</p>
-        </section>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Timo & Tino on Tour</title>
+<meta name="description" content="Live dabei auf der Radreise von Schorndorf nach Griechenland." />
+<meta name="theme-color" content="#0c6b58" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./src/assets/apple-touch-icon.png" />
+<link rel="icon" type="image/svg+xml" href="./src/assets/icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="T&T Tour" />
+<link rel="stylesheet" href="./src/vendor/leaflet/leaflet.css" />
+<link rel="stylesheet" href="./src/styles/app.css" />
+<script src="./src/vendor/leaflet/leaflet.js" defer></script>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    color: #1f2a2f;
+    background:
+      radial-gradient(circle at top left, rgba(235, 143, 52, 0.18), transparent 32%),
+      linear-gradient(180deg, #fff9f0 0%, #f7f1e7 48%, #f2efe8 100%);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .scene-wrap {
+    position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 26px rgba(29, 35, 38, 0.12);
+  }
+  svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* ── Pseudo-3D ── */
+  .fly {
+    transform-box: view-box; transform-origin: 400px 560px;
+    animation: fly var(--dur, 5.2s) linear infinite;
+    animation-delay: var(--delay, 0s); opacity: 0;
+  }
+  @keyframes fly {
+    0% { transform: scale(0.05); opacity: 0; }
+    6% { opacity: 1; }
+    62% { transform: scale(1.6); }
+    100% { transform: scale(11); opacity: 1; }
+  }
+  .fly-dash {
+    transform-box: view-box; transform-origin: 400px 560px;
+    animation: flydash 3.2s linear infinite;
+    animation-delay: var(--delay, 0s); opacity: 0;
+  }
+  @keyframes flydash {
+    0% { transform: scale(0.08, 0.08); opacity: 0; }
+    8% { opacity: 0.7; }
+    62% { transform: scale(1.3, 1.9); }
+    100% { transform: scale(4.5, 13); opacity: 0.7; }
+  }
+
+  .spokes, .crank { animation: spin var(--wheel, 0.82s) linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .timo { transform-box: view-box; transform-origin: 400px 1000px; animation: sway 1.7s ease-in-out infinite alternate; }
+  @keyframes sway { from { transform: rotate(-1.3deg); } to { transform: rotate(1.3deg); } }
+  .calf-l { animation: pedal var(--pedal, 0.42s) ease-in-out infinite alternate; }
+  .calf-r { animation: pedal var(--pedal, 0.42s) ease-in-out infinite alternate-reverse; }
+  @keyframes pedal { from { transform: translateY(0); } to { transform: translateY(-16px); } }
+  .cockpit { animation: cockpitbob 0.48s ease-in-out infinite alternate; }
+  @keyframes cockpitbob { to { transform: translateY(2px); } }
+  .cloud-drift { animation: drift 90s linear infinite; }
+  @keyframes drift { to { transform: translateX(-900px); } }
+  .glint { animation: glint 3.2s ease-in-out infinite; }
+  @keyframes glint { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+
+  /* ── Zustaende ── */
+  .night-veil, .stars, .moon, .camp { opacity: 0; transition: opacity 1.4s ease; }
+  .sun-group, .timo { transition: opacity 1.3s ease; }
+  .scene--night .night-veil, .scene--night .stars, .scene--night .moon, .scene--night .camp { opacity: 1; }
+  .scene--night .sun-group, .scene--night .timo { opacity: 0; }
+  .scene--night .fly, .scene--night .fly-dash, .scene--night .calf-l, .scene--night .calf-r,
+  .scene--night .cockpit, .scene--night .cloud-drift { animation-play-state: paused; }
+  .hands { transition: opacity 1.2s ease; }
+  .scene--night .hands { opacity: 0; }
+  .star { animation: twinkle 2.6s ease-in-out infinite; }
+  .star:nth-child(3n) { animation-delay: 0.9s; }
+  .star:nth-child(3n+1) { animation-delay: 1.7s; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+  .fire-glow { animation: fireglow 1.1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes fireglow { from { transform: scale(0.92); } to { transform: scale(1.08); } }
+
+  /* Pause am Tag */
+  .scene--pause .timo, .scene--pause .hands { opacity: 0; }
+  .scene--pause .fly, .scene--pause .fly-dash, .scene--pause .calf-l,
+  .scene--pause .calf-r, .scene--pause .cockpit { animation-play-state: paused; }
+  .steam { animation: steam 2.6s ease-in-out infinite; }
+  @keyframes steam {
+    0% { transform: translateY(0); opacity: 0; }
+    30% { opacity: 0.8; }
+    100% { transform: translateY(-20px); opacity: 0; }
+  }
+  .pause-note {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; pointer-events: none; opacity: 0; transition: opacity 1s ease;
+  }
+  body.mode-pause .pause-note, body.mode-stale .pause-note { opacity: 1; }
+  body.mode-pause .moment-stage, body.mode-stale .moment-stage { opacity: 0; transition: opacity 0.8s ease; }
+  .pause-note__badge {
+    width: 154px; height: 154px; border-radius: 50%;
+    background: rgba(255, 253, 248, 0.9); backdrop-filter: blur(8px);
+    box-shadow: 0 18px 44px rgba(29, 35, 38, 0.26);
+    display: grid; place-items: center;
+  }
+  .pause-note p {
+    font-size: 16.5px; font-weight: 700; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.9); backdrop-filter: blur(8px);
+    padding: 10px 20px; border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(29, 35, 38, 0.16);
+  }
+
+  /* Wetter */
+  .rain, .snow, .extra-clouds, .fog { opacity: 0; transition: opacity 1.2s ease; }
+  .scene--rain .rain { opacity: 1; }
+  .scene--snow .snow { opacity: 1; }
+  .scene--rain .sun-group, .scene--overcast .sun-group, .scene--snow .sun-group { opacity: 0.25; }
+  .scene--rain .extra-clouds, .scene--overcast .extra-clouds, .scene--snow .extra-clouds { opacity: 1; }
+  .scene--fog .fog { opacity: 0.85; }
+  .raindrop { animation: rainfall 0.55s linear infinite; }
+  @keyframes rainfall { to { transform: translate(-40px, 340px); } }
+  .snowflake { animation: snowfall 4.5s linear infinite; }
+  @keyframes snowfall { to { transform: translate(-30px, 380px); } }
+
+  /* ── Momente ── */
+  .moment-stage {
+    position: absolute; left: 0; right: 0;
+    top: calc(62px + env(safe-area-inset-top));
+    display: flex; justify-content: center; pointer-events: none; z-index: 5;
+  }
+  .moment {
+    position: absolute; width: min(56vw, 235px); opacity: 0;
+    transform: translateY(18px) rotate(-2deg) scale(0.94);
+    transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.18, 0.7, 0.3, 1.12);
+  }
+  .moment.show { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  .moment--photo {
+    background: #fffdf8; border-radius: 6px; padding: 10px 10px 12px;
+    box-shadow: 0 18px 42px rgba(29, 35, 38, 0.28);
+    transform: translateY(18px) rotate(-4.5deg) scale(0.94);
+  }
+  .moment--photo.show { transform: translateY(0) rotate(-2.5deg) scale(1); }
+  .moment--photo img {
+    display: block; width: 100%; aspect-ratio: 4 / 3;
+    object-fit: cover; border-radius: 3px; background: #e9e2d2;
+  }
+  .moment--photo .tape {
+    position: absolute; top: -10px; left: 50%;
+    width: 74px; height: 22px; transform: translateX(-50%) rotate(3deg);
+    background: rgba(232, 217, 168, 0.85); border-radius: 2px;
+  }
+  .moment--card {
+    background: rgba(255, 253, 248, 0.96); border-radius: 22px;
+    padding: 16px 18px 15px; box-shadow: 0 18px 42px rgba(29, 35, 38, 0.24);
+    text-align: center;
+  }
+  .moment__eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #8a5ca7; margin-bottom: 6px;
+  }
+  .moment__title { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+  .moment__meta { font-size: 13.5px; color: #58656b; margin-top: 3px; font-weight: 600; }
+  .moment__caption {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 9px; padding: 0 2px; font-size: 12.5px; font-weight: 700; color: #58656b;
+  }
+  .moment__flags { font-size: 42px; line-height: 1.15; margin: 4px 0 2px; }
+  .moment__flags .arrow { font-size: 24px; color: #8a5ca7; vertical-align: middle; margin: 0 8px; }
+
+  /* ── Minimap ── */
+  .minimap {
+    position: absolute; right: 12px; bottom: 14px; z-index: 6;
+    width: 104px; height: 104px; padding: 0; cursor: pointer;
+    background: rgba(255, 253, 248, 0.88);
+    border: 1.5px solid rgba(31, 42, 47, 0.14); border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(29, 35, 38, 0.22); overflow: hidden;
+  }
+  #minimapMap { position: absolute; inset: 0; pointer-events: none; }
+  #minimapMap .leaflet-control-container { display: none; }
+  .minimap__hint {
+    position: absolute; right: 5px; bottom: 3px; z-index: 800;
+    font-size: 11px; color: #1f2a2f; pointer-events: none;
+    background: rgba(255, 253, 248, 0.85); border-radius: 6px; padding: 0 3px;
+  }
+  .live-pos-marker { position: relative; width: 32px; height: 32px; }
+  .live-pos-marker__dot {
+    position: absolute; left: 10px; top: 10px; width: 12px; height: 12px;
+    border-radius: 50%; background: #0c6b58; border: 2.5px solid #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  }
+  .live-pos-marker__pulse {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(12, 107, 88, 0.35); animation: mappulse 2s ease-out infinite;
+  }
+  @keyframes mappulse { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+
+  .scene-ctrl { position: absolute; left: 12px; bottom: 14px; z-index: 6; display: flex; gap: 6px; }
+  .scene-ctrl a {
+    width: 34px; height: 34px; display: grid; place-items: center;
+    font-size: 14px; text-decoration: none; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.82); backdrop-filter: blur(6px);
+    border-radius: 50%; box-shadow: 0 2px 8px rgba(29, 35, 38, 0.14);
+  }
+
+  /* ── HUD ── */
+  .hud-top {
+    position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 0; right: 0;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    padding: 0 12px; pointer-events: none; z-index: 6;
+  }
+  .chip {
+    font-size: 12.5px; font-weight: 700; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.88); backdrop-filter: blur(8px);
+    padding: 7px 12px; border-radius: 999px; white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(29, 35, 38, 0.08);
+  }
+  .chip[hidden] { display: none; }
+  .chip--live { color: #0c6b58; }
+  .chip--live .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #0c6b58; margin-right: 5px; animation: pulse 2s ease-in-out infinite;
+  }
+  .chip--stale { color: #8a6d4a; }
+  .chip--stale .dot { animation: none; background: #b9a487; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* ── Fortschrittsleiste ── */
+  .tour-progress {
+    position: relative; flex: 0 0 auto; height: 16px; margin: 8px 12px 6px;
+    border-radius: 8px; overflow: hidden; cursor: pointer;
+    border: 1px solid rgba(31, 42, 47, 0.1);
+  }
+  .tour-progress__track { position: absolute; inset: 0; }
+  .tour-progress__veil { position: absolute; top: 0; bottom: 0; right: 0; background: rgba(247, 241, 231, 0.72); }
+  .tour-progress__marker { position: absolute; top: -1px; bottom: -1px; width: 3px; background: #fffdf8; box-shadow: 0 0 5px rgba(0, 0, 0, 0.35); }
+  .tour-progress__label {
+    position: absolute; top: 50%; transform: translate(8px, -50%);
+    font-size: 9.5px; font-weight: 800; color: #1f2a2f;
+    background: rgba(255, 253, 248, 0.92); padding: 1px 6px; border-radius: 7px; pointer-events: none;
+  }
+
+  /* ── Boxen ── */
+  .boxes { flex: 0 0 auto; display: grid; grid-template-columns: 1fr 0.9fr 1.1fr; gap: 7px; padding: 0 12px 8px; }
+  .box {
+    position: relative; background: rgba(255, 250, 244, 0.8); border-radius: 13px;
+    padding: 7px 9px 6px; border: 1px solid rgba(31, 42, 47, 0.06);
+    text-align: left; font: inherit; color: inherit;
+  }
+  button.box { cursor: pointer; }
+  .box span { display: block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #58656b; }
+  .box strong { display: block; font-size: 14px; letter-spacing: -0.01em; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .box small { display: block; font-size: 9.5px; color: #58656b; margin-top: 1px; font-weight: 600; }
+  .box__more { position: absolute; right: 7px; top: 7px; font-size: 11px; color: #8a938f; font-style: normal; }
+  .poi-row { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; font-weight: 600; color: #3d4a50; margin-top: 2px; }
+  .poi-row b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .poi-row em { font-style: normal; color: #58656b; flex-shrink: 0; }
+  .thumb-stack { position: relative; height: 40px; margin-top: 3px; }
+  .thumb-stack img {
+    position: absolute; width: 44px; height: 38px; object-fit: cover;
+    border-radius: 6px; border: 2px solid #fffdf8;
+    box-shadow: 0 2px 6px rgba(29, 35, 38, 0.18); background: #e9e2d2;
+  }
+  .thumb-stack img:nth-child(1) { left: 0; transform: rotate(-5deg); }
+  .thumb-stack img:nth-child(2) { left: 26px; transform: rotate(3deg); top: 1px; }
+  .thumb-stack img:nth-child(3) { left: 52px; transform: rotate(-2deg); }
+  .thumb-stack__count {
+    position: absolute; right: 0; bottom: 0; font-size: 9px; font-weight: 800;
+    color: #fffdf8; background: #0c6b58; border-radius: 8px; padding: 1.5px 6px;
+  }
+
+  /* ── Popups ── */
+  .sheet {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(18, 32, 50, 0.55); backdrop-filter: blur(3px); padding: 18px;
+  }
+  .sheet.open { display: flex; }
+  .sheet__card {
+    position: relative; width: min(94vw, 560px); max-height: 78vh; overflow-y: auto;
+    background: #fffdf8; border-radius: 22px; padding: 18px 16px 16px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  }
+  .sheet__title { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 2px; }
+  .sheet__sub { font-size: 12px; color: #58656b; font-weight: 600; margin-bottom: 12px; }
+  .sheet__close {
+    position: absolute; top: 10px; right: 10px; width: 34px; height: 34px;
+    border: none; border-radius: 50%; background: rgba(31, 42, 47, 0.06);
+    color: #1f2a2f; font-size: 15px; cursor: pointer; z-index: 2;
+  }
+  .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; cursor: pointer; }
+  .health-list div {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 9px 2px; border-bottom: 1px solid rgba(31, 42, 47, 0.07);
+    font-size: 13.5px; font-weight: 600; color: #3d4a50;
+  }
+  .health-list div strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .tour-list { margin-top: 14px; }
+  .tour-list h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #58656b; margin-bottom: 6px; }
+  .tour-list div {
+    display: flex; justify-content: space-between; gap: 10px; padding: 7px 2px;
+    border-bottom: 1px solid rgba(31, 42, 47, 0.05); font-size: 12.5px; color: #3d4a50;
+  }
+  .tour-list b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .tour-list em { font-style: normal; color: #58656b; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .setup-hint {
+    background: rgba(235, 143, 52, 0.1); border: 1px solid rgba(235, 143, 52, 0.3);
+    border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: #7a5a2f; font-weight: 600;
+  }
+  #bigmap { width: 100%; height: min(64vh, 560px); border-radius: 14px; }
+  .map-modal__card { padding: 12px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<div class="scene-wrap">
+<svg class="scene" id="scene" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMax slice" aria-label="Live-Blick über den Lenker">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf0d5"/><stop offset="0.7" stop-color="#f7e6c4"/><stop offset="1" stop-color="#efe0b8"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0" stop-color="#f5a94d" stop-opacity="0.85"/>
+      <stop offset="0.55" stop-color="#f5a94d" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#f5a94d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a5751"/><stop offset="1" stop-color="#45423e"/>
+    </linearGradient>
+    <linearGradient id="veilFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#122032" stop-opacity="0"/><stop offset="0.14" stop-color="#122032" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fb4c9"/><stop offset="1" stop-color="#9ec9d8"/>
+    </linearGradient>
+    <clipPath id="torsoClip">
+      <path d="M364 740 Q400 726 436 740 L446 852 Q400 868 354 852 Z"/>
+    </clipPath>
+
+    <g id="cloud">
+      <ellipse cx="0" cy="0" rx="46" ry="16" fill="#fffdf8"/>
+      <ellipse cx="-24" cy="6" rx="28" ry="12" fill="#fffdf8"/>
+      <ellipse cx="26" cy="7" rx="30" ry="12" fill="#fffdf8"/>
+    </g>
+    <g id="cloudDark">
+      <ellipse cx="0" cy="0" rx="52" ry="18" fill="#b9bfc2"/>
+      <ellipse cx="-28" cy="7" rx="30" ry="13" fill="#b9bfc2"/>
+      <ellipse cx="30" cy="8" rx="32" ry="13" fill="#c6cbcd"/>
+    </g>
+
+    <!-- Baumtypen je Land -->
+    <g id="tree-conifer">
+      <rect x="-1.5" y="-3" width="3" height="5" fill="#5a4632"/>
+      <path d="M0 -26 L7 -13 L3.5 -13 L9 -3 L-9 -3 L-3.5 -13 L-7 -13 Z" fill="#3f6b52"/>
+    </g>
+    <g id="tree-cypress">
+      <rect x="-1.2" y="-3" width="2.4" height="5" fill="#5a4632"/>
+      <ellipse cx="0" cy="-16" rx="4.2" ry="15" fill="#39604a"/>
+    </g>
+    <g id="tree-olive">
+      <path d="M-1.6 2 L-0.6 -8 L0.6 -8 L1.6 2 Z" fill="#7a6a55"/>
+      <ellipse cx="0" cy="-13" rx="10" ry="7" fill="#8fa87a"/>
+      <ellipse cx="-5" cy="-9" rx="6" ry="4.5" fill="#9db486"/>
+      <ellipse cx="5" cy="-10" rx="6" ry="4.5" fill="#829c6e"/>
+    </g>
+  </defs>
+
+  <rect width="800" height="1200" fill="url(#sky)"/>
+  <g class="sun-group">
+    <circle cx="170" cy="290" r="95" fill="url(#sunGlow)"/>
+    <circle cx="170" cy="290" r="38" fill="#f2a24b"/>
+  </g>
+  <g class="cloud-drift" opacity="0.9">
+    <use href="#cloud" x="560" y="300"/><use href="#cloud" x="900" y="250"/>
+    <use href="#cloud" x="1250" y="320"/><use href="#cloud" x="1500" y="270"/>
+  </g>
+  <g class="extra-clouds">
+    <use href="#cloudDark" x="250" y="270"/><use href="#cloudDark" x="520" y="230"/>
+    <use href="#cloudDark" x="650" y="310"/>
+  </g>
+
+  <rect class="night-veil" width="800" height="1200" fill="#122032" opacity="0" style="mix-blend-mode: multiply;"/>
+  <g class="stars" fill="#fdf0d5">
+    <circle class="star" cx="150" cy="240" r="2.2"/><circle class="star" cx="320" cy="215" r="1.7"/>
+    <circle class="star" cx="480" cy="275" r="2"/><circle class="star" cx="620" cy="225" r="1.6"/>
+    <circle class="star" cx="240" cy="360" r="1.8"/><circle class="star" cx="560" cy="390" r="1.6"/>
+    <circle class="star" cx="410" cy="310" r="1.5"/><circle class="star" cx="680" cy="330" r="2"/>
+    <circle class="star" cx="90" cy="420" r="1.5"/><circle class="star" cx="740" cy="430" r="1.4"/>
+  </g>
+  <g class="moon">
+    <mask id="moonMaskPov">
+      <circle cx="180" cy="290" r="34" fill="white"/>
+      <circle cx="195" cy="279" r="29" fill="black"/>
+    </mask>
+    <circle cx="180" cy="290" r="34" fill="#f6ecd4" mask="url(#moonMaskPov)"/>
+  </g>
+
+  <!-- Meer (Kuestenlaender) -->
+  <rect id="seaBand" y="500" width="800" height="62" fill="url(#seaGrad)" opacity="0"/>
+
+  <!-- Horizont: Farben kommen aus dem Landes-Preset -->
+  <path id="hillFar" d="M0 500 Q80 448 170 480 Q260 508 340 462 Q420 420 500 470 Q580 512 660 468 Q730 432 800 472 L800 560 L0 560 Z" fill="#b3c4b0"/>
+  <g id="snowCaps" opacity="0">
+    <path d="M340 462 L326 486 L338 480 L350 492 L362 476 L352 462 Z" fill="#fffdf8"/>
+    <path d="M660 468 L646 492 L658 486 L670 498 L682 482 L672 468 Z" fill="#fffdf8"/>
+  </g>
+  <path id="hillNear" d="M0 528 Q100 486 200 516 Q300 542 400 502 Q500 468 600 510 Q700 545 800 508 L800 560 L0 560 Z" fill="#93ab90"/>
+
+  <!-- Dorf am Horizont: Typ kommt aus dem Preset -->
+  <g id="villageSlot" transform="translate(452,556)"></g>
+  <use class="road-tree" href="#tree-conifer" transform="translate(310,556) scale(1.1)"/>
+  <use class="road-tree" href="#tree-conifer" transform="translate(540,558) scale(0.9)"/>
+
+  <!-- Felder -->
+  <rect id="fieldBand" y="560" width="800" height="640" fill="#a3bd94"/>
+  <g fill="#eb8f34" opacity="0.85">
+    <circle cx="120" cy="700" r="4"/><circle cx="80" cy="880" r="7"/><circle cx="180" cy="1060" r="10"/>
+    <circle cx="700" cy="740" r="5"/><circle cx="730" cy="960" r="8"/><circle cx="640" cy="1130" r="11"/>
+  </g>
+  <g fill="#fffdf8" opacity="0.9">
+    <circle cx="60" cy="640" r="3"/><circle cx="220" cy="800" r="5"/><circle cx="130" cy="980" r="8"/>
+    <circle cx="740" cy="660" r="3.5"/><circle cx="660" cy="850" r="6"/><circle cx="760" cy="1080" r="9"/>
+  </g>
+
+  <!-- Strasse -->
+  <path d="M386 560 L414 560 L790 1200 L10 1200 Z" fill="url(#roadGrad)"/>
+  <path d="M386 560 L10 1200" stroke="#f4e6c8" stroke-width="5" opacity="0.5"/>
+  <path d="M414 560 L790 1200" stroke="#f4e6c8" stroke-width="5" opacity="0.5"/>
+  <g fill="#f4e6c8">
+    <rect class="fly-dash" style="--delay: 0s" x="397" y="574" width="6" height="20" rx="1.5"/>
+    <rect class="fly-dash" style="--delay: -0.8s" x="397" y="574" width="6" height="20" rx="1.5"/>
+    <rect class="fly-dash" style="--delay: -1.6s" x="397" y="574" width="6" height="20" rx="1.5"/>
+    <rect class="fly-dash" style="--delay: -2.4s" x="397" y="574" width="6" height="20" rx="1.5"/>
+  </g>
+
+  <!-- Strassenrand: Baeume + Ortsschild (Text aus Reverse-Geocoding) -->
+  <g class="fly" style="--delay: 0s"><use class="road-tree" href="#tree-conifer" transform="translate(366,585) scale(1.6)"/></g>
+  <g class="fly" style="--delay: -1.4s">
+    <g transform="translate(438,584)">
+      <rect x="-0.7" y="-13" width="1.4" height="13" fill="#8a8478"/>
+      <rect x="-15" y="-21" width="30" height="9" rx="1.8" fill="#fffdf8" stroke="#0c6b58" stroke-width="0.8"/>
+      <text id="signPlace" x="0" y="-14.5" text-anchor="middle" font-size="4" font-weight="700" fill="#0c6b58" font-family="Trebuchet MS, sans-serif"></text>
+    </g>
+  </g>
+  <g class="fly" style="--delay: -2.7s">
+    <g transform="translate(370,586)">
+      <path d="M-4 0 L-4 -6.5 Q-4 -9 0 -9 Q4 -9 4 -6.5 L4 0 Z" fill="#fffdf8" stroke="#c9c2b4" stroke-width="0.6"/>
+      <text id="signKm" x="0" y="-3" text-anchor="middle" font-size="2.8" font-weight="700" fill="#58656b" font-family="Trebuchet MS, sans-serif"></text>
+    </g>
+  </g>
+  <g class="fly" style="--delay: -4s"><use class="road-tree" href="#tree-conifer" transform="translate(434,584) scale(1.3)"/></g>
+
+  <!-- Timo voraus -->
+  <g transform="translate(-28,0)">
+  <g class="timo">
+    <ellipse cx="400" cy="1002" rx="64" ry="12" fill="#1f2a2f" opacity="0.16"/>
+    <ellipse cx="400" cy="948" rx="15" ry="52" fill="#2b2b2b"/>
+    <ellipse cx="400" cy="948" rx="7" ry="42" fill="#6a6a66"/>
+    <ellipse cx="400" cy="948" rx="2.5" ry="36" fill="#2b2b2b"/>
+    <path d="M385 900 Q400 888 415 900" stroke="#0c6b58" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <circle cx="400" cy="896" r="4.5" fill="#e8453a"/>
+    <rect x="362" y="898" width="24" height="34" rx="7" fill="#c9704a"/>
+    <rect x="414" y="898" width="24" height="34" rx="7" fill="#c9704a"/>
+    <g class="calf-l">
+      <rect x="356" y="884" width="15" height="42" rx="7.5" fill="#2b3a41"/>
+      <rect x="354" y="920" width="19" height="10" rx="4" fill="#1f2a2f"/>
+    </g>
+    <g class="calf-r">
+      <rect x="429" y="884" width="15" height="42" rx="7.5" fill="#2b3a41"/>
+      <rect x="427" y="920" width="19" height="10" rx="4" fill="#1f2a2f"/>
+    </g>
+    <rect x="384" y="852" width="32" height="10" rx="5" fill="#1f2a2f"/>
+    <path d="M368 862 Q400 850 432 862 L428 886 Q400 876 372 886 Z" fill="#2b3a41"/>
+    <!-- Trikot: Flagge des aktuellen Landes -->
+    <g id="jersey" clip-path="url(#torsoClip)"></g>
+    <path id="sleeveL" d="M364 744 Q346 764 342 792" stroke="#1e4a9e" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <path id="sleeveR" d="M436 744 Q454 764 458 792" stroke="#1e4a9e" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <rect x="390" y="712" width="20" height="16" rx="7" fill="#e8b48c"/>
+    <circle cx="400" cy="692" r="30" fill="#0c6b58"/>
+    <path d="M373 700 A 30 30 0 0 1 427 700 L 427 706 A 30 22 0 0 1 373 706 Z" fill="#0a5c4c"/>
+    <g stroke="#fffdf8" stroke-width="3" opacity="0.55" stroke-linecap="round">
+      <path d="M385 672 Q383 686 385 698"/><path d="M400 668 Q398 684 400 700"/><path d="M415 672 Q417 686 415 698"/>
+    </g>
+  </g>
+  </g>
+
+  <!-- Nachtlager -->
+  <g class="camp">
+    <g transform="translate(212,930) scale(1.35)">
+      <path d="M-60 0 L0 -66 L60 0 Z" fill="#a35a3c"/>
+      <path d="M-14 0 L0 -46 L14 0 Z" fill="#7a4028"/>
+      <circle class="fire-glow" cx="112" cy="-8" r="28" fill="#f5a94d" opacity="0.45"/>
+      <path d="M105 -4 q7 -17 14 0 q5 9 -7 11 q-12 -2 -7 -11" fill="#eb8f34"/>
+      <g stroke="#6b5138" stroke-width="4.5" stroke-linecap="round">
+        <line x1="99" y1="4" x2="124" y2="-2"/><line x1="101" y1="-2" x2="123" y2="5"/>
+      </g>
+    </g>
+    <g transform="translate(520,952)" opacity="0.9">
+      <circle cx="0" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <circle cx="74" cy="0" r="24" fill="none" stroke="#1c2529" stroke-width="4"/>
+      <path d="M0 0 L30 -8 L17 -45 L0 0 M30 -8 L57 -45 M17 -45 L57 -45 M57 -45 L74 0" stroke="#1c2529" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Regen -->
+  <g class="rain">
+    <g stroke="#7fa3b8" stroke-width="3" stroke-linecap="round" opacity="0.65">
+      <g class="raindrop"><line x1="90" y1="-60" x2="80" y2="-22"/><line x1="290" y1="-130" x2="280" y2="-92"/><line x1="490" y1="-40" x2="480" y2="-2"/><line x1="690" y1="-150" x2="680" y2="-112"/></g>
+      <g class="raindrop" style="animation-delay:-0.18s"><line x1="180" y1="-100" x2="170" y2="-62"/><line x1="390" y1="-35" x2="380" y2="3"/><line x1="590" y1="-115" x2="580" y2="-77"/><line x1="760" y1="-55" x2="750" y2="-17"/></g>
+      <g class="raindrop" style="animation-delay:-0.36s"><line x1="40" y1="-145" x2="30" y2="-107"/><line x1="240" y1="-55" x2="230" y2="-17"/><line x1="440" y1="-160" x2="430" y2="-122"/><line x1="640" y1="-70" x2="630" y2="-32"/></g>
+    </g>
+    <g stroke="#7fa3b8" stroke-width="3" stroke-linecap="round" opacity="0.65" transform="translate(0,340)">
+      <g class="raindrop"><line x1="130" y1="-60" x2="120" y2="-22"/><line x1="330" y1="-130" x2="320" y2="-92"/><line x1="530" y1="-40" x2="520" y2="-2"/><line x1="730" y1="-150" x2="720" y2="-112"/></g>
+      <g class="raindrop" style="animation-delay:-0.27s"><line x1="220" y1="-100" x2="210" y2="-62"/><line x1="420" y1="-35" x2="410" y2="3"/><line x1="620" y1="-115" x2="610" y2="-77"/></g>
+    </g>
+    <g stroke="#7fa3b8" stroke-width="3.5" stroke-linecap="round" opacity="0.6" transform="translate(0,680)">
+      <g class="raindrop"><line x1="100" y1="-60" x2="88" y2="-16"/><line x1="360" y1="-120" x2="348" y2="-76"/><line x1="600" y1="-50" x2="588" y2="-6"/></g>
+      <g class="raindrop" style="animation-delay:-0.3s"><line x1="250" y1="-90" x2="238" y2="-46"/><line x1="480" y1="-140" x2="468" y2="-96"/><line x1="710" y1="-80" x2="698" y2="-36"/></g>
+    </g>
+  </g>
+
+  <!-- Schnee -->
+  <g class="snow" fill="#fffdf8">
+    <g class="snowflake"><circle cx="90" cy="-40" r="4"/><circle cx="300" cy="-120" r="5"/><circle cx="520" cy="-60" r="4"/><circle cx="700" cy="-140" r="5"/></g>
+    <g class="snowflake" style="animation-delay:-1.5s"><circle cx="180" cy="-90" r="5"/><circle cx="420" cy="-30" r="4"/><circle cx="620" cy="-110" r="5"/></g>
+    <g class="snowflake" style="animation-delay:-3s"><circle cx="60" cy="-130" r="4"/><circle cx="250" cy="-50" r="5"/><circle cx="480" cy="-150" r="4"/><circle cx="740" cy="-70" r="5"/></g>
+    <g class="snowflake" style="animation-delay:-0.8s" transform="translate(0,380)"><circle cx="140" cy="-60" r="4"/><circle cx="360" cy="-120" r="5"/><circle cx="660" cy="-40" r="4"/></g>
+  </g>
+
+  <!-- Nebel -->
+  <g class="fog">
+    <rect y="440" width="800" height="200" fill="#e8e4da" opacity="0.6"/>
+    <rect y="500" width="800" height="110" fill="#efece4" opacity="0.55"/>
+  </g>
+
+  <rect class="night-veil" x="0" y="380" width="800" height="820" fill="url(#veilFade)" style="mix-blend-mode: multiply;"/>
+
+  <!-- Eigenes Cockpit -->
+  <g class="cockpit">
+    <path d="M60 1122 Q140 1078 260 1072 L540 1072 Q660 1078 740 1122" stroke="#1c2529" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <path d="M78 1113 Q130 1085 200 1077" stroke="#2e3b42" stroke-width="30" fill="none" stroke-linecap="round"/>
+    <path d="M722 1113 Q670 1085 600 1077" stroke="#2e3b42" stroke-width="30" fill="none" stroke-linecap="round"/>
+    <g class="hands">
+      <g fill="#e8b48c">
+        <ellipse cx="150" cy="1092" rx="34" ry="26" transform="rotate(-16 150 1092)"/>
+        <ellipse cx="650" cy="1092" rx="34" ry="26" transform="rotate(16 650 1092)"/>
+      </g>
+      <g fill="#d9a273">
+        <ellipse cx="136" cy="1078" rx="9" ry="14" transform="rotate(-24 136 1078)"/>
+        <ellipse cx="664" cy="1078" rx="9" ry="14" transform="rotate(24 664 1078)"/>
+      </g>
+    </g>
+    <rect x="384" y="1080" width="32" height="120" rx="10" fill="#1c2529"/>
+
+    <!-- Fahrradcomputer -->
+    <g transform="translate(400,1024)">
+      <rect x="-108" y="-84" width="216" height="168" rx="20" fill="#1c2529"/>
+      <rect x="-98" y="-74" width="196" height="148" rx="12" fill="#233036"/>
+      <rect x="-92" y="-68" width="184" height="136" rx="9" fill="#0e1a1e"/>
+      <text id="dispSpeed" x="-14" y="-8" text-anchor="middle" font-size="52" font-weight="800" fill="#e8f4ee" font-family="Trebuchet MS, sans-serif">--</text>
+      <text x="42" y="-8" font-size="16" font-weight="700" fill="#7d9990" font-family="Trebuchet MS, sans-serif">km/h</text>
+      <line x1="-80" y1="6" x2="80" y2="6" stroke="#31454d" stroke-width="1.5"/>
+      <text id="dispToday" x="-80" y="30" font-size="16.5" font-weight="700" fill="#bcd8cc" font-family="Trebuchet MS, sans-serif">heute –</text>
+      <text id="dispPct" x="80" y="30" text-anchor="end" font-size="16.5" font-weight="700" fill="#bcd8cc" font-family="Trebuchet MS, sans-serif">–</text>
+      <rect x="-80" y="40" width="160" height="7" rx="3.5" fill="#31454d"/>
+      <rect id="dispBar" x="-80" y="40" width="0" height="7" rx="3.5" fill="#3fa07c"/>
+      <text id="dispBorder" x="0" y="62" text-anchor="middle" font-size="14.5" font-weight="700" fill="#9db8ad" font-family="Trebuchet MS, sans-serif"></text>
+      <rect x="-14" y="82" width="28" height="16" rx="5" fill="#1c2529"/>
+    </g>
+  </g>
+</svg>
+
+<!-- Momente -->
+<div class="moment-stage" id="momentStage">
+  <div class="moment moment--card" data-moment="border" hidden>
+    <p class="moment__eyebrow">Voraus · Grenzübergang</p>
+    <p class="moment__flags"><span id="borderFlags"></span></p>
+    <p class="moment__title" id="borderName"></p>
+    <p class="moment__meta" id="borderMeta"></p>
+  </div>
+</div>
+
+<!-- Pause / kein Signal -->
+<div class="pause-note" aria-hidden="true">
+  <div class="pause-note__badge">
+    <svg id="pauseIcon" width="96" height="96" viewBox="0 0 100 100" aria-hidden="true">
+      <g stroke="#8a938f" stroke-width="5" fill="none" stroke-linecap="round">
+        <path class="steam" d="M36 32 q5 -9 0 -16"/>
+        <path class="steam" style="animation-delay: 0.9s" d="M50 34 q-5 -9 0 -17"/>
+        <path class="steam" style="animation-delay: 1.7s" d="M63 32 q5 -8 0 -15"/>
+      </g>
+      <path d="M22 44 h55 v14 a27.5 26 0 0 1 -55 0 Z" fill="#fffdf8" stroke="#1f2a2f" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M26 48 h47 v6 a23.5 16 0 0 1 -8 12 a40 40 0 0 1 -31 0 a23.5 16 0 0 1 -8 -12 Z" fill="#6b4a2f"/>
+      <path d="M77 48 h5 a11 11 0 0 1 0 22 h-7" fill="none" stroke="#1f2a2f" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="18" y1="90" x2="80" y2="90" stroke="#1f2a2f" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <p id="pauseText">Gerade wird Pause gemacht</p>
+</div>
+
+<!-- Minimap -->
+<button class="minimap" id="minimap" aria-label="Karte vergrößern">
+  <div id="minimapMap" aria-hidden="true"></div>
+  <span class="minimap__hint">⤢</span>
+</button>
+
+<div class="scene-ctrl">
+  <a href="./backup/" aria-label="Zur klassischen Ansicht" title="Klassische Ansicht">☰</a>
+</div>
+
+<!-- HUD -->
+<div class="hud-top">
+  <span class="chip chip--live" id="chipState"><span class="dot"></span><span id="chipStateText">Verbinde…</span></span>
+  <span class="chip" id="chipPlace" hidden></span>
+  <span class="chip" id="chipWeather" hidden></span>
+  <span class="chip" id="chipFresh" hidden></span>
+</div>
+</div><!-- /scene-wrap -->
+
+<!-- Fortschritt -->
+<div class="tour-progress" id="tourProgress" role="button" tabindex="0" aria-label="Tourstatus öffnen">
+  <div class="tour-progress__track" id="tpTrack"></div>
+  <div class="tour-progress__veil" id="tpVeil"></div>
+  <div class="tour-progress__marker" id="tpMarker"></div>
+  <span class="tour-progress__label" id="tpLabel">–</span>
+</div>
+
+<!-- Boxen -->
+<section class="boxes" aria-label="Schnellzugriff">
+  <button class="box" id="boxHealth">
+    <span id="healthLabel">Strava</span>
+    <strong id="healthValue">–</strong>
+    <small id="healthSub">wird geladen…</small>
+    <em class="box__more">›</em>
+  </button>
+  <button class="box" id="boxAlbum">
+    <span>Fotos</span>
+    <div class="thumb-stack" id="thumbStack"></div>
+    <em class="box__more">›</em>
+  </button>
+  <div class="box">
+    <span>Nächste POI</span>
+    <div id="poiList"><div class="poi-row"><b>–</b></div></div>
+  </div>
+</section>
+
+<!-- Popup: Strava -->
+<div class="sheet" id="healthSheet">
+  <div class="sheet__card">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Touren & Health</h3>
+    <p class="sheet__sub" id="healthSheetSub">Strava</p>
+    <div id="healthContent"></div>
+  </div>
+</div>
+
+<!-- Popup: Album -->
+<div class="sheet" id="albumSheet">
+  <div class="sheet__card">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Fotoalbum</h3>
+    <p class="sheet__sub" id="albumCount">Fotos von unterwegs</p>
+    <div class="album-grid" id="albumGrid"></div>
+  </div>
+</div>
+
+<!-- Popup: Tourstatus -->
+<div class="sheet" id="statusSheet">
+  <div class="sheet__card" style="width: min(94vw, 640px);">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <h3 class="sheet__title">Tourstatus</h3>
+    <p class="sheet__sub">Höhenprofil, Länder & Tageskilometer</p>
+    <div id="jtSlot"></div>
+  </div>
+</div>
+
+<!-- Popup: Karte -->
+<div class="sheet" id="mapSheet">
+  <div class="sheet__card map-modal__card" style="width: min(94vw, 640px);">
+    <button class="sheet__close" data-close aria-label="Schließen">✕</button>
+    <div id="bigmap"></div>
+  </div>
+</div>
+
+<!-- Wird beim Deploy durch die GitHub Action mit Commit + Zeit ersetzt -->
+<div class="deploy-version">lokal</div>
+
+<!-- Lightbox (aus der Haupt-App) -->
+<dialog id="photo-lightbox" class="photo-lightbox">
+  <button class="photo-lightbox__close" data-lightbox-close aria-label="Schließen">&#x2715;</button>
+  <img class="photo-lightbox__img" src="" alt="" />
+  <p class="photo-lightbox__caption"></p>
+</dialog>
+
+<script type="module">
+  import { loadRouteData } from "./src/services/gpxRouteService.js";
+  import { createLocationProvider } from "./src/location/LocationProvider.js";
+  import { mapLocationToRoute, computeMovementStatus } from "./src/services/routePositionService.js";
+  import { buildCountrySegments, COUNTRY_NAMES } from "./src/services/routeCountryService.js";
+  import { reverseGeocode, geocodeOnce } from "./src/services/geocodeService.js";
+  import { loadPoiData } from "./src/services/poiService.js";
+  import { startPhotoService } from "./src/services/photoService.js";
+  import { fetchWeather } from "./src/services/weatherService.js";
+  import { startTourStatsService } from "./src/services/tourStatsService.js";
+  import { createJourneyTimelineCard } from "./src/components/journeyTimeline.js";
+  import { getCountryPreset } from "./src/config/scenePresets.js";
+  import { tripMeta } from "./src/data/mockData.js";
+
+  const PHOTO_HOST = "https://zweiaufachse.thefinks.de";
+  const STALE_MS = 2 * 60 * 60 * 1000;   // Fix aelter → "Signal veraltet"
+  const PAUSE_MS = 10 * 60 * 1000;       // so lange still → Pause
+  const NIGHT_FROM = 21;
+  const NIGHT_TO = 7;
+
+  const state = {
+    routeData: null,
+    locationData: null,
+    previousLocationData: null,
+    lastMovementAt: null,
+    geocodeData: null,
+    countrySegments: [],
+    poiData: null,
+    photos: [],
+    weather: null,
+    stats: { todayKm: null, yesterdayKm: null, strava: { configured: false } },
+    mode: "unknown",
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const fmtKm = (km) => (km == null ? "–" : `${Math.round(km).toLocaleString("de-DE")} km`);
+
+  // ── Landes-Presets auf die Szene anwenden ──
+  let appliedCountry = null;
+
+  function villageSvg(type) {
+    const roofs = {
+      gable: "#b5533c", chalet: "#8a5b3c", campanile: "#c0663f",
+      stone: "#a05a3c", minaret: "#b5533c", whitehouse: "#2c6fad",
+    };
+    const roof = roofs[type] ?? "#b5533c";
+    const base = `
+      <rect x="0" y="-10" width="14" height="10" fill="#e9e2d2"/>
+      <path d="M-1.5 -10 L7 -17 L15.5 -10 Z" fill="${roof}"/>
+      <rect x="18" y="-8" width="11" height="8" fill="#efe8d8"/>
+      <path d="M16.5 -8 L23.5 -14 L30.5 -8 Z" fill="${roof}"/>`;
+
+    if (type === "minaret") {
+      return base + `
+        <rect x="34" y="-24" width="3.5" height="24" fill="#f4efe2"/>
+        <path d="M35.75 -31 L33 -24 L38.5 -24 Z" fill="#4d7a63"/>`;
+    }
+    if (type === "campanile") {
+      return base + `
+        <rect x="34" y="-26" width="6" height="26" fill="#e5ddc9"/>
+        <path d="M37 -33 L33 -26 L41 -26 Z" fill="${roof}"/>`;
+    }
+    if (type === "chalet") {
+      return base + `
+        <rect x="33" y="-9" width="13" height="9" fill="#c9a877"/>
+        <path d="M31 -9 L39.5 -17 L48 -9 Z" fill="#6b4a30"/>`;
+    }
+    if (type === "whitehouse") {
+      return `
+        <rect x="0" y="-10" width="14" height="10" fill="#fffdf8"/>
+        <path d="M-1 -10 L7 -15 L15 -10 Z" fill="#2c6fad"/>
+        <rect x="18" y="-8" width="12" height="8" fill="#fffdf8"/>
+        <path d="M17 -8 L24 -13 L31 -8 Z" fill="#2c6fad"/>
+        <rect x="34" y="-11" width="10" height="11" fill="#fffdf8"/>
+        <path d="M33 -11 L39 -16 L45 -11 Z" fill="#2c6fad"/>`;
+    }
+    return base + `<rect x="33" y="-7" width="10" height="7" fill="#ded5c0"/>`;
+  }
+
+  function applyCountry(code) {
+    if (!code || code === appliedCountry) return;
+    appliedCountry = code;
+    const preset = getCountryPreset(code);
+
+    $("jersey").innerHTML =
+      `<rect x="350" y="726" width="100" height="136" fill="${preset.jersey.base}"/>` +
+      preset.jersey.overlay;
+    $("sleeveL").setAttribute("stroke", preset.jersey.base);
+    $("sleeveR").setAttribute("stroke", preset.jersey.base);
+
+    $("hillFar").setAttribute("fill", preset.hillFar);
+    $("hillNear").setAttribute("fill", preset.hillNear);
+    $("fieldBand").setAttribute("fill", preset.field);
+    $("snowCaps").setAttribute("opacity", preset.snowCaps ? "1" : "0");
+    $("seaBand").setAttribute("opacity", preset.sea ? "1" : "0");
+    $("villageSlot").innerHTML = villageSvg(preset.village);
+
+    document.querySelectorAll(".road-tree").forEach((el) => {
+      el.setAttribute("href", `#tree-${preset.tree}`);
+    });
+  }
+
+  // ── Zustand aus den Live-Daten ableiten ──
+  function riderLocalHour() {
+    if (state.weather?.localTime) {
+      const hour = Number(state.weather.localTime.slice(11, 13));
+      if (Number.isFinite(hour)) return hour;
+    }
+    return new Date().getHours();
+  }
+
+  function computeMode() {
+    if (!state.locationData) return "unknown";
+
+    const fixTime = new Date(state.locationData.timestamp).getTime();
+    const ageMs = Number.isNaN(fixTime) ? null : Date.now() - fixTime;
+    const hour = riderLocalHour();
+    const isNight = hour >= NIGHT_FROM || hour < NIGHT_TO;
+
+    if (ageMs != null && ageMs > STALE_MS) return isNight ? "night" : "stale";
+
+    const { isMoving } = computeMovementStatus(state.locationData, state.previousLocationData);
+    if (isMoving) return "day";
+
+    if (isMoving === false) {
+      if (isNight) return "night";
+      // Ohne je gesehene Bewegung stehen sie wirklich — sonst kann es ein
+      // kurzer Halt an der Ampel sein, dann laeuft die Szene weiter.
+      const stillMs = state.lastMovementAt ? Date.now() - state.lastMovementAt : Infinity;
+      return stillMs >= PAUSE_MS ? "pause" : "day";
+    }
+
+    // isMoving === null: erst ein Fix, Bewegung noch nicht bestimmbar
+    return isNight ? "night" : "day";
+  }
+
+  function applyMode(mode) {
+    state.mode = mode;
+    const scene = $("scene");
+    scene.classList.toggle("scene--night", mode === "night");
+    scene.classList.toggle("scene--pause", mode === "pause" || mode === "stale");
+    document.body.classList.toggle("mode-pause", mode === "pause");
+    document.body.classList.toggle("mode-stale", mode === "stale");
+
+    $("pauseText").textContent =
+      mode === "stale" ? "Gerade kein GPS-Signal" : "Gerade wird Pause gemacht";
+
+    const chip = $("chipState");
+    chip.classList.toggle("chip--stale", mode === "stale");
+    $("chipStateText").textContent =
+      mode === "day" ? "in Bewegung"
+      : mode === "pause" ? "Pause ☕"
+      : mode === "night" ? "schläft 🌙"
+      : mode === "stale" ? "Signal veraltet"
+      : "Verbinde…";
+  }
+
+  function formatAge(ms) {
+    if (ms < 90_000) return "gerade eben";
+    const minutes = Math.round(ms / 60_000);
+    if (minutes < 60) return `vor ${minutes} Min`;
+    const hours = Math.round(ms / 3_600_000);
+    if (hours < 48) return `vor ${hours} Std`;
+    return `vor ${Math.round(hours / 24)} Tagen`;
+  }
+
+  // ── Rendering ──
+  function renderScene() {
+    const loc = state.locationData;
+    const match = loc?.routeMatch;
+
+    // Tempo: Traccar liefert speedKph, sonst aus zwei Fixes berechnet
+    const movement = computeMovementStatus(loc, state.previousLocationData);
+    const speed = loc?.speedKph ?? movement.speedKph;
+    const showSpeed = state.mode === "day" && speed != null;
+    $("dispSpeed").textContent = showSpeed ? String(Math.round(speed)) : "--";
+
+    // Animationstempo folgt der echten Geschwindigkeit
+    if (showSpeed && speed > 1) {
+      const factor = Math.min(2.2, Math.max(0.5, 19 / speed));
+      $("scene").style.setProperty("--wheel", `${(0.82 * factor).toFixed(2)}s`);
+      $("scene").style.setProperty("--pedal", `${(0.42 * factor).toFixed(2)}s`);
+    }
+
+    $("dispToday").textContent =
+      state.stats.todayKm != null ? `heute ${Math.round(state.stats.todayKm)} km` : "heute –";
+
+    if (match) {
+      const pct = Math.round(match.progressRatio * 100);
+      $("dispPct").textContent = `${pct} %`;
+      $("dispBar").setAttribute("width", String((160 * match.progressRatio).toFixed(1)));
+      $("signKm").textContent = Math.round(match.distanceDoneKm).toLocaleString("de-DE");
+
+      $("tpVeil").style.width = `${(100 - pct).toFixed(1)}%`;
+      $("tpMarker").style.left = `calc(${pct}% - 1.5px)`;
+      $("tpLabel").style.left = `${pct}%`;
+      $("tpLabel").textContent = `${pct} %`;
+    }
+
+    if (state.geocodeData?.locationLabel) {
+      $("signPlace").textContent = state.geocodeData.locationLabel;
+      const chipPlace = $("chipPlace");
+      chipPlace.hidden = false;
+      chipPlace.textContent = `${state.geocodeData.flag ?? ""} ${state.geocodeData.locationLabel}`.trim();
+    }
+
+    if (state.weather) {
+      const chipWeather = $("chipWeather");
+      chipWeather.hidden = false;
+      const preset = state.weather.preset;
+      const icon = state.mode === "night" ? preset.nightIcon : preset.icon;
+      const temp = state.weather.temperatureC != null ? `${Math.round(state.weather.temperatureC)}°C` : "";
+      chipWeather.textContent = `${icon} ${temp}`.trim();
+
+      $("scene").classList.remove("scene--rain", "scene--snow", "scene--overcast", "scene--fog", "scene--thunder");
+      if (preset.sceneClass) {
+        preset.sceneClass.split(" ").forEach((cls) => $("scene").classList.add(cls));
+      }
+    }
+
+    if (loc?.timestamp) {
+      const ageMs = Date.now() - new Date(loc.timestamp).getTime();
+      const chipFresh = $("chipFresh");
+      chipFresh.hidden = false;
+      chipFresh.textContent = formatAge(Math.max(0, ageMs));
+    }
+  }
+
+  function currentCountryIndex() {
+    const ratio = state.locationData?.routeMatch?.progressRatio;
+    if (ratio == null || !state.countrySegments.length) return -1;
+    for (let i = 0; i < state.countrySegments.length; i++) {
+      if (ratio < state.countrySegments[i].toPercent) return i;
+    }
+    return state.countrySegments.length - 1;
+  }
+
+  function renderBorder() {
+    const idx = currentCountryIndex();
+    const card = document.querySelector('[data-moment="border"]');
+    if (idx < 0 || idx >= state.countrySegments.length - 1 || !state.routeData) {
+      card.hidden = true;
+      return;
+    }
+
+    const current = state.countrySegments[idx];
+    const next = state.countrySegments[idx + 1];
+    const totalKm = state.routeData.totalDistanceKm;
+    const doneKm = state.locationData.routeMatch.distanceDoneKm;
+    const kmAhead = current.toPercent * totalKm - doneKm;
+    if (kmAhead <= 0) {
+      card.hidden = true;
+      return;
+    }
+
+    card.hidden = false;
+    $("borderFlags").innerHTML = `${current.flag}<span class="arrow">→</span>${next.flag}`;
+    $("borderName").textContent = COUNTRY_NAMES[next.code] ?? next.code;
+    $("borderMeta").textContent =
+      `in ${Math.round(kmAhead)} km · Land ${idx + 2} von ${state.countrySegments.length}`;
+    $("dispBorder").textContent = `${next.flag} Grenze in ${Math.round(kmAhead)} km`;
+  }
+
+  function renderPois() {
+    const doneKm = state.locationData?.routeMatch?.distanceDoneKm;
+    if (doneKm == null || !state.poiData?.pois?.length) return;
+
+    const next = state.poiData.pois
+      .filter((poi) =>
+        !poi.needsEnrichment &&
+        poi.score >= 0.6 &&
+        poi.routeKm != null &&
+        poi.routeKm > doneKm &&
+        (poi.distanceFromRouteKm == null || poi.distanceFromRouteKm <= 5))
+      .sort((a, b) => a.routeKm - b.routeKm)
+      .slice(0, 3);
+
+    $("poiList").innerHTML = next.length
+      ? next.map((poi) => `
+          <div class="poi-row">
+            <b>${poi.name}</b><em>${Math.round(poi.routeKm - doneKm)} km</em>
+          </div>`).join("")
+      : `<div class="poi-row"><b>keine in Reichweite</b></div>`;
+  }
+
+  function renderProgressTrack() {
+    if (!state.countrySegments.length) return;
+    const stops = state.countrySegments
+      .map((seg) => `${seg.color} ${(seg.fromPercent * 100).toFixed(2)}% ${(seg.toPercent * 100).toFixed(2)}%`)
+      .join(", ");
+    $("tpTrack").style.background = `linear-gradient(90deg, ${stops})`;
+  }
+
+  function renderTimeline() {
+    if (!state.routeData || !state.countrySegments.length) return;
+    $("jtSlot").innerHTML = createJourneyTimelineCard(
+      state.routeData,
+      state.locationData,
+      state.countrySegments,
+      { todayKm: state.stats.todayKm, yesterdayKm: state.stats.yesterdayKm },
+    );
+  }
+
+  // ── Strava-Box + Popup ──
+  function renderStrava() {
+    const strava = state.stats.strava ?? {};
+    const totals = strava.totals;
+
+    if (!strava.configured || !totals) {
+      $("healthLabel").textContent = "Strava";
+      $("healthValue").textContent = "–";
+      $("healthSub").textContent = "noch nicht verbunden";
+      $("healthSheetSub").textContent = "Strava ist noch nicht eingerichtet";
+      $("healthContent").innerHTML = `
+        <div class="setup-hint">
+          Sobald Strava verbunden ist, erscheinen hier Gesamtdistanz, Höhenmeter,
+          Kalorien, Puls und die Liste der vergangenen Touren.<br><br>
+          Einrichtung: <strong>docs/strava-setup.md</strong>
+        </div>`;
+      return;
+    }
+
+    $("healthLabel").textContent = "Strava gesamt";
+    $("healthValue").textContent = fmtKm(totals.distanceKm);
+    $("healthSub").textContent = `${totals.rides} Fahrten · ${Math.round(totals.elevationM).toLocaleString("de-DE")} hm`;
+    $("healthSheetSub").textContent = `${totals.rides} Fahrten aufgezeichnet`;
+
+    const rows = [
+      ["Distanz gesamt", fmtKm(totals.distanceKm)],
+      ["Höhenmeter", `${Math.round(totals.elevationM).toLocaleString("de-DE")} hm`],
+      totals.calories ? ["Kalorien", `${Math.round(totals.calories).toLocaleString("de-DE")} kcal`] : null,
+      totals.avgHeartrate ? ["Ø Herzfrequenz", `${Math.round(totals.avgHeartrate)} bpm`] : null,
+      totals.maxHeartrate ? ["Max. Herzfrequenz", `${Math.round(totals.maxHeartrate)} bpm`] : null,
+      ["Fahrten", String(totals.rides)],
+    ].filter(Boolean);
+
+    const tours = (strava.pastTours ?? []).slice(0, 12);
+
+    $("healthContent").innerHTML = `
+      <div class="health-list">
+        ${rows.map(([label, value]) => `<div>${label} <strong>${value}</strong></div>`).join("")}
       </div>
-    </div>
-    <!-- Wird beim Deploy durch die GitHub Action mit Commit + Zeit ersetzt -->
-    <div class="deploy-version">lokal</div>
-    <script type="module">
-      const root = document.querySelector("#app");
+      ${tours.length ? `
+        <div class="tour-list">
+          <h4>Vergangene Touren</h4>
+          ${tours.map((tour) => `
+            <div>
+              <b>${tour.name}</b>
+              <em>${tour.distanceKm.toLocaleString("de-DE")} km · ${new Date(tour.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}</em>
+            </div>`).join("")}
+        </div>` : ""}
+    `;
+  }
 
-      const renderStartupError = (message) => {
-        if (!root) {
-          return;
-        }
+  // ── Fotos: Box, Album, Slider (nur heutige) ──
+  const stage = $("momentStage");
+  let photoCards = [];
+  let carouselStarted = false;
 
-        root.innerHTML = `
-          <div class="app-shell">
-            <section class="route-loading-card">
-              <p class="section-intro__eyebrow">Startfehler</p>
-              <h2>Die Web-App konnte nicht geladen werden.</h2>
-              <p class="muted-text">${message}</p>
-            </section>
-          </div>
-        `;
-      };
+  function todayKeyForRiders() {
+    if (state.weather?.localTime) return state.weather.localTime.slice(0, 10);
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  }
 
-      // Nur waehrend des Starts aktiv: sobald die App laeuft ("app-ready"),
-      // darf ein spaeterer unbehandelter Fehler die UI nicht mehr ersetzen.
-      const onStartupError = (event) => {
-        renderStartupError(event?.error?.message || event.message || "Unbekannter Browserfehler");
-      };
+  function renderPhotos() {
+    const photos = state.photos.filter((photo) => photo.thumbUrl);
 
-      const onStartupRejection = (event) => {
-        const reason = event.reason;
-        renderStartupError(reason?.message || String(reason) || "Unbekannter Promise-Fehler");
-      };
+    $("thumbStack").innerHTML =
+      photos.slice(0, 3).map((photo) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" alt="" loading="lazy" />`).join("") +
+      (photos.length ? `<span class="thumb-stack__count">${photos.length}</span>` : "");
 
-      window.addEventListener("error", onStartupError);
-      window.addEventListener("unhandledrejection", onStartupRejection);
-      window.addEventListener(
-        "app-ready",
-        () => {
-          window.removeEventListener("error", onStartupError);
-          window.removeEventListener("unhandledrejection", onStartupRejection);
-        },
-        { once: true },
+    $("albumGrid").innerHTML = photos
+      .map((photo, index) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" data-idx="${index}" alt="Foto von unterwegs" loading="lazy" />`)
+      .join("");
+    $("albumCount").textContent = photos.length
+      ? `${photos.length} Fotos von unterwegs`
+      : "Noch keine Fotos";
+
+    // Slider: nur Fotos des heutigen Kalendertages
+    const today = todayKeyForRiders();
+    const todays = photos.filter((photo) => photo.date?.slice(0, 10) === today).slice(0, 5);
+
+    photoCards.forEach((card) => card.remove());
+    photoCards = todays.map((photo) => {
+      const card = document.createElement("div");
+      card.className = "moment moment--photo";
+      const ageH = Math.max(1, Math.round((Date.now() - new Date(photo.date).getTime()) / 3_600_000));
+      card.innerHTML = `
+        <span class="tape"></span>
+        <img src="${PHOTO_HOST}${photo.thumbUrl}" alt="Foto von heute" />
+        <div class="moment__caption"><span>📍 <span data-loc>…</span></span><span>vor ${ageH} Std</span></div>`;
+      card.querySelector("img").addEventListener("error", () => { card.dataset.dead = "1"; });
+      stage.appendChild(card);
+
+      if (photo.lat != null) {
+        geocodeOnce(photo.lat, photo.lon)
+          .then((geo) => {
+            const el = card.querySelector("[data-loc]");
+            if (el) el.textContent = geo?.locationLabel ?? "unterwegs";
+          })
+          .catch(() => {
+            const el = card.querySelector("[data-loc]");
+            if (el) el.textContent = "unterwegs";
+          });
+      } else {
+        card.querySelector("[data-loc]").textContent = "unterwegs";
+      }
+      return card;
+    });
+
+    if (!carouselStarted) {
+      carouselStarted = true;
+      startCarousel();
+    }
+  }
+
+  function startCarousel() {
+    const SHOW_MS = 6000;
+    const GAP_MS = 900;
+    let idx = 0;
+
+    function next() {
+      const border = document.querySelector('[data-moment="border"]');
+      const cards = [...photoCards.filter((c) => c.dataset.dead !== "1")];
+      if (border && !border.hidden) cards.push(border);
+
+      if (!cards.length) {
+        setTimeout(next, 4000);
+        return;
+      }
+
+      const card = cards[idx % cards.length];
+      idx += 1;
+      card.classList.add("show");
+      setTimeout(() => card.classList.remove("show"), SHOW_MS);
+      setTimeout(next, SHOW_MS + GAP_MS);
+    }
+    setTimeout(next, 1500);
+  }
+
+  // ── Lightbox ──
+  const lightbox = $("photo-lightbox");
+  let lbIdx = 0;
+
+  function albumPhotos() {
+    return state.photos.filter((photo) => photo.thumbUrl);
+  }
+
+  function showLightbox(dir = 0) {
+    const photos = albumPhotos();
+    const photo = photos[lbIdx];
+    if (!photo) return;
+
+    const img = lightbox.querySelector(".photo-lightbox__img");
+    img.src = PHOTO_HOST + (photo.lightboxUrl ?? photo.thumbUrl);
+    if (dir !== 0 && typeof img.animate === "function") {
+      img.animate(
+        [{ opacity: 0.25, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: "none" }],
+        { duration: 200, easing: "ease-out" },
       );
+    }
 
-      import("./src/main.js?v=20260713a").catch((error) => {
-        renderStartupError(error?.message || "Modul-Import fehlgeschlagen");
-        console.error(error);
+    const date = photo.date ? new Date(photo.date) : null;
+    lightbox.querySelector(".photo-lightbox__caption").innerHTML = `<div class="lc-chips">
+      <span class="lc-chip">${lbIdx + 1}/${photos.length}</span>
+      ${date ? `<span class="lc-chip">${date.toLocaleDateString("de-DE", { day: "2-digit", month: "long" })}</span>` : ""}
+      ${date ? `<span class="lc-chip">${date.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</span>` : ""}
+      ${photo.lat != null ? `<span class="lc-chip">📍 <span id="lbLoc">…</span></span>` : ""}
+    </div>`;
+
+    if (photo.lat != null) {
+      const captured = lbIdx;
+      geocodeOnce(photo.lat, photo.lon)
+        .then((geo) => {
+          if (captured !== lbIdx) return;
+          const el = $("lbLoc");
+          if (el) el.textContent = geo?.locationLabel ?? "unterwegs";
+        })
+        .catch(() => {});
+    }
+
+    for (const n of [lbIdx - 1, lbIdx + 1]) {
+      const neighbor = photos[n];
+      if (neighbor) new Image().src = PHOTO_HOST + (neighbor.lightboxUrl ?? neighbor.thumbUrl);
+    }
+  }
+
+  function navLightbox(dir) {
+    const next = lbIdx + dir;
+    if (next < 0 || next >= albumPhotos().length) return;
+    lbIdx = next;
+    showLightbox(dir);
+  }
+
+  $("albumGrid").addEventListener("click", (event) => {
+    const img = event.target.closest("img[data-idx]");
+    if (!img) return;
+    lbIdx = Number(img.dataset.idx);
+    showLightbox();
+    lightbox.showModal();
+  });
+  lightbox.querySelector("[data-lightbox-close]").addEventListener("click", () => lightbox.close());
+  lightbox.addEventListener("click", (event) => { if (event.target === lightbox) lightbox.close(); });
+  document.addEventListener("keydown", (event) => {
+    if (!lightbox.open) return;
+    if (event.key === "ArrowRight") navLightbox(1);
+    if (event.key === "ArrowLeft") navLightbox(-1);
+  });
+  let lbTouchX = 0;
+  lightbox.addEventListener("touchstart", (e) => { lbTouchX = e.touches[0].clientX; }, { passive: true });
+  lightbox.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - lbTouchX;
+    if (Math.abs(dx) > 40) navLightbox(dx < 0 ? 1 : -1);
+  });
+
+  // ── Popups ──
+  function wireSheet(sheetId, opener, onOpen) {
+    const sheet = $(sheetId);
+    opener?.addEventListener("click", () => {
+      sheet.classList.add("open");
+      onOpen?.();
+    });
+    sheet.querySelector("[data-close]").addEventListener("click", () => sheet.classList.remove("open"));
+    sheet.addEventListener("click", (event) => { if (event.target === sheet) sheet.classList.remove("open"); });
+  }
+  wireSheet("statusSheet", $("tourProgress"));
+  wireSheet("healthSheet", $("boxHealth"));
+  wireSheet("albumSheet", $("boxAlbum"));
+
+  // ── Karten (Minimap + Popup) ──
+  let miniMap = null;
+  let miniMarker = null;
+  let bigMap = null;
+  let bigMarker = null;
+
+  function routeLatLngs(routeData, step = 4) {
+    return routeData.points.filter((_, i) => i % step === 0).map((p) => [p.lat, p.lon]);
+  }
+
+  function posIcon() {
+    return window.L.divIcon({
+      className: "",
+      html: `<div class="live-pos-marker"><div class="live-pos-marker__pulse"></div><div class="live-pos-marker__dot"></div></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+  }
+
+  function drawRoute(map, routeData, doneMeters, step) {
+    const pts = routeData.points.filter((_, i) => i % step === 0);
+    let split = pts.findIndex((p) => p.cumulativeDistanceMeters >= doneMeters);
+    if (split < 1) split = 1;
+    const toLL = (p) => [p.lat, p.lon];
+
+    window.L.polyline(pts.slice(split).map(toLL), { color: "#90a4ae", weight: 3, opacity: 0.75, lineCap: "round" }).addTo(map);
+    window.L.polyline(pts.slice(0, split + 1).map(toLL), { color: "#eb8f34", weight: 3.4, opacity: 0.95, lineCap: "round" }).addTo(map);
+  }
+
+  function initMaps() {
+    if (!window.L || !state.routeData) return;
+
+    miniMap = window.L.map("minimapMap", {
+      zoomControl: false, attributionControl: false, dragging: false,
+      scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false,
+      boxZoom: false, keyboard: false, preferCanvas: true,
+    });
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd", maxZoom: 19,
+    }).addTo(miniMap);
+
+    const done = (state.locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000;
+    drawRoute(miniMap, state.routeData, done, 24);
+    miniMap.fitBounds([
+      [state.routeData.bounds.minLat, state.routeData.bounds.minLon],
+      [state.routeData.bounds.maxLat, state.routeData.bounds.maxLon],
+    ], { padding: [4, 4] });
+
+    wireSheet("mapSheet", $("minimap"), () => {
+      if (!bigMap) {
+        bigMap = window.L.map("bigmap", { zoomControl: true, attributionControl: false, preferCanvas: true });
+        window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          subdomains: "abcd", maxZoom: 19,
+        }).addTo(bigMap);
+        window.L.control.attribution({ prefix: false })
+          .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
+          .addTo(bigMap);
+        drawRoute(bigMap, state.routeData, (state.locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000, 4);
+      }
+      requestAnimationFrame(() => {
+        bigMap.invalidateSize();
+        if (state.locationData) {
+          const ll = [state.locationData.latitude, state.locationData.longitude];
+          if (bigMarker) bigMarker.setLatLng(ll);
+          else bigMarker = window.L.marker(ll, { icon: posIcon(), zIndexOffset: 1000 }).addTo(bigMap);
+          bigMap.setView(ll, 9);
+        } else {
+          bigMap.fitBounds([
+            [state.routeData.bounds.minLat, state.routeData.bounds.minLon],
+            [state.routeData.bounds.maxLat, state.routeData.bounds.maxLon],
+          ], { padding: [18, 18] });
+        }
       });
-    </script>
-  </body>
+    });
+
+    updateMapMarker();
+  }
+
+  function updateMapMarker() {
+    if (!miniMap || !state.locationData) return;
+    const ll = [state.locationData.latitude, state.locationData.longitude];
+    if (miniMarker) miniMarker.setLatLng(ll);
+    else miniMarker = window.L.circleMarker(ll, {
+      radius: 4, color: "#fffdf8", weight: 1.5, fillColor: "#0c6b58", fillOpacity: 1,
+    }).addTo(miniMap);
+  }
+
+  // ── Start ──
+  state.routeData = await loadRouteData();
+  state.countrySegments = buildCountrySegments(state.routeData);
+  renderProgressTrack();
+
+  loadPoiData()
+    .then((poiData) => { state.poiData = poiData; renderPois(); })
+    .catch(() => {});
+
+  startPhotoService({
+    onUpdate(photos) { state.photos = photos; renderPhotos(); },
+    onError() { state.photos = []; renderPhotos(); },
+  });
+
+  startTourStatsService({
+    onUpdate(stats) {
+      state.stats = stats;
+      renderScene();
+      renderTimeline();
+      renderStrava();
+    },
+  });
+
+  const provider = createLocationProvider({
+    routeData: state.routeData,
+    onUpdate(snapshot) {
+      state.previousLocationData = state.locationData;
+      state.locationData = mapLocationToRoute(state.routeData, snapshot);
+
+      const movement = computeMovementStatus(state.locationData, state.previousLocationData);
+      if (movement.isMoving) state.lastMovementAt = Date.now();
+
+      const segIdx = currentCountryIndex();
+      if (segIdx >= 0) applyCountry(state.countrySegments[segIdx].code);
+
+      applyMode(computeMode());
+      renderScene();
+      renderBorder();
+      renderPois();
+      renderTimeline();
+      updateMapMarker();
+
+      reverseGeocode(snapshot.latitude, snapshot.longitude)
+        .then((geo) => { if (geo) { state.geocodeData = geo; renderScene(); } })
+        .catch(() => {});
+
+      fetchWeather(snapshot.latitude, snapshot.longitude)
+        .then((weather) => {
+          state.weather = weather;
+          applyMode(computeMode());
+          renderScene();
+        })
+        .catch(() => {});
+    },
+    onError(message) {
+      applyMode("stale");
+      $("pauseText").textContent = message || "Keine Verbindung zum GPS-Tracker";
+    },
+  });
+
+  await provider.start();
+
+  if (window.L) initMaps();
+  else window.addEventListener("load", initMaps, { once: true });
+
+  // Frische-Anzeige und Zustand aktuell halten, auch ohne neue Fixes
+  setInterval(() => {
+    if (!state.locationData) return;
+    applyMode(computeMode());
+    renderScene();
+  }, 60_000);
+
+  window.addEventListener("pagehide", () => provider.stop());
+  window.addEventListener("pageshow", (event) => { if (event.persisted) window.location.reload(); });
+
+  // Reisetag als Titel, sobald das Startdatum gesetzt ist
+  if (tripMeta.startDate) {
+    const start = new Date(tripMeta.startDate);
+    start.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = Math.floor((today - start) / 86_400_000) + 1;
+    if (day >= 1) document.title = `Timo & Tino · Tag ${day}`;
+  }
+</script>
+</body>
 </html>

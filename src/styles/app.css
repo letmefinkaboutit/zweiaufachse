@@ -2498,3 +2498,8 @@ img {
   }
   html { scroll-behavior: auto; }
 }
+
+/* Live-Ansicht (Startseite): keine Bottom-Nav, Versionsanzeige sitzt tiefer */
+body:not(:has(.bottom-nav)) .deploy-version {
+  bottom: calc(2px + env(safe-area-inset-bottom));
+}
