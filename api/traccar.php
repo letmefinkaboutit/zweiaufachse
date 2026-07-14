@@ -52,26 +52,35 @@ if (
     exit;
 }
 
-// Gibt Status UND Daten zurueck, damit "Token falsch" von "nichts gefunden"
-// unterschieden werden kann.
-function traccarCall(string $path, array $config): array
+// Traccar akzeptiert den API-Token je nach Version entweder als Bearer-Header
+// ODER nur als Query-Parameter (?token=...). Wir probieren beides und merken
+// uns, was funktioniert hat.
+$GLOBALS['traccarAuthMode'] = null;
+
+function traccarRequest(string $path, array $config, string $mode): array
 {
     $baseUrl = rtrim((string) $config['base_url'], '/');
     $auth    = $config['auth'] ?? [];
+    $token   = (string) ($auth['token'] ?? '');
+    $url     = $baseUrl . $path;
     $headers = ['Accept: application/json'];
 
-    if (($auth['mode'] ?? '') === 'bearer' && !empty($auth['token'])) {
-        $headers[] = 'Authorization: Bearer ' . $auth['token'];
+    if ($mode === 'bearer' && $token !== '') {
+        $headers[] = 'Authorization: Bearer ' . $token;
     }
 
-    $ch = curl_init($baseUrl . $path);
+    if ($mode === 'query' && $token !== '') {
+        $url .= (str_contains($path, '?') ? '&' : '?') . 'token=' . rawurlencode($token);
+    }
+
+    $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_HTTPHEADER     => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 15,
     ]);
 
-    if (($auth['mode'] ?? '') === 'basic' && !empty($auth['email'])) {
+    if ($mode === 'basic' && !empty($auth['email'])) {
         curl_setopt($ch, CURLOPT_USERPWD, $auth['email'] . ':' . ($auth['password'] ?? ''));
     }
 
@@ -81,8 +90,45 @@ function traccarCall(string $path, array $config): array
 
     return [
         'status' => $status,
+        'body'   => is_string($body) ? $body : '',
         'data'   => is_string($body) ? json_decode($body, true) : null,
+        'mode'   => $mode,
     ];
+}
+
+// Gibt Status UND Daten zurueck, damit "Token falsch" von "nichts gefunden"
+// unterschieden werden kann.
+function traccarCall(string $path, array $config): array
+{
+    $auth = $config['auth'] ?? [];
+
+    // Bekannter Weg zuerst, sonst der Reihe nach durchprobieren
+    $modes = $GLOBALS['traccarAuthMode'] !== null
+        ? [$GLOBALS['traccarAuthMode']]
+        : (($auth['mode'] ?? '') === 'basic'
+            ? ['basic', 'bearer', 'query']
+            : ['bearer', 'query', 'basic']);
+
+    $last = ['status' => 0, 'body' => '', 'data' => null, 'mode' => 'none'];
+
+    foreach ($modes as $mode) {
+        if ($mode === 'basic' && empty($auth['email'])) {
+            continue;
+        }
+        if (($mode === 'bearer' || $mode === 'query') && empty($auth['token'])) {
+            continue;
+        }
+
+        $result = traccarRequest($path, $config, $mode);
+        $last = $result;
+
+        if ($result['status'] >= 200 && $result['status'] < 300) {
+            $GLOBALS['traccarAuthMode'] = $mode;
+            return $result;
+        }
+    }
+
+    return $last;
 }
 
 function traccarGet(string $path, array $config): ?array
@@ -111,17 +157,23 @@ if ($deviceId === null || ($now - $deviceAt) > DEVICE_TTL) {
 
     if ($call['status'] === 401 || $call['status'] === 403) {
         echo json_encode([
-            'configured' => false,
-            'reason'     => 'Traccar lehnt den Token ab (HTTP ' . $call['status'] . ') — TRACCAR_TOKEN pruefen.',
-        ]);
+            'configured'  => false,
+            'reason'      => 'Traccar lehnt den Token ab (HTTP ' . $call['status'] . ') — TRACCAR_TOKEN pruefen.',
+            'traccarSays' => mb_substr(strip_tags($call['body']), 0, 300),
+            'baseUrl'     => rtrim((string) $config['base_url'], '/'),
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     if ($call['status'] < 200 || $call['status'] >= 300) {
         echo json_encode([
             'configured' => false,
-            'reason'     => 'Traccar antwortete mit HTTP ' . $call['status'] . '.',
-        ]);
+            'reason'     => 'Traccar antwortete mit HTTP ' . $call['status']
+                . ' (Auth-Versuche: Bearer, ?token=, Basic).',
+            // Rohantwort hilft bei der Ursachensuche (enthaelt keinen Token)
+            'traccarSays' => mb_substr(strip_tags($call['body']), 0, 300),
+            'baseUrl'     => rtrim((string) $config['base_url'], '/'),
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
