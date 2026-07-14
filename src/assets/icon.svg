@@ -1,17 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#0e7a64"/>
-      <stop offset="1" stop-color="#084c40"/>
+      <stop offset="1" stop-color="#07463b"/>
     </linearGradient>
+    <pattern id="checker" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(-6)">
+      <rect width="26" height="26" fill="#fffdf8"/>
+      <rect width="13" height="13" fill="#2f6fc4"/>
+      <rect x="13" y="13" width="13" height="13" fill="#2f6fc4"/>
+    </pattern>
+    <clipPath id="badge">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
   </defs>
+
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="118" cy="112" r="46" fill="#ffe0bb" opacity="0.9"/>
-  <path d="M96 420 C 200 380, 150 300, 250 268 S 380 210, 396 138"
-        fill="none" stroke="#fffdf8" stroke-width="26" stroke-linecap="round"
-        stroke-dasharray="2 46" opacity="0.95"/>
-  <circle cx="396" cy="138" r="44" fill="#eb8f34" opacity="0.35"/>
-  <circle cx="396" cy="138" r="28" fill="#eb8f34" stroke="#fffdf8" stroke-width="9"/>
-  <text x="256" y="470" text-anchor="middle" font-family="Avenir Next, Trebuchet MS, sans-serif"
-        font-size="64" font-weight="700" fill="#fffdf8" letter-spacing="2">T&amp;T</text>
+
+  <g clip-path="url(#badge)">
+    <!-- Huegel und Strasse im Hintergrund -->
+    <path d="M0 372 Q90 330 190 362 Q300 396 400 352 Q470 322 512 344 L512 512 L0 512 Z" fill="#0b6553" opacity="0.9"/>
+    <path d="M214 512 L298 512 L286 398 L226 398 Z" fill="#0a5346" opacity="0.75"/>
+
+  <!-- Die beiden fuellen das Badge (Kopf-Zoom, unten angeschnitten) -->
+  <g transform="matrix(1.25,0,0,1.25,-64,-110)">
+
+    <!-- ── Tino (rechts, hinten) ── -->
+    <g>
+      <path d="M300 512 Q306 424 372 404 Q438 424 452 512 Z" fill="#2f6fc4" stroke="#14202b" stroke-width="7"/>
+      <path d="M340 410 Q372 436 404 410 L398 396 Q372 414 346 396 Z" fill="#d93a2b" stroke="#14202b" stroke-width="6"/>
+      <ellipse cx="372" cy="332" rx="72" ry="76" fill="#f0c39a" stroke="#14202b" stroke-width="7"/>
+      <ellipse cx="302" cy="336" rx="12" ry="17" fill="#e8b48c" stroke="#14202b" stroke-width="6"/>
+      <ellipse cx="442" cy="336" rx="12" ry="17" fill="#e8b48c" stroke="#14202b" stroke-width="6"/>
+      <circle cx="346" cy="322" r="8" fill="#14202b"/>
+      <circle cx="398" cy="322" r="8" fill="#14202b"/>
+      <path d="M336 362 Q372 396 408 362 Z" fill="#fffdf8" stroke="#14202b" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M292 300 a80 84 0 0 1 160 0 Z" fill="url(#checker)" stroke="#14202b" stroke-width="7" stroke-linejoin="round"/>
+      <g fill="#14202b" opacity="0.9">
+        <rect x="331" y="248" width="13" height="34" rx="6.5" transform="rotate(-16 337 265)"/>
+        <rect x="365" y="240" width="13" height="42" rx="6.5"/>
+        <rect x="400" y="248" width="13" height="34" rx="6.5" transform="rotate(16 406 265)"/>
+      </g>
+      <rect x="286" y="288" width="172" height="20" rx="10" fill="#2b4a7a" stroke="#14202b" stroke-width="6"/>
+    </g>
+
+    <!-- ── Timo (links, vorne, mit Brille) ── -->
+    <g>
+      <path d="M52 512 Q66 420 140 398 Q214 420 226 512 Z" fill="#2f6fc4" stroke="#14202b" stroke-width="7"/>
+      <path d="M104 404 Q140 432 176 404 L170 390 Q140 410 110 390 Z" fill="#d93a2b" stroke="#14202b" stroke-width="6"/>
+      <ellipse cx="140" cy="322" rx="76" ry="80" fill="#e8b48c" stroke="#14202b" stroke-width="7"/>
+      <ellipse cx="64" cy="326" rx="13" ry="18" fill="#dfa87c" stroke="#14202b" stroke-width="6"/>
+      <ellipse cx="216" cy="326" rx="13" ry="18" fill="#dfa87c" stroke="#14202b" stroke-width="6"/>
+      <path d="M100 356 Q140 394 180 356 Z" fill="#fffdf8" stroke="#14202b" stroke-width="6" stroke-linejoin="round"/>
+      <!-- Brille -->
+      <g fill="#eaf2fb" stroke="#2f6fc4" stroke-width="8">
+        <rect x="82" y="296" width="48" height="34" rx="13"/>
+        <rect x="150" y="296" width="48" height="34" rx="13"/>
+      </g>
+      <path d="M130 312 h20" stroke="#2f6fc4" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="106" cy="313" r="7" fill="#14202b"/>
+      <circle cx="174" cy="313" r="7" fill="#14202b"/>
+      <path d="M56 288 a84 88 0 0 1 168 0 Z" fill="url(#checker)" stroke="#14202b" stroke-width="7" stroke-linejoin="round"/>
+      <g fill="#14202b" opacity="0.9">
+        <rect x="97" y="234" width="14" height="36" rx="7" transform="rotate(-16 104 252)"/>
+        <rect x="133" y="226" width="14" height="44" rx="7"/>
+        <rect x="169" y="234" width="14" height="36" rx="7" transform="rotate(16 176 252)"/>
+      </g>
+      <rect x="50" y="276" width="180" height="21" rx="10.5" fill="#2b4a7a" stroke="#14202b" stroke-width="6"/>
+    </g>
+
+  </g>
+  </g>
 </svg>

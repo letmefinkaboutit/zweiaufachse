@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Reduzierte Logo-Variante fuer kleine Groessen (Browser-Tab, 16-32 px):
+       nur die beiden karierten Helme — das Erkennungszeichen der Fahrer. -->
+  <defs>
+    <linearGradient id="fbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e7a64"/>
+      <stop offset="1" stop-color="#07463b"/>
+    </linearGradient>
+    <pattern id="fchecker" width="7" height="7" patternUnits="userSpaceOnUse">
+      <rect width="7" height="7" fill="#fffdf8"/>
+      <rect width="3.5" height="3.5" fill="#2f6fc4"/>
+      <rect x="3.5" y="3.5" width="3.5" height="3.5" fill="#2f6fc4"/>
+    </pattern>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#fbg)"/>
+
+  <!-- Helm links -->
+  <g>
+    <path d="M4 34 a15 16 0 0 1 30 0 Z" fill="url(#fchecker)" stroke="#14202b" stroke-width="2.6" stroke-linejoin="round"/>
+    <rect x="2.5" y="32.5" width="33" height="7" rx="3.5" fill="#2b4a7a" stroke="#14202b" stroke-width="2.4"/>
+  </g>
+
+  <!-- Helm rechts -->
+  <g>
+    <path d="M30 36 a15 16 0 0 1 30 0 Z" fill="url(#fchecker)" stroke="#14202b" stroke-width="2.6" stroke-linejoin="round"/>
+    <rect x="28.5" y="34.5" width="33" height="7" rx="3.5" fill="#2b4a7a" stroke="#14202b" stroke-width="2.4"/>
+  </g>
+</svg>
