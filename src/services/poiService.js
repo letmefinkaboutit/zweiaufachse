@@ -126,8 +126,12 @@ function summarizePois(pois) {
   };
 }
 
+// Wie beim Routen-Service: projekt-relativer Pfad, gegen den Projekt-Root
+// aufgeloest — funktioniert auch aus /live/.
+const projectRoot = new URL("../../", import.meta.url);
+
 export async function loadPoiData() {
-  const response = await fetch(encodeURI(poiConfig.sourceFilePath));
+  const response = await fetch(new URL(encodeURI(poiConfig.sourceFilePath), projectRoot));
 
   if (!response.ok) {
     throw new Error(`Die POI-Datei konnte nicht geladen werden (${response.status}).`);

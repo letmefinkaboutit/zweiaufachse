@@ -132,8 +132,12 @@ function buildRouteModel(data) {
   };
 }
 
+// Pfade in der Config sind projekt-relativ ("./src/..."). Sie werden gegen den
+// Projekt-Root aufgeloest, damit sie auch aus Unterseiten wie /live/ stimmen.
+const projectRoot = new URL("../../", import.meta.url);
+
 export async function loadRouteData() {
-  const response = await fetch(routeSource.dataPath);
+  const response = await fetch(new URL(routeSource.dataPath, projectRoot));
 
   if (!response.ok) {
     throw new Error(
