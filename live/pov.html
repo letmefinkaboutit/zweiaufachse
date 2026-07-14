@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Living Scene · POV-Hybrid · km 1.096</title>
 <link rel="stylesheet" href="../src/vendor/leaflet/leaflet.css" />
+<!-- Original-Design der Haupt-App: liefert das Journey-Timeline-Modul 1:1 -->
+<link rel="stylesheet" href="../src/styles/app.css" />
 <script src="../src/vendor/leaflet/leaflet.js" defer></script>
 <style>
   * { margin: 0; box-sizing: border-box; }
@@ -42,28 +44,52 @@
     background: rgba(255, 253, 248, 0.9); border: 1px solid rgba(31, 42, 47, 0.08);
     border-radius: 999px; padding: 7px 13px; cursor: pointer; flex-shrink: 0;
   }
-  .sections { padding: 0 14px calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 14px; }
-  .boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sections { padding: 0 14px calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+  /* Filigrane Kennzahlen-Zeile: ergaenzt die Timeline, dupliziert sie nicht */
+  .boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .box {
-    background: rgba(255, 250, 244, 0.92); border-radius: 18px;
-    padding: 12px 12px 11px; box-shadow: 0 10px 26px rgba(29, 35, 38, 0.07);
+    background: rgba(255, 250, 244, 0.75); border-radius: 14px;
+    padding: 9px 10px 8px; border: 1px solid rgba(31, 42, 47, 0.06);
   }
-  .box span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #58656b; }
-  .box strong { display: block; font-size: 19px; letter-spacing: -0.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .box small { display: block; font-size: 11.5px; color: #58656b; margin-top: 2px; font-weight: 600; }
-  .panel {
-    background: rgba(255, 250, 244, 0.92); border-radius: 22px;
-    padding: 16px 16px 14px; box-shadow: 0 12px 30px rgba(29, 35, 38, 0.08);
+  .box span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #58656b; }
+  .box strong { display: block; font-size: 15px; letter-spacing: -0.01em; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .box small { display: block; font-size: 10.5px; color: #58656b; margin-top: 1px; font-weight: 600; }
+
+  /* ── Minimap in der Szene (Videospiel-Stil), Klick = grosse Karte ── */
+  .minimap {
+    position: absolute; right: 12px; bottom: 16px; z-index: 6;
+    width: 104px; height: 104px; padding: 0; cursor: pointer;
+    background: rgba(255, 253, 248, 0.88); backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(31, 42, 47, 0.12); border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(29, 35, 38, 0.22);
+    overflow: hidden;
   }
-  .panel__eyebrow {
-    font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: #58656b;
+  .minimap svg { display: block; width: 100%; height: 100%; }
+  .minimap__hint {
+    position: absolute; right: 5px; bottom: 4px;
+    font-size: 11px; color: #58656b; pointer-events: none;
   }
-  .panel h3 { font-size: 17.5px; letter-spacing: -0.02em; margin: 2px 0 10px; }
-  .timeline-svg { display: block; width: 100%; height: auto; }
-  #map {
-    height: 300px; border-radius: 14px; overflow: hidden;
-    background: #e9e2d2;
+  .mm-pulse { animation: mmpulse 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes mmpulse { from { transform: scale(0.5); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+
+  .map-modal {
+    position: fixed; inset: 0; z-index: 40;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(18, 32, 50, 0.55); backdrop-filter: blur(3px);
+    padding: 18px;
+  }
+  .map-modal.open { display: flex; }
+  .map-modal__card {
+    position: relative; width: min(94vw, 640px); height: min(72vh, 620px);
+    background: #fffdf8; border-radius: 22px; overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  }
+  #bigmap { width: 100%; height: 100%; }
+  .map-modal__close {
+    position: absolute; top: 10px; right: 10px; z-index: 1001;
+    width: 38px; height: 38px; border: none; border-radius: 50%;
+    background: rgba(255, 253, 248, 0.95); color: #1f2a2f;
+    font-size: 17px; cursor: pointer; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
   }
   .live-pos-marker { position: relative; width: 32px; height: 32px; }
   .live-pos-marker__dot {
@@ -577,6 +603,12 @@
   <span class="chip" id="chipWeather">…°C</span>
   <span class="chip" id="chipFresh">vor 1 Min</span>
 </div>
+
+<!-- Minimap wie im Videospiel: Klick oeffnet die grosse Karte -->
+<button class="minimap" id="minimap" aria-label="Karte vergrößern">
+  <svg id="minimapSvg" viewBox="0 0 108 108" aria-hidden="true"></svg>
+  <span class="minimap__hint">⤢</span>
+</button>
 </div><!-- /scene-wrap -->
 
 <div class="bar">
@@ -587,77 +619,36 @@
 </div>
 
 <main class="sections">
-  <!-- Sektion 2: statische Info-Boxen -->
+  <!-- Sektion 2: schlanke Zusatz-Kennzahlen (ohne Dopplung zur Timeline) -->
   <section class="boxes" aria-label="Tour-Kennzahlen">
-    <div class="box">
-      <span>Heute</span>
-      <strong>64 km</strong>
-      <small>gestern 71 km</small>
-    </div>
-    <div class="box">
-      <span>Fortschritt</span>
-      <strong>52 %</strong>
-      <small>1.096 von 2.107 km</small>
-    </div>
     <div class="box">
       <span>Reisetag</span>
       <strong>Tag 34</strong>
       <small>seit 10. Juni</small>
     </div>
+    <div class="box">
+      <span>Nächste Grenze</span>
+      <strong>🇲🇪 224 km</strong>
+      <small>Land 8 von 10</small>
+    </div>
+    <div class="box">
+      <span>Nächstes Highlight</span>
+      <strong>Mostar</strong>
+      <small>in 143 km · UNESCO</small>
+    </div>
   </section>
 
-  <!-- Sektion 3: Tourstatus — Hoehenprofil + Laender-Abschnitte -->
-  <section class="panel">
-    <p class="panel__eyebrow">Tourstatus</p>
-    <h3>Höhenprofil &amp; Länder</h3>
-    <svg class="timeline-svg" viewBox="0 0 700 160" role="img" aria-label="Höhenprofil mit Länderabschnitten und Live-Position">
-      <!-- Fortschritts-Tönung -->
-      <rect x="0" y="16" width="364" height="92" fill="#0c6b58" opacity="0.07"/>
-      <!-- Höhenprofil -->
-      <path d="M0 108 L0 95 L40 90 L70 84 L92 52 L105 42 L122 58 L142 46 L158 38 L175 60 L195 76 L215 70 L235 66 L255 84 L273 92 L288 98 L303 90 L322 74 L342 62 L362 68 L380 58 L398 78 L420 64 L440 56 L458 50 L475 62 L492 70 L508 58 L528 54 L548 78 L568 86 L585 74 L602 64 L625 60 L648 82 L672 92 L700 96 L700 108 Z" fill="#d9d2c2"/>
-      <!-- Länderbänder (echte Segment-Anteile aus route-data) -->
-      <g>
-        <rect x="0" y="112" width="66" height="18" fill="#1a1a1a"/>
-        <rect x="66" y="112" width="45" height="18" fill="#ED2939"/>
-        <rect x="111" y="112" width="46" height="18" fill="#009246"/>
-        <rect x="157" y="112" width="31" height="18" fill="#ED2939"/>
-        <rect x="188" y="112" width="85" height="18" fill="#003DA5"/>
-        <rect x="273" y="112" width="30" height="18" fill="#FF0000"/>
-        <rect x="303" y="112" width="136" height="18" fill="#002395"/>
-        <rect x="439" y="112" width="66" height="18" fill="#D4AF37"/>
-        <rect x="505" y="112" width="97" height="18" fill="#E41E20"/>
-        <rect x="602" y="112" width="98" height="18" fill="#0D5EAF"/>
-      </g>
-      <g font-size="11" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji',sans-serif">
-        <text x="33" y="126">🇩🇪</text>
-        <text x="88" y="126">🇦🇹</text>
-        <text x="134" y="126">🇮🇹</text>
-        <text x="230" y="126">🇸🇮</text>
-        <text x="288" y="126">🇭🇷</text>
-        <text x="371" y="126">🇧🇦</text>
-        <text x="472" y="126">🇲🇪</text>
-        <text x="553" y="126">🇦🇱</text>
-        <text x="651" y="126">🇬🇷</text>
-      </g>
-      <!-- Live-Marker bei 52 % -->
-      <line x1="364" y1="24" x2="364" y2="132" stroke="#0c6b58" stroke-width="2" opacity="0.55" stroke-dasharray="3 3"/>
-      <circle cx="364" cy="66" r="9" fill="#0c6b58" opacity="0.2"/>
-      <circle cx="364" cy="66" r="5" fill="#0c6b58" stroke="#fffdf8" stroke-width="2"/>
-      <rect x="326" y="4" width="76" height="18" rx="9" fill="#0c6b58"/>
-      <text x="364" y="17" text-anchor="middle" font-size="11" font-weight="700" fill="#fffdf8" font-family="Trebuchet MS, sans-serif">km 1.096</text>
-      <!-- Achsen-Labels -->
-      <text x="0" y="150" font-size="10.5" font-weight="600" fill="#8a938f" font-family="Trebuchet MS, sans-serif">Schorndorf</text>
-      <text x="700" y="150" text-anchor="end" font-size="10.5" font-weight="600" fill="#8a938f" font-family="Trebuchet MS, sans-serif">Volos · 2.107 km</text>
-    </svg>
-  </section>
-
-  <!-- Sektion 4: die echte Live-Karte -->
-  <section class="panel">
-    <p class="panel__eyebrow">Live-Karte</p>
-    <h3>Wo sind sie gerade?</h3>
-    <div id="map"></div>
-  </section>
+  <!-- Sektion 3: das echte Journey-Timeline-Modul der Haupt-App -->
+  <section id="jtSlot" aria-label="Tourstatus"></section>
 </main>
+
+<!-- Grosse Karte als Popup (Klick auf die Minimap) -->
+<div class="map-modal" id="mapModal">
+  <div class="map-modal__card">
+    <button class="map-modal__close" id="mapModalClose" aria-label="Karte schließen">✕</button>
+    <div id="bigmap"></div>
+  </div>
+</div>
 
 <script>
   const scene = document.getElementById("scene");
@@ -870,54 +861,6 @@
     .then((photos) => initMoments(photos.filter((p) => p.thumbUrl)))
     .catch(() => initMoments(FALLBACK_PHOTOS));
 
-  // ── Echte Live-Karte: reale Route aus route-data.json, Split bei km 1.096 ──
-  const DONE_METERS = 1_096_000;
-
-  function initLiveMap() {
-    if (!window.L || !document.getElementById("map")) return;
-
-    const map = window.L.map("map", { zoomControl: true, attributionControl: false, preferCanvas: true });
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd", maxZoom: 19,
-    }).addTo(map);
-    window.L.control.attribution({ prefix: false })
-      .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
-      .addTo(map);
-
-    fetch("../src/route/route-data.json")
-      .then((r) => r.json())
-      .then((data) => {
-        // Jeden 4. Punkt reicht fuer die Uebersicht
-        const pts = data.points.filter((_, i) => i % 4 === 0);
-        const splitIdx = Math.max(1, pts.findIndex((p) => p[3] >= DONE_METERS));
-        const toLL = (p) => [p[0], p[1]];
-
-        window.L.polyline(pts.slice(splitIdx).map(toLL), {
-          color: "#90a4ae", weight: 3.5, opacity: 0.75, lineCap: "round",
-        }).addTo(map);
-        window.L.polyline(pts.slice(0, splitIdx + 1).map(toLL), {
-          color: "#eb8f34", weight: 3.5, opacity: 0.9, lineCap: "round",
-        }).addTo(map);
-
-        const icon = window.L.divIcon({
-          className: "",
-          html: `<div class="live-pos-marker"><div class="live-pos-marker__pulse"></div><div class="live-pos-marker__dot"></div></div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-        });
-        window.L.marker([SIM.lat, SIM.lon], { icon, zIndexOffset: 1000 }).addTo(map);
-
-        map.fitBounds([
-          [data.bounds.minLat, data.bounds.minLon],
-          [data.bounds.maxLat, data.bounds.maxLon],
-        ], { padding: [14, 14] });
-      })
-      .catch(() => {
-        map.setView([SIM.lat, SIM.lon], 8);
-      });
-  }
-  window.addEventListener("load", initLiveMap);
-
   // Desktop/Querformat: ganze Szene zeigen statt nur das Cockpit
   if (window.innerWidth > window.innerHeight) {
     scene.setAttribute("preserveAspectRatio", "xMidYMax meet");
@@ -934,6 +877,116 @@
     lastFixMin = lastFixMin >= 3 ? 1 : lastFixMin + 1;
     document.getElementById("chipFresh").textContent = `vor ${lastFixMin} Min`;
   }, 30000);
+</script>
+
+<!-- Echte Module der Haupt-App: Journey-Timeline + Kartendaten -->
+<script type="module">
+  import { buildCountrySegments } from "../src/services/routeCountryService.js";
+  import { createJourneyTimelineCard } from "../src/components/journeyTimeline.js";
+
+  const SIM_POS = { lat: 44.24317, lon: 17.2959 };
+  const DONE_METERS = 1_096_000;
+
+  const data = await (await fetch("../src/route/route-data.json")).json();
+  const points = data.points.map(([lat, lon, ele, cum]) => ({ lat, lon, ele, cumulativeDistanceMeters: cum }));
+
+  const sampled = [];
+  const step = (points.length - 1) / 239;
+  for (let i = 0; i < 240; i++) sampled.push(points[Math.round(i * step)]);
+
+  const totalKm = data.totalDistanceMeters / 1000;
+  const doneKm = DONE_METERS / 1000;
+  const progressRatio = doneKm / totalKm;
+
+  // ── Journey-Timeline: das Original-Modul, gefuettert mit Sim-Stand ──
+  const routeData = {
+    totalDistanceKm: totalKm,
+    totalDistanceLabel: `${totalKm.toFixed(0)} km`,
+    minElevation: data.minElevation,
+    maxElevation: data.maxElevation,
+    sampledRoute: sampled,
+    currentProgress: {
+      ratio: progressRatio,
+      distanceDoneLabel: `${doneKm.toFixed(0)} km`,
+      remainingLabel: `${(totalKm - doneKm).toFixed(0)} km`,
+    },
+  };
+  const segments = buildCountrySegments({ sampledRoute: sampled, totalDistanceKm: totalKm });
+  const locationData = {
+    routeMatch: {
+      progressRatio,
+      distanceDoneLabel: `${doneKm.toFixed(0)} km`,
+      remainingLabel: `${(totalKm - doneKm).toFixed(0)} km`,
+    },
+  };
+  document.getElementById("jtSlot").innerHTML =
+    createJourneyTimelineCard(routeData, locationData, segments, { todayKm: 64, yesterdayKm: 71 });
+
+  // ── Minimap: Route als Miniatur, Klick = grosse Karte ──
+  const mmPoints = points.filter((_, i) => i % 24 === 0);
+  const lat0 = (data.bounds.minLat + data.bounds.maxLat) / 2;
+  const kx = Math.cos((lat0 * Math.PI) / 180);
+  const px = (p) => (p.lon - data.bounds.minLon) * kx;
+  const py = (p) => data.bounds.maxLat - p.lat;
+  const spanX = (data.bounds.maxLon - data.bounds.minLon) * kx;
+  const spanY = data.bounds.maxLat - data.bounds.minLat;
+  const S = 92 / Math.max(spanX, spanY);
+  const offX = (108 - spanX * S) / 2;
+  const offY = (108 - spanY * S) / 2;
+  const toXY = (p) => `${(offX + px(p) * S).toFixed(1)},${(offY + py(p) * S).toFixed(1)}`;
+
+  const mmSplit = Math.max(1, mmPoints.findIndex((p) => p.cumulativeDistanceMeters >= DONE_METERS));
+  const pos = { lat: SIM_POS.lat, lon: SIM_POS.lon };
+  const [posX, posY] = toXY(pos).split(",");
+
+  document.getElementById("minimapSvg").innerHTML = `
+    <polyline points="${mmPoints.slice(mmSplit).map(toXY).join(" ")}" fill="none" stroke="#9aa7ab" stroke-width="2" stroke-linecap="round"/>
+    <polyline points="${mmPoints.slice(0, mmSplit + 1).map(toXY).join(" ")}" fill="none" stroke="#eb8f34" stroke-width="2.4" stroke-linecap="round"/>
+    <circle class="mm-pulse" cx="${posX}" cy="${posY}" r="6" fill="rgba(12,107,88,0.4)"/>
+    <circle cx="${posX}" cy="${posY}" r="3.4" fill="#0c6b58" stroke="#fffdf8" stroke-width="1.4"/>
+  `;
+
+  // ── Grosse Karte im Popup, Leaflet lazy beim ersten Oeffnen ──
+  const modal = document.getElementById("mapModal");
+  let bigMap = null;
+
+  function openMap() {
+    modal.classList.add("open");
+    if (!bigMap && window.L) {
+      bigMap = window.L.map("bigmap", { zoomControl: true, attributionControl: false, preferCanvas: true });
+      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd", maxZoom: 19,
+      }).addTo(bigMap);
+      window.L.control.attribution({ prefix: false })
+        .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
+        .addTo(bigMap);
+
+      const pts = data.points.filter((_, i) => i % 4 === 0);
+      const splitIdx = Math.max(1, pts.findIndex((p) => p[3] >= DONE_METERS));
+      const toLL = (p) => [p[0], p[1]];
+      window.L.polyline(pts.slice(splitIdx).map(toLL), { color: "#90a4ae", weight: 3.5, opacity: 0.75, lineCap: "round" }).addTo(bigMap);
+      window.L.polyline(pts.slice(0, splitIdx + 1).map(toLL), { color: "#eb8f34", weight: 3.5, opacity: 0.9, lineCap: "round" }).addTo(bigMap);
+
+      const icon = window.L.divIcon({
+        className: "",
+        html: `<div class="live-pos-marker"><div class="live-pos-marker__pulse"></div><div class="live-pos-marker__dot"></div></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+      window.L.marker([SIM_POS.lat, SIM_POS.lon], { icon, zIndexOffset: 1000 }).addTo(bigMap);
+    }
+    requestAnimationFrame(() => {
+      bigMap?.invalidateSize();
+      bigMap?.fitBounds([
+        [data.bounds.minLat, data.bounds.minLon],
+        [data.bounds.maxLat, data.bounds.maxLon],
+      ], { padding: [18, 18] });
+    });
+  }
+
+  document.getElementById("minimap").addEventListener("click", openMap);
+  document.getElementById("mapModalClose").addEventListener("click", () => modal.classList.remove("open"));
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
 </script>
 </body>
 </html>
