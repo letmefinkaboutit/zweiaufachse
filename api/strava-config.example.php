@@ -12,5 +12,5 @@ return [
 
     // Ab diesem Tag zaehlen Fahrten zur Tour (davor = "vergangene Touren").
     // Gleicher Wert wie tripMeta.startDate in src/data/mockData.js.
-    'trip_start'    => '2026-07-20',
+    'trip_start'    => '2026-07-19',
 ];

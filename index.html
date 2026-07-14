@@ -624,6 +624,7 @@
 <!-- HUD -->
 <div class="hud-top">
   <span class="chip chip--live" id="chipState"><span class="dot"></span><span id="chipStateText">Verbinde…</span></span>
+  <span class="chip" id="chipDay" hidden></span>
   <span class="chip" id="chipPlace" hidden></span>
   <span class="chip" id="chipWeather" hidden></span>
   <span class="chip" id="chipFresh" hidden></span>
@@ -742,6 +743,20 @@
   const $ = (id) => document.getElementById(id);
   const fmtKm = (km) => (km == null ? "–" : `${Math.round(km).toLocaleString("de-DE")} km`);
 
+  // Tage bis zur Abfahrt (negativ/0 = die Reise laeuft)
+  function daysUntilStart() {
+    if (!tripMeta.startDate) return null;
+    const start = new Date(`${tripMeta.startDate}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((start - today) / 86_400_000);
+  }
+
+  function startDateLabel() {
+    return new Date(`${tripMeta.startDate}T00:00:00`)
+      .toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  }
+
   // ── Landes-Presets auf die Szene anwenden ──
   let appliedCountry = null;
 
@@ -849,11 +864,24 @@
     document.body.classList.toggle("mode-pause", mode === "pause");
     document.body.classList.toggle("mode-stale", mode === "stale");
 
+    // Vor der Abfahrt hat der Ruhe-Zustand eine eigene Botschaft
+    const until = daysUntilStart();
     $("pauseText").textContent =
-      mode === "stale" ? "Gerade kein GPS-Signal" : "Gerade wird Pause gemacht";
+      until != null && until > 0
+        ? `Die Reise beginnt am ${startDateLabel()}`
+        : mode === "stale"
+          ? "Gerade kein GPS-Signal"
+          : "Gerade wird Pause gemacht";
 
     const chip = $("chipState");
     chip.classList.toggle("chip--stale", mode === "stale");
+
+    // Vor der Abfahrt ist "Pause" irrefuehrend — sie sind schlicht startklar
+    if (until != null && until > 0 && mode !== "day") {
+      $("chipStateText").textContent = "startklar";
+      return;
+    }
+
     $("chipStateText").textContent =
       mode === "day" ? "in Bewegung"
       : mode === "pause" ? "Pause ☕"
@@ -1397,15 +1425,25 @@
   window.addEventListener("pagehide", () => provider.stop());
   window.addEventListener("pageshow", (event) => { if (event.persisted) window.location.reload(); });
 
-  // Reisetag als Titel, sobald das Startdatum gesetzt ist
-  if (tripMeta.startDate) {
-    const start = new Date(tripMeta.startDate);
-    start.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const day = Math.floor((today - start) / 86_400_000) + 1;
-    if (day >= 1) document.title = `Timo & Tino · Tag ${day}`;
+  // Vor der Abfahrt Countdown, danach Reisetag
+  function renderTripDay() {
+    const until = daysUntilStart();
+    if (until == null) return;
+
+    const chipDay = $("chipDay");
+    chipDay.hidden = false;
+
+    if (until > 0) {
+      chipDay.textContent = until === 1 ? "🚴 Abfahrt morgen" : `🚴 Abfahrt in ${until} Tagen`;
+      document.title = "Timo & Tino · bald geht's los";
+      return;
+    }
+
+    const day = -until + 1;
+    chipDay.textContent = `Tag ${day}`;
+    document.title = `Timo & Tino · Tag ${day}`;
   }
+  renderTripDay();
 </script>
 </body>
 </html>
