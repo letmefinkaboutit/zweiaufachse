@@ -40,18 +40,20 @@ CORS-Problem, und die Tageskilometer werden serverseitig berechnet und gecacht.
 - Geraet mit dieser uniqueId anlegen (falls es sich nicht selbst meldet).
 - API-Token erzeugen: *Einstellungen → Benutzer → eigenen Benutzer öffnen → Token*.
 
-### c) Auf dem Webspace
-`api/traccar-config.php` anlegen (Vorlage: `api/traccar-config.example.php`)
-und **manuell per FTP** hochladen (gitignored, der Deploy loescht sie nicht):
+### c) Token als GitHub-Secret hinterlegen
+Kein FTP noetig — der Deploy-Workflow schreibt `api/traccar-config.php`
+selbst aus den Secrets (die Datei ist gitignored, das Secret landet nie im Repo).
 
-```php
-return [
-    'base_url' => 'https://server.traccar.org/api',
-    'auth'     => ['mode' => 'bearer', 'token' => 'DEIN-TOKEN'],
-    'device'   => ['unique_id' => 'DEINE-GERAETE-KENNUNG'],
-    'timezone' => 'Europe/Berlin',
-];
-```
+*GitHub → Settings → Secrets and variables → Actions → New repository secret:*
+
+| Secret | Wert |
+|---|---|
+| `TRACCAR_TOKEN` | der API-Token aus Traccar Cloud |
+| `TRACCAR_DEVICE_ID` | *(optional)* Geraete-Kennung, Default: `88031483` |
+
+Danach einmal deployen (Push auf `main` oder *Actions → Deploy Web App →
+Run workflow*). Fehlt das Secret, warnt der Workflow und die App bleibt im
+Mock-Modus — sie geht nie mit falschen Daten live.
 
 Test: `https://zweiaufachse.thefinks.de/api/traccar.php` muss
 `{"configured":true,"position":{…},"daily":{…}}` liefern.
@@ -83,18 +85,16 @@ Deshalb laeuft alles ueber `api/strava.php` auf dem Webspace.
    ```
 4. Aus der Antwort das **`refresh_token`** notieren (das laeuft nicht ab).
 
-### Auf dem Webspace
-`api/strava-config.php` anlegen (Vorlage: `api/strava-config.example.php`),
-Werte eintragen und **manuell per FTP** hochladen:
+### Als GitHub-Secrets hinterlegen
+Auch hier kein FTP — der Workflow erzeugt `api/strava-config.php` beim Deploy:
 
-```php
-return [
-    'client_id'     => '123456',
-    'client_secret' => '…',
-    'refresh_token' => '…',
-    'trip_start'    => '2026-07-19',  // = tripMeta.startDate
-];
-```
+| Secret | Wert |
+|---|---|
+| `STRAVA_CLIENT_ID` | Client ID der Strava-App |
+| `STRAVA_CLIENT_SECRET` | Client Secret |
+| `STRAVA_REFRESH_TOKEN` | der oben geholte Refresh-Token |
+
+`trip_start` setzt der Workflow automatisch auf **2026-07-19**.
 
 Test: `https://zweiaufachse.thefinks.de/api/strava.php` muss
 `{"configured":true,…}` liefern.

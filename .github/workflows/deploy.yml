@@ -29,6 +29,44 @@ jobs:
           test -f index.html
           test -f src/main.js
           find src -name "*.js" -print0 | xargs -0 -n1 node --check
+          if command -v php >/dev/null; then
+            find api bilderupload -name "*.php" -print0 | xargs -0 -n1 php -l
+          fi
+
+      # Zugangsdaten kommen aus GitHub-Secrets und werden beim Deploy in die
+      # Server-Configs geschrieben. Sie landen NIE im Repo (beide gitignored).
+      # Fehlt ein Secret, laeuft die App weiter im jeweiligen Fallback.
+      - name: Traccar-Config aus Secrets erzeugen
+        shell: bash
+        env:
+          TRACCAR_TOKEN: ${{ secrets.TRACCAR_TOKEN }}
+          TRACCAR_DEVICE_ID: ${{ secrets.TRACCAR_DEVICE_ID }}
+        run: |
+          if [ -z "$TRACCAR_TOKEN" ]; then
+            echo "::warning::TRACCAR_TOKEN fehlt — App bleibt im Mock-Modus (GPS nicht verbunden)."
+            exit 0
+          fi
+          DEVICE_ID="${TRACCAR_DEVICE_ID:-88031483}"
+          printf "<?php\nreturn [\n    'base_url' => 'https://server.traccar.org/api',\n    'auth'     => ['mode' => 'bearer', 'token' => '%s'],\n    'device'   => ['unique_id' => '%s'],\n    'timezone' => 'Europe/Berlin',\n];\n" \
+            "$TRACCAR_TOKEN" "$DEVICE_ID" > api/traccar-config.php
+          php -l api/traccar-config.php
+          echo "Traccar-Config erzeugt (Geraet $DEVICE_ID)"
+
+      - name: Strava-Config aus Secrets erzeugen
+        shell: bash
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$STRAVA_CLIENT_ID" ] || [ -z "$STRAVA_REFRESH_TOKEN" ]; then
+            echo "::warning::Strava-Secrets fehlen — Chip zeigt 'noch nicht verbunden'."
+            exit 0
+          fi
+          printf "<?php\nreturn [\n    'client_id'     => '%s',\n    'client_secret' => '%s',\n    'refresh_token' => '%s',\n    'trip_start'    => '2026-07-19',\n];\n" \
+            "$STRAVA_CLIENT_ID" "$STRAVA_CLIENT_SECRET" "$STRAVA_REFRESH_TOKEN" > api/strava-config.php
+          php -l api/strava-config.php
+          echo "Strava-Config erzeugt"
 
       # Temporaer bis Tour-Ende: sichtbare Versionsanzeige unten rechts,
       # damit klar ist, welcher Stand live ist.
