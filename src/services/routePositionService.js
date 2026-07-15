@@ -47,6 +47,20 @@ function formatCoordinate(latitude, longitude) {
 const MOVEMENT_THRESHOLD_KPH = 4;
 
 export function computeMovementStatus(currentLocation, previousLocation) {
+  if (Number.isFinite(currentLocation?.speedKph)) {
+    return {
+      isMoving: currentLocation.speedKph >= MOVEMENT_THRESHOLD_KPH,
+      speedKph: currentLocation.speedKph,
+    };
+  }
+
+  if (typeof currentLocation?.motion === "boolean") {
+    return {
+      isMoving: currentLocation.motion,
+      speedKph: null,
+    };
+  }
+
   if (!currentLocation?.timestamp || !previousLocation?.timestamp) {
     return { isMoving: null, speedKph: null };
   }
