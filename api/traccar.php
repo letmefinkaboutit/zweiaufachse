@@ -37,6 +37,33 @@ $cache = is_file(CACHE_FILE)
 
 $now = time();
 
+// Abkuehlphase nach Auth-Fehler: schlaegt Traccar den Login ab (401/403),
+// fassen wir den Server 15 Minuten lang NICHT mehr an. Sonst loest das
+// Dauer-Polling der App eine Brute-Force-Sperre des Kontos aus.
+const AUTH_COOLDOWN = 900;
+if (isset($cache['authFailedAt']) && ($now - $cache['authFailedAt']) < AUTH_COOLDOWN) {
+    $remaining = AUTH_COOLDOWN - ($now - $cache['authFailedAt']);
+    echo json_encode([
+        'configured' => false,
+        'reason'     => 'Login von Traccar abgelehnt. Neuer Versuch in '
+            . ceil($remaining / 60) . ' Min (Schutz vor Konto-Sperre).',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Merkt sich einen Auth-Fehler und beendet die Anfrage.
+function failAuth(array $cache, string $reason, string $raw = '', string $baseUrl = ''): void
+{
+    $cache['authFailedAt'] = time();
+    @file_put_contents(CACHE_FILE, json_encode($cache));
+
+    $payload = ['configured' => false, 'reason' => $reason];
+    if ($raw !== '')     $payload['traccarSays'] = mb_substr(strip_tags($raw), 0, 300);
+    if ($baseUrl !== '') $payload['baseUrl'] = $baseUrl;
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // Alles noch frisch? Dann direkt ausliefern.
 if (
     isset($cache['position'], $cache['positionAt'], $cache['daily'], $cache['dailyAt'])
@@ -96,39 +123,23 @@ function traccarRequest(string $path, array $config, string $mode): array
     ];
 }
 
-// Gibt Status UND Daten zurueck, damit "Token falsch" von "nichts gefunden"
-// unterschieden werden kann.
+// Genau EIN Auth-Versuch pro Aufruf mit dem konfigurierten Modus.
+// Kein Durchprobieren mehrerer Wege — das wuerde bei falschen Zugangsdaten
+// die Brute-Force-Sperre von Traccar ausloesen.
 function traccarCall(string $path, array $config): array
 {
     $auth = $config['auth'] ?? [];
+    $mode = $auth['mode'] ?? 'bearer';
 
-    // Bekannter Weg zuerst, sonst der Reihe nach durchprobieren
-    $modes = $GLOBALS['traccarAuthMode'] !== null
-        ? [$GLOBALS['traccarAuthMode']]
-        : (($auth['mode'] ?? '') === 'basic'
-            ? ['basic', 'bearer', 'query']
-            : ['bearer', 'query', 'basic']);
-
-    $last = ['status' => 0, 'body' => '', 'data' => null, 'mode' => 'none'];
-
-    foreach ($modes as $mode) {
-        if ($mode === 'basic' && empty($auth['email'])) {
-            continue;
-        }
-        if (($mode === 'bearer' || $mode === 'query') && empty($auth['token'])) {
-            continue;
-        }
-
-        $result = traccarRequest($path, $config, $mode);
-        $last = $result;
-
-        if ($result['status'] >= 200 && $result['status'] < 300) {
-            $GLOBALS['traccarAuthMode'] = $mode;
-            return $result;
-        }
+    // Basic braucht E-Mail, Bearer/Query brauchen einen Token
+    if ($mode === 'basic' && empty($auth['email'])) {
+        return ['status' => 0, 'body' => 'Basic-Auth ohne E-Mail konfiguriert', 'data' => null, 'mode' => $mode];
+    }
+    if (($mode === 'bearer' || $mode === 'query') && empty($auth['token'])) {
+        return ['status' => 0, 'body' => 'Token-Auth ohne Token konfiguriert', 'data' => null, 'mode' => $mode];
     }
 
-    return $last;
+    return traccarRequest($path, $config, $mode);
 }
 
 function traccarGet(string $path, array $config): ?array
@@ -156,21 +167,18 @@ if ($deviceId === null || ($now - $deviceAt) > DEVICE_TTL) {
     $devices = is_array($call['data']) ? $call['data'] : [];
 
     if ($call['status'] === 401 || $call['status'] === 403) {
-        echo json_encode([
-            'configured'  => false,
-            'reason'      => 'Traccar lehnt den Token ab (HTTP ' . $call['status'] . ') — TRACCAR_TOKEN pruefen.',
-            'traccarSays' => mb_substr(strip_tags($call['body']), 0, 300),
-            'baseUrl'     => rtrim((string) $config['base_url'], '/'),
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        failAuth(
+            $cache,
+            'Traccar lehnt die Anmeldung ab (HTTP ' . $call['status'] . ') — Zugangsdaten pruefen.',
+            $call['body'],
+            rtrim((string) $config['base_url'], '/')
+        );
     }
 
     if ($call['status'] < 200 || $call['status'] >= 300) {
         echo json_encode([
-            'configured' => false,
-            'reason'     => 'Traccar antwortete mit HTTP ' . $call['status']
-                . ' (Auth-Versuche: Bearer, ?token=, Basic).',
-            // Rohantwort hilft bei der Ursachensuche (enthaelt keinen Token)
+            'configured'  => false,
+            'reason'      => 'Traccar antwortete mit HTTP ' . $call['status'] . '.',
             'traccarSays' => mb_substr(strip_tags($call['body']), 0, 300),
             'baseUrl'     => rtrim((string) $config['base_url'], '/'),
         ], JSON_UNESCAPED_UNICODE);
@@ -294,6 +302,7 @@ if (($now - $dailyAt) >= DAILY_TTL) {
 }
 
 @file_put_contents(CACHE_FILE, json_encode([
+    // Erfolg: eine evtl. gesetzte Abkuehl-Markierung faellt hier weg
     'deviceId'   => $deviceId,
     'deviceName' => $deviceName,
     'deviceAt'   => $deviceAt,
