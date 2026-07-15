@@ -724,6 +724,7 @@
   const PHOTO_HOST = "https://zweiaufachse.thefinks.de";
   const STALE_MS = 2 * 60 * 60 * 1000;   // Fix aelter → "Signal veraltet"
   const PAUSE_MS = 10 * 60 * 1000;       // so lange still → Pause
+  const MOVEMENT_THRESHOLD_KPH = 4;       // darunter ist es Pause/Stand statt Fahrt
   const NIGHT_FROM = 21;
   const NIGHT_TO = 7;
 
@@ -842,6 +843,15 @@
 
     if (ageMs != null && ageMs > STALE_MS) return isNight ? "night" : "stale";
 
+    if (Number.isFinite(state.locationData.speedKph)) {
+      return state.locationData.speedKph >= MOVEMENT_THRESHOLD_KPH
+        ? "day"
+        : isNight ? "night" : "pause";
+    }
+
+    if (state.locationData.motion === false) return isNight ? "night" : "pause";
+    if (state.locationData.motion === true) return "day";
+
     const { isMoving } = computeMovementStatus(state.locationData, state.previousLocationData);
     if (isMoving) return "day";
 
@@ -912,11 +922,11 @@
     // Tempo: Traccar liefert speedKph, sonst aus zwei Fixes berechnet
     const movement = computeMovementStatus(loc, state.previousLocationData);
     const speed = loc?.speedKph ?? movement.speedKph;
-    const showSpeed = state.mode === "day" && speed != null;
+    const showSpeed = speed != null;
     $("dispSpeed").textContent = showSpeed ? String(Math.round(speed)) : "--";
 
     // Animationstempo folgt der echten Geschwindigkeit
-    if (showSpeed && speed > 1) {
+    if (state.mode === "day" && showSpeed && speed > 1) {
       const factor = Math.min(2.2, Math.max(0.5, 19 / speed));
       $("scene").style.setProperty("--wheel", `${(0.82 * factor).toFixed(2)}s`);
       $("scene").style.setProperty("--pedal", `${(0.42 * factor).toFixed(2)}s`);
