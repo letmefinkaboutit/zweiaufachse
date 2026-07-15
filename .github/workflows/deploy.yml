@@ -39,25 +39,27 @@ jobs:
       - name: Traccar-Config aus Secrets erzeugen
         shell: bash
         env:
-          TRACCAR_TOKEN: ${{ secrets.TRACCAR_TOKEN }}
           TRACCAR_EMAIL: ${{ secrets.TRACCAR_EMAIL }}
           TRACCAR_PASSWORD: ${{ secrets.TRACCAR_PASSWORD }}
           TRACCAR_DEVICE_ID: ${{ secrets.TRACCAR_DEVICE_ID }}
           TRACCAR_BASE_URL: ${{ secrets.TRACCAR_BASE_URL }}
         run: |
-          if [ -z "$TRACCAR_TOKEN" ] && [ -z "$TRACCAR_EMAIL" ]; then
-            echo "::warning::Weder TRACCAR_TOKEN noch TRACCAR_EMAIL gesetzt — App bleibt im Mock-Modus."
-            exit 0
-          fi
           DEVICE_ID="${TRACCAR_DEVICE_ID:-88031483}"
           BASE_URL="${TRACCAR_BASE_URL:-https://server.traccar.org/api}"
-          # E-Mail + Passwort (Basic Auth) funktioniert bei Traccar immer und
-          # wird bevorzugt, wenn gesetzt; sonst der API-Token.
-          if [ -n "$TRACCAR_EMAIL" ]; then MODE="basic"; else MODE="bearer"; fi
-          printf "<?php\nreturn [\n    'base_url' => '%s',\n    'auth'     => [\n        'mode'     => '%s',\n        'token'    => '%s',\n        'email'    => '%s',\n        'password' => '%s',\n    ],\n    'device'   => ['unique_id' => '%s'],\n    'timezone' => 'Europe/Berlin',\n];\n" \
-            "$BASE_URL" "$MODE" "$TRACCAR_TOKEN" "$TRACCAR_EMAIL" "$TRACCAR_PASSWORD" "$DEVICE_ID" > api/traccar-config.php
+          if [ -n "$TRACCAR_EMAIL" ] && [ -n "$TRACCAR_PASSWORD" ]; then
+            # E-Mail + Passwort (Basic Auth) — funktioniert bei Traccar zuverlaessig.
+            printf "<?php\nreturn [\n    'base_url' => '%s',\n    'auth'     => ['mode' => 'basic', 'email' => '%s', 'password' => '%s', 'token' => ''],\n    'device'   => ['unique_id' => '%s'],\n    'timezone' => 'Europe/Berlin',\n];\n" \
+              "$BASE_URL" "$TRACCAR_EMAIL" "$TRACCAR_PASSWORD" "$DEVICE_ID" > api/traccar-config.php
+            echo "Traccar-Config erzeugt (Basic Auth, Geraet $DEVICE_ID, Server $BASE_URL)"
+          else
+            # Keine gueltigen Zugangsdaten: stumme Config, die Traccar NICHT
+            # kontaktiert (kein Token-Haemmern → keine Konto-Sperre). Ueberschreibt
+            # eine evtl. vorhandene alte Config auf dem Server.
+            printf "<?php\nreturn [\n    'base_url' => '%s',\n    'auth'     => ['mode' => 'disabled', 'email' => '', 'password' => '', 'token' => ''],\n    'device'   => ['unique_id' => '%s'],\n    'timezone' => 'Europe/Berlin',\n];\n" \
+              "$BASE_URL" "$DEVICE_ID" > api/traccar-config.php
+            echo "::warning::TRACCAR_EMAIL/PASSWORD fehlen — Traccar deaktiviert (stumme Config, kein Login-Versuch)."
+          fi
           php -l api/traccar-config.php
-          echo "Traccar-Config erzeugt (Auth: $MODE, Geraet $DEVICE_ID, Server $BASE_URL)"
 
       - name: Strava-Config aus Secrets erzeugen
         shell: bash

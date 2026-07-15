@@ -31,6 +31,19 @@ if (!is_file(CONFIG_FILE)) {
 $config = require CONFIG_FILE;
 $baseUrl = rtrim((string) ($config['base_url'] ?? ''), '/');
 
+// Sicherung: ohne gueltige Zugangsdaten wird Traccar NICHT angefasst.
+$authMode = $config['auth']['mode'] ?? '';
+$hasCreds = ($authMode === 'basic' && !empty($config['auth']['email']))
+    || (($authMode === 'bearer' || $authMode === 'query') && !empty($config['auth']['token']));
+
+if (!$hasCreds) {
+    echo json_encode([
+        'configured' => false,
+        'reason'     => 'Traccar-Zugangsdaten fehlen (TRACCAR_EMAIL/PASSWORD als Secret setzen).',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $cache = is_file(CACHE_FILE)
     ? (json_decode((string) @file_get_contents(CACHE_FILE), true) ?: [])
     : [];
