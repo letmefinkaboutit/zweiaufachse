@@ -12,19 +12,43 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="T&T Tour" />
+<script>
+  (() => {
+    let frame = 0;
+
+    function syncViewportHeight() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
+        document.documentElement.style.setProperty("--app-height", `${height}px`);
+        document.documentElement.classList.toggle("compact-height", height < 740);
+        document.documentElement.classList.toggle("very-compact-height", height < 640);
+      });
+    }
+
+    syncViewportHeight();
+    window.addEventListener("resize", syncViewportHeight, { passive: true });
+    window.addEventListener("orientationchange", syncViewportHeight, { passive: true });
+    window.addEventListener("pageshow", syncViewportHeight, { passive: true });
+    window.visualViewport?.addEventListener("resize", syncViewportHeight, { passive: true });
+  })();
+</script>
 <link rel="stylesheet" href="./src/vendor/leaflet/leaflet.css" />
 <link rel="stylesheet" href="./src/styles/app.css" />
 <script src="./src/vendor/leaflet/leaflet.js" defer></script>
 <style>
   * { margin: 0; box-sizing: border-box; }
-  html { height: 100%; }
+  html { width: 100%; height: 100%; overflow: hidden; }
   body {
     font-family: "Avenir Next", "Trebuchet MS", sans-serif;
     color: #1f2a2f;
     background:
       radial-gradient(circle at top left, rgba(235, 143, 52, 0.18), transparent 32%),
       linear-gradient(180deg, #fff9f0 0%, #f7f1e7 48%, #f2efe8 100%);
-    height: 100dvh;
+    width: 100%;
+    height: var(--app-height, 100dvh);
+    min-height: 0;
+    max-height: var(--app-height, 100dvh);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -423,6 +447,39 @@
     .health-metrics { grid-template-columns: repeat(2, 1fr); }
     .health-metric { min-height: 78px; }
   }
+  @media (max-width: 380px) {
+    .health-tile__meta, .health-tile__meta span { font-size: 7px; }
+    .health-tile__live::before { display: none; }
+  }
+  @media (max-width: 340px) {
+    #healthSub { display: none; }
+    .health-tile__meta { justify-content: flex-start; }
+  }
+  html.compact-height .hud-top { top: calc(6px + env(safe-area-inset-top)); gap: 4px; padding-inline: 8px; }
+  html.compact-height .chip { padding: 5px 9px; font-size: 11px; }
+  html.compact-height .moment-stage { top: calc(50px + env(safe-area-inset-top)); }
+  html.compact-height .minimap { right: 8px; bottom: 9px; width: 88px; height: 88px; border-radius: 12px; }
+  html.compact-height .scene-ctrl { left: 8px; bottom: 9px; }
+  html.compact-height .tour-progress { height: 14px; margin: 5px 8px 4px; }
+  html.compact-height .boxes { gap: 5px; padding: 0 8px 5px; }
+  html.compact-height .box { padding: 5px 7px 4px; border-radius: 10px; }
+  html.compact-height .box__more { right: 5px; top: 5px; }
+  html.compact-height .health-tile__value strong { font-size: 16px; }
+  html.compact-height .health-tile__bar { margin-top: 3px; }
+  html.compact-height .health-tile__meta { margin-top: 2px; }
+  html.compact-height .thumb-stack { height: 34px; margin-top: 1px; }
+  html.compact-height .thumb-stack img { width: 39px; height: 33px; }
+  html.compact-height .thumb-stack img:nth-child(2) { left: 22px; }
+  html.compact-height .thumb-stack img:nth-child(3) { left: 44px; }
+  html.compact-height .poi-row { margin-top: 1px; font-size: 9px; }
+  html.very-compact-height .chip { padding: 4px 7px; font-size: 10.5px; }
+  html.very-compact-height .minimap { width: 78px; height: 78px; }
+  html.very-compact-height .tour-progress { height: 12px; margin-block: 3px; }
+  html.very-compact-height .boxes { padding-bottom: 3px; }
+  html.very-compact-height .thumb-stack { height: 30px; }
+  html.very-compact-height .thumb-stack img { width: 35px; height: 29px; }
+  html.very-compact-height .box span { font-size: 8px; }
+  html.very-compact-height .poi-row:nth-child(n+3) { display: none; }
   #bigmap { width: 100%; height: min(64vh, 560px); border-radius: 14px; }
   .map-modal__card { padding: 12px; }
 
