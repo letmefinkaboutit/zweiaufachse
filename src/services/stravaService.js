@@ -9,6 +9,7 @@ const EMPTY = {
   configured: false,
   totals: null,
   tripDays: {},
+  tripTours: [],
   pastTours: [],
 };
 
@@ -28,6 +29,7 @@ export async function fetchStravaSummary() {
       configured: true,
       totals: data.totals ?? null,
       tripDays: data.tripDays ?? {},
+      tripTours: data.tripTours ?? [],
       pastTours: data.pastTours ?? [],
       updatedAt: data.updatedAt ?? null,
     };

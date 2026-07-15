@@ -14,7 +14,7 @@ function localDateKey(offsetDays = 0) {
 
 export function startTourStatsService({ onUpdate }) {
   let traccar = { todayKm: null, yesterdayKm: null };
-  let strava = { configured: false, tripDays: {}, totals: null, pastTours: [] };
+  let strava = { configured: false, tripDays: {}, tripTours: [], totals: null, pastTours: [] };
 
   function emit() {
     const today = localDateKey(0);

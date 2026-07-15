@@ -9,7 +9,7 @@
 //   3. Diese Datei per FTP hochladen (config bleibt gitignored)
 //
 // Antwort:
-//   { "configured": bool, "totals": {...}, "tripDays": {...}, "pastTours": [...] }
+//   { "configured": bool, "totals": {...}, "tripDays": {...}, "tripTours": [...], "pastTours": [...] }
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -130,6 +130,7 @@ $totals = [
 $hrSum = 0.0;
 $hrCount = 0;
 $tripDays  = [];
+$tripTours = [];
 $pastTours = [];
 
 foreach ($activities as $activity) {
@@ -140,6 +141,8 @@ foreach ($activities as $activity) {
     $startLocal = substr((string) ($activity['start_date_local'] ?? ''), 0, 10);
     $distanceKm = ((float) ($activity['distance'] ?? 0)) / 1000;
     $elevationM = (float) ($activity['total_elevation_gain'] ?? 0);
+    $movingTime = (int) ($activity['moving_time'] ?? 0);
+    $elapsedTime = (int) ($activity['elapsed_time'] ?? 0);
     // kilojoules ~ kcal bei Radfahren (Wirkungsgrad ~24 % hebt sich raus)
     $calories   = (float) ($activity['kilojoules'] ?? 0);
     $avgHr      = isset($activity['average_heartrate']) ? (float) $activity['average_heartrate'] : null;
@@ -162,17 +165,51 @@ foreach ($activities as $activity) {
 
     if ($isTripRide) {
         if (!isset($tripDays[$startLocal])) {
-            $tripDays[$startLocal] = ['distanceKm' => 0.0, 'elevationM' => 0.0, 'calories' => 0.0];
+            $tripDays[$startLocal] = [
+                'distanceKm' => 0.0,
+                'elevationM' => 0.0,
+                'calories'   => 0.0,
+                'movingTime' => 0,
+                'elapsedTime'=> 0,
+                'hrSum'      => 0.0,
+                'hrWeight'   => 0,
+                'maxHeartrate' => null,
+                'rides'      => 0,
+            ];
         }
         $tripDays[$startLocal]['distanceKm'] += $distanceKm;
         $tripDays[$startLocal]['elevationM'] += $elevationM;
         $tripDays[$startLocal]['calories']   += $calories;
+        $tripDays[$startLocal]['movingTime'] += $movingTime;
+        $tripDays[$startLocal]['elapsedTime'] += $elapsedTime;
+        $tripDays[$startLocal]['rides']++;
+        if ($avgHr !== null) {
+            $weight = max(1, $movingTime);
+            $tripDays[$startLocal]['hrSum'] += $avgHr * $weight;
+            $tripDays[$startLocal]['hrWeight'] += $weight;
+        }
+        if ($maxHr !== null) {
+            $tripDays[$startLocal]['maxHeartrate'] = max($tripDays[$startLocal]['maxHeartrate'] ?? 0, $maxHr);
+        }
+
+        $tripTours[] = [
+            'name'        => (string) ($activity['name'] ?? 'Tour'),
+            'date'        => $startLocal,
+            'distanceKm'  => round($distanceKm, 1),
+            'elevationM'  => round($elevationM),
+            'movingTime'  => $movingTime,
+            'elapsedTime' => $elapsedTime,
+            'calories'    => round($calories),
+            'avgHeartrate'=> $avgHr !== null ? round($avgHr) : null,
+            'maxHeartrate'=> $maxHr !== null ? round($maxHr) : null,
+        ];
     } else {
         $pastTours[] = [
             'name'       => (string) ($activity['name'] ?? 'Tour'),
             'date'       => $startLocal,
             'distanceKm' => round($distanceKm, 1),
             'elevationM' => round($elevationM),
+            'movingTime' => $movingTime,
         ];
     }
 }
@@ -190,18 +227,25 @@ $pastTours = array_slice($pastTours, 0, 20);
 
 foreach ($tripDays as $day => $values) {
     $tripDays[$day] = [
-        'distanceKm' => round($values['distanceKm'], 1),
-        'elevationM' => round($values['elevationM']),
-        'calories'   => round($values['calories']),
+        'distanceKm'   => round($values['distanceKm'], 1),
+        'elevationM'   => round($values['elevationM']),
+        'calories'     => round($values['calories']),
+        'movingTime'   => $values['movingTime'],
+        'elapsedTime'  => $values['elapsedTime'],
+        'avgHeartrate' => $values['hrWeight'] > 0 ? round($values['hrSum'] / $values['hrWeight']) : null,
+        'maxHeartrate' => $values['maxHeartrate'] !== null ? round($values['maxHeartrate']) : null,
+        'rides'        => $values['rides'],
     ];
 }
 krsort($tripDays);
+usort($tripTours, fn($a, $b) => strcmp($b['date'], $a['date']));
 
 $payload = json_encode([
     'configured' => true,
     'updatedAt'  => gmdate('c'),
     'totals'     => $totals,
     'tripDays'   => $tripDays,
+    'tripTours'  => $tripTours,
     'pastTours'  => $pastTours,
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

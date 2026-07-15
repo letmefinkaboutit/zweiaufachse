@@ -72,13 +72,15 @@ jobs:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          STRAVA_TRIP_START: ${{ secrets.STRAVA_TRIP_START }}
         run: |
-          if [ -z "$STRAVA_CLIENT_ID" ] || [ -z "$STRAVA_REFRESH_TOKEN" ]; then
+          if [ -z "$STRAVA_CLIENT_ID" ] || [ -z "$STRAVA_CLIENT_SECRET" ] || [ -z "$STRAVA_REFRESH_TOKEN" ]; then
             echo "::warning::Strava-Secrets fehlen — Chip zeigt 'noch nicht verbunden'."
             exit 0
           fi
-          printf "<?php\nreturn [\n    'client_id'     => '%s',\n    'client_secret' => '%s',\n    'refresh_token' => '%s',\n    'trip_start'    => '2026-07-19',\n];\n" \
-            "$STRAVA_CLIENT_ID" "$STRAVA_CLIENT_SECRET" "$STRAVA_REFRESH_TOKEN" > api/strava-config.php
+          TRIP_START="${STRAVA_TRIP_START:-2026-07-19}"
+          printf "<?php\nreturn [\n    'client_id'     => '%s',\n    'client_secret' => '%s',\n    'refresh_token' => '%s',\n    'trip_start'    => '%s',\n];\n" \
+            "$STRAVA_CLIENT_ID" "$STRAVA_CLIENT_SECRET" "$STRAVA_REFRESH_TOKEN" "$TRIP_START" > api/strava-config.php
           php -l api/strava-config.php
           echo "Strava-Config erzeugt"
 

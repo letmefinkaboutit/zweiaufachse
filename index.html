@@ -301,6 +301,26 @@
   }
   .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; cursor: pointer; }
+  .health-summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;
+  }
+  .health-stat {
+    background: rgba(12, 107, 88, 0.08); border: 1px solid rgba(12, 107, 88, 0.15);
+    border-radius: 12px; padding: 9px 10px;
+  }
+  .health-stat span {
+    display: block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #58656b; margin-bottom: 3px;
+  }
+  .health-stat strong {
+    display: block; font-size: 18px; line-height: 1.05; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .health-stat small { display: block; margin-top: 3px; font-size: 10.5px; color: #58656b; font-weight: 700; }
+  .health-note {
+    border-left: 3px solid #eb8f34; padding: 6px 0 6px 10px; margin-bottom: 12px;
+    font-size: 12px; line-height: 1.35; color: #3d4a50; font-weight: 650;
+  }
   .health-list div {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 9px 2px; border-bottom: 1px solid rgba(31, 42, 47, 0.07);
@@ -315,9 +335,13 @@
   }
   .tour-list b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .tour-list em { font-style: normal; color: #58656b; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .tour-list small { display: block; color: #718087; font-weight: 650; margin-top: 2px; }
   .setup-hint {
     background: rgba(235, 143, 52, 0.1); border: 1px solid rgba(235, 143, 52, 0.3);
     border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: #7a5a2f; font-weight: 600;
+  }
+  @media (max-width: 420px) {
+    .health-summary { grid-template-columns: 1fr; }
   }
   #bigmap { width: 100%; height: min(64vh, 560px); border-radius: 14px; }
   .map-modal__card { padding: 12px; }
@@ -1052,51 +1076,131 @@
   }
 
   // ── Strava-Box + Popup ──
+  function fmtHm(meters) {
+    return meters == null ? "–" : `${Math.round(meters).toLocaleString("de-DE")} hm`;
+  }
+
+  function fmtHours(seconds) {
+    if (!seconds) return "–";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.round((seconds % 3600) / 60);
+    return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")} h` : `${minutes} min`;
+  }
+
+  function fmtDateShort(dateKey) {
+    return new Date(`${dateKey}T12:00:00`)
+      .toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function sumTripDays(entries) {
+    return entries.reduce((acc, [, day]) => {
+      acc.distanceKm += day.distanceKm ?? 0;
+      acc.elevationM += day.elevationM ?? 0;
+      acc.calories += day.calories ?? 0;
+      acc.movingTime += day.movingTime ?? 0;
+      acc.rides += day.rides ?? 0;
+      if (day.avgHeartrate != null) {
+        const weight = Math.max(1, day.movingTime ?? 1);
+        acc.hrSum += day.avgHeartrate * weight;
+        acc.hrWeight += weight;
+      }
+      if (day.maxHeartrate != null) acc.maxHeartrate = Math.max(acc.maxHeartrate ?? 0, day.maxHeartrate);
+      return acc;
+    }, {
+      distanceKm: 0,
+      elevationM: 0,
+      calories: 0,
+      movingTime: 0,
+      rides: 0,
+      hrSum: 0,
+      hrWeight: 0,
+      maxHeartrate: null,
+    });
+  }
+
   function renderStrava() {
     const strava = state.stats.strava ?? {};
-    const totals = strava.totals;
 
-    if (!strava.configured || !totals) {
+    if (!strava.configured) {
       $("healthLabel").textContent = "Strava";
       $("healthValue").textContent = "–";
       $("healthSub").textContent = "noch nicht verbunden";
       $("healthSheetSub").textContent = "Strava ist noch nicht eingerichtet";
       $("healthContent").innerHTML = `
         <div class="setup-hint">
-          Sobald Strava verbunden ist, erscheinen hier Gesamtdistanz, Höhenmeter,
-          Kalorien, Puls und die Liste der vergangenen Touren.<br><br>
-          Einrichtung: <strong>docs/strava-setup.md</strong>
+          Sobald Strava verbunden ist, erscheinen hier die abgeschlossenen Etappen:
+          Distanz, Höhenmeter, Fahrzeit, Kalorien und Puls. Der aktuelle Tag bleibt
+          live aus Traccar.<br><br>
+          ${strava.reason ? `<strong>${escapeHtml(strava.reason)}</strong><br><br>` : ""}
+          Benötigte Secrets: <strong>STRAVA_CLIENT_ID</strong>,
+          <strong>STRAVA_CLIENT_SECRET</strong>, <strong>STRAVA_REFRESH_TOKEN</strong>.
         </div>`;
       return;
     }
 
-    $("healthLabel").textContent = "Strava gesamt";
-    $("healthValue").textContent = fmtKm(totals.distanceKm);
-    $("healthSub").textContent = `${totals.rides} Fahrten · ${Math.round(totals.elevationM).toLocaleString("de-DE")} hm`;
-    $("healthSheetSub").textContent = `${totals.rides} Fahrten aufgezeichnet`;
+    const today = todayKeyForRiders();
+    const tripEntries = Object.entries(strava.tripDays ?? {}).sort(([a], [b]) => b.localeCompare(a));
+    const completedEntries = tripEntries.filter(([day]) => day < today);
+    const completed = sumTripDays(completedEntries);
+    const todayKm = state.stats.sources?.today === "traccar" ? state.stats.todayKm : null;
+    const totalKm = completed.distanceKm + (todayKm ?? 0);
+    const avgHr = completed.hrWeight > 0 ? Math.round(completed.hrSum / completed.hrWeight) : null;
+
+    $("healthLabel").textContent = "Tour bisher";
+    $("healthValue").textContent = fmtKm(totalKm);
+    $("healthSub").textContent = `${completedEntries.length} Etappen · heute ${todayKm != null ? Math.round(todayKm) + " km" : "live"}`;
+    $("healthSheetSub").textContent = `Abgeschlossene Tage aus Strava, aktueller Tag aus Traccar`;
 
     const rows = [
-      ["Distanz gesamt", fmtKm(totals.distanceKm)],
-      ["Höhenmeter", `${Math.round(totals.elevationM).toLocaleString("de-DE")} hm`],
-      totals.calories ? ["Kalorien", `${Math.round(totals.calories).toLocaleString("de-DE")} kcal`] : null,
-      totals.avgHeartrate ? ["Ø Herzfrequenz", `${Math.round(totals.avgHeartrate)} bpm`] : null,
-      totals.maxHeartrate ? ["Max. Herzfrequenz", `${Math.round(totals.maxHeartrate)} bpm`] : null,
-      ["Fahrten", String(totals.rides)],
+      ["Strava-Etappen", String(completedEntries.length)],
+      ["Strava-Distanz", fmtKm(completed.distanceKm)],
+      ["Höhenmeter", fmtHm(completed.elevationM)],
+      ["Fahrzeit", fmtHours(completed.movingTime)],
+      completed.calories ? ["Kalorien", `${Math.round(completed.calories).toLocaleString("de-DE")} kcal`] : null,
+      avgHr ? ["Ø Puls", `${avgHr} bpm`] : null,
+      completed.maxHeartrate ? ["Max. Puls", `${completed.maxHeartrate} bpm`] : null,
     ].filter(Boolean);
 
-    const tours = (strava.pastTours ?? []).slice(0, 12);
+    const tours = (strava.tripTours ?? [])
+      .filter((tour) => tour.date < today)
+      .slice(0, 12);
 
     $("healthContent").innerHTML = `
+      <div class="health-summary">
+        <div class="health-stat"><span>Heute</span><strong>${todayKm != null ? fmtKm(todayKm) : "live"}</strong><small>Traccar</small></div>
+        <div class="health-stat"><span>Abgeschlossen</span><strong>${fmtKm(completed.distanceKm)}</strong><small>Strava</small></div>
+        <div class="health-stat"><span>Tour bisher</span><strong>${fmtKm(totalKm)}</strong><small>kombiniert</small></div>
+      </div>
+      <p class="health-note">Aktueller Tag: Live-Distanz von Traccar. Vergangene Tage: abgeschlossene Strava-Aktivitäten.</p>
       <div class="health-list">
         ${rows.map(([label, value]) => `<div>${label} <strong>${value}</strong></div>`).join("")}
       </div>
+      ${completedEntries.length ? `
+        <div class="tour-list">
+          <h4>Abgeschlossene Tage</h4>
+          ${completedEntries.map(([day, values]) => `
+            <div>
+              <b>${fmtDateShort(day)}</b>
+              <em>${fmtKm(values.distanceKm)} · ${fmtHm(values.elevationM)}</em>
+            </div>`).join("")}
+        </div>` : `
+        <div class="setup-hint">Noch keine abgeschlossene Strava-Etappe seit Tourstart. Sobald der erste Tag abgeschlossen und synchronisiert ist, erscheint er hier.</div>`}
       ${tours.length ? `
         <div class="tour-list">
-          <h4>Vergangene Touren</h4>
+          <h4>Aktivitäten</h4>
           ${tours.map((tour) => `
             <div>
-              <b>${tour.name}</b>
-              <em>${tour.distanceKm.toLocaleString("de-DE")} km · ${new Date(tour.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}</em>
+              <b>${escapeHtml(tour.name)}<small>${fmtDateShort(tour.date)} · ${fmtHours(tour.movingTime)}</small></b>
+              <em>${tour.distanceKm.toLocaleString("de-DE")} km</em>
             </div>`).join("")}
         </div>` : ""}
     `;
