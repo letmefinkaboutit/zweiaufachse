@@ -1075,6 +1075,16 @@
     );
   }
 
+  function renderStatsSurfaces() {
+    try {
+      renderScene();
+      renderTimeline();
+      renderStrava();
+    } catch (error) {
+      console.error("[StatsRender]", error);
+    }
+  }
+
   // ── Strava-Box + Popup ──
   function fmtHm(meters) {
     return meters == null ? "–" : `${Math.round(meters).toLocaleString("de-DE")} hm`;
@@ -1486,9 +1496,7 @@
   startTourStatsService({
     onUpdate(stats) {
       state.stats = stats;
-      renderScene();
-      renderTimeline();
-      renderStrava();
+      renderStatsSurfaces();
     },
   });
 
