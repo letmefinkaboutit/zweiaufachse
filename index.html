@@ -263,6 +263,31 @@
   .box strong { display: block; font-size: 14px; letter-spacing: -0.01em; margin-top: 1px; font-variant-numeric: tabular-nums; }
   .box small { display: block; font-size: 9.5px; color: #58656b; margin-top: 1px; font-weight: 600; }
   .box__more { position: absolute; right: 7px; top: 7px; font-size: 11px; color: #8a938f; font-style: normal; }
+  .health-tile { min-width: 0; overflow: hidden; }
+  .health-tile__value {
+    display: flex; align-items: baseline; gap: 3px; margin-top: 2px;
+    color: #0c6b58; white-space: nowrap;
+  }
+  .health-tile__value strong { display: inline; font-size: 18px; line-height: 1; margin: 0; }
+  .health-tile__value b { font-size: 9px; color: #58656b; }
+  .health-tile__bar {
+    display: flex; width: 100%; height: 4px; margin-top: 5px; overflow: hidden;
+    border-radius: 2px; background: rgba(31, 42, 47, 0.08);
+  }
+  .health-tile__bar i { display: block; height: 100%; transition: width 0.35s ease; }
+  .health-tile__bar-completed { background: #eb8f34; }
+  .health-tile__bar-today { background: #0c6b58; }
+  .health-tile__meta {
+    display: flex; align-items: center; justify-content: space-between; gap: 4px;
+    margin-top: 4px; color: #58656b; font-size: 8.5px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .health-tile__meta span { display: inline; color: inherit; font-size: inherit; letter-spacing: 0; text-transform: none; }
+  .health-tile__live { color: #0c6b58 !important; }
+  .health-tile__live::before {
+    content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 3px;
+    border-radius: 50%; background: currentColor; vertical-align: 1px;
+  }
   .poi-row { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; font-weight: 600; color: #3d4a50; margin-top: 2px; }
   .poi-row b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .poi-row em { font-style: normal; color: #58656b; flex-shrink: 0; }
@@ -301,47 +326,102 @@
   }
   .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; cursor: pointer; }
-  .health-summary {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;
+  .health-sheet__card { width: min(94vw, 600px); max-height: min(88vh, 780px); padding: 20px 18px 18px; }
+  .health-hero {
+    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(150px, 0.8fr); gap: 16px;
+    align-items: stretch; margin-bottom: 12px; padding: 16px;
+    border: 1px solid rgba(12, 107, 88, 0.15); border-radius: 8px;
+    background: linear-gradient(135deg, rgba(12, 107, 88, 0.1), rgba(255, 253, 248, 0.35));
   }
-  .health-stat {
-    background: rgba(12, 107, 88, 0.08); border: 1px solid rgba(12, 107, 88, 0.15);
-    border-radius: 12px; padding: 9px 10px;
+  .health-hero__eyebrow {
+    font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #0c6b58;
   }
-  .health-stat span {
-    display: block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #58656b; margin-bottom: 3px;
+  .health-hero__total { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+  .health-hero__total strong {
+    font-size: 38px; line-height: 1; color: #1f2a2f; font-variant-numeric: tabular-nums;
   }
-  .health-stat strong {
-    display: block; font-size: 18px; line-height: 1.05; letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
+  .health-hero__total span { font-size: 14px; font-weight: 800; color: #58656b; }
+  .health-hero__caption { margin-top: 5px; font-size: 11px; line-height: 1.3; color: #58656b; font-weight: 650; }
+  .health-source { align-self: center; }
+  .health-source__bar {
+    display: flex; height: 9px; overflow: hidden; border-radius: 5px;
+    background: rgba(31, 42, 47, 0.08);
   }
-  .health-stat small { display: block; margin-top: 3px; font-size: 10.5px; color: #58656b; font-weight: 700; }
-  .health-note {
-    border-left: 3px solid #eb8f34; padding: 6px 0 6px 10px; margin-bottom: 12px;
-    font-size: 12px; line-height: 1.35; color: #3d4a50; font-weight: 650;
+  .health-source__bar span { display: block; height: 100%; min-width: 0; transition: width 0.35s ease; }
+  .health-source__completed { background: #eb8f34; }
+  .health-source__today { background: #0c6b58; }
+  .health-source__labels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .health-source__labels div { min-width: 0; }
+  .health-source__labels span { display: block; font-size: 9px; color: #718087; font-weight: 750; }
+  .health-source__labels b { display: block; margin-top: 1px; font-size: 12px; color: #3d4a50; font-variant-numeric: tabular-nums; }
+  .health-source__labels div:last-child { text-align: right; }
+  .health-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .health-metric {
+    min-width: 0; min-height: 84px; padding: 10px;
+    border: 1px solid rgba(31, 42, 47, 0.08); border-top: 3px solid var(--metric-color);
+    border-radius: 7px; background: rgba(255, 255, 255, 0.48);
   }
-  .health-list div {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 9px 2px; border-bottom: 1px solid rgba(31, 42, 47, 0.07);
-    font-size: 13.5px; font-weight: 600; color: #3d4a50;
+  .health-metric__icon {
+    display: grid; place-items: center; width: 22px; height: 22px; margin-bottom: 7px;
+    border-radius: 50%; color: var(--metric-color); background: color-mix(in srgb, var(--metric-color) 12%, transparent);
+    font-size: 11px; font-weight: 900;
   }
-  .health-list div strong { font-size: 15px; font-variant-numeric: tabular-nums; }
-  .tour-list { margin-top: 14px; }
-  .tour-list h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #58656b; margin-bottom: 6px; }
-  .tour-list div {
-    display: flex; justify-content: space-between; gap: 10px; padding: 7px 2px;
-    border-bottom: 1px solid rgba(31, 42, 47, 0.05); font-size: 12.5px; color: #3d4a50;
+  .health-metric span { display: block; font-size: 9px; color: #718087; font-weight: 750; }
+  .health-metric strong {
+    display: block; margin-top: 2px; overflow-wrap: anywhere; font-size: 15px; line-height: 1.1;
+    color: #1f2a2f; font-variant-numeric: tabular-nums;
   }
-  .tour-list b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .tour-list em { font-style: normal; color: #58656b; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-  .tour-list small { display: block; color: #718087; font-weight: 650; margin-top: 2px; }
+  .health-metric small { display: block; margin-top: 3px; font-size: 8.5px; color: #718087; font-weight: 650; }
+  .health-section { margin-top: 16px; }
+  .health-section__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .health-section__head h4 { font-size: 12px; color: #1f2a2f; }
+  .health-section__head span { font-size: 10px; color: #718087; font-weight: 700; }
+  .stage-list { position: relative; padding-left: 17px; }
+  .stage-list::before {
+    content: ""; position: absolute; left: 4px; top: 13px; bottom: 13px; width: 2px;
+    background: rgba(12, 107, 88, 0.16);
+  }
+  .stage-item { position: relative; padding: 9px 0 10px 8px; border-bottom: 1px solid rgba(31, 42, 47, 0.07); }
+  .stage-item::before {
+    content: ""; position: absolute; left: -17px; top: 14px; width: 8px; height: 8px;
+    border: 2px solid #fffdf8; border-radius: 50%; background: #0c6b58; box-shadow: 0 0 0 1px rgba(12, 107, 88, 0.28);
+  }
+  .stage-item__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .stage-item__date { font-size: 12px; color: #3d4a50; font-weight: 800; }
+  .stage-item__distance { font-size: 15px; color: #1f2a2f; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stage-item__metrics { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 5px; }
+  .stage-item__metrics span { font-size: 10px; color: #718087; font-weight: 700; white-space: nowrap; }
+  .activity-list { border-top: 1px solid rgba(31, 42, 47, 0.07); }
+  .activity-item { border-bottom: 1px solid rgba(31, 42, 47, 0.07); }
+  .activity-item summary {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    padding: 10px 2px; cursor: pointer; list-style: none;
+  }
+  .activity-item summary::-webkit-details-marker { display: none; }
+  .activity-item summary::after { content: "+"; grid-column: 3; color: #718087; font-size: 16px; }
+  .activity-item[open] summary::after { content: "−"; }
+  .activity-item__name { min-width: 0; }
+  .activity-item__name b { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: #3d4a50; }
+  .activity-item__name small { display: block; margin-top: 2px; font-size: 9.5px; color: #718087; font-weight: 650; }
+  .activity-item__distance { font-size: 13px; color: #0c6b58; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .activity-item__details {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px;
+    padding: 0 2px 11px;
+  }
+  .activity-item__details span { font-size: 9px; color: #718087; font-weight: 700; }
+  .activity-item__details b { display: block; margin-top: 1px; font-size: 11px; color: #3d4a50; font-variant-numeric: tabular-nums; }
   .setup-hint {
     background: rgba(235, 143, 52, 0.1); border: 1px solid rgba(235, 143, 52, 0.3);
-    border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: #7a5a2f; font-weight: 600;
+    border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #7a5a2f; font-weight: 600;
   }
   @media (max-width: 420px) {
-    .health-summary { grid-template-columns: 1fr; }
+    .health-tile__meta { gap: 2px; font-size: 8px; }
+    .health-sheet__card { padding: 18px 14px 14px; }
+    .health-hero { grid-template-columns: 1fr; gap: 12px; padding: 13px; }
+    .health-hero__total strong { font-size: 34px; }
+    .health-metrics { grid-template-columns: repeat(2, 1fr); }
+    .health-metric { min-height: 78px; }
   }
   #bigmap { width: 100%; height: min(64vh, 560px); border-radius: 14px; }
   .map-modal__card { padding: 12px; }
@@ -666,10 +746,17 @@
 
 <!-- Boxen -->
 <section class="boxes" aria-label="Schnellzugriff">
-  <button class="box" id="boxHealth">
+  <button class="box health-tile" id="boxHealth">
     <span id="healthLabel">Strava</span>
-    <strong id="healthValue">–</strong>
-    <small id="healthSub">wird geladen…</small>
+    <div class="health-tile__value"><strong id="healthValue">–</strong><b>km</b></div>
+    <div class="health-tile__bar" aria-hidden="true">
+      <i class="health-tile__bar-completed" id="healthBarCompleted"></i>
+      <i class="health-tile__bar-today" id="healthBarToday"></i>
+    </div>
+    <div class="health-tile__meta">
+      <span id="healthSub">wird geladen…</span>
+      <span class="health-tile__live" id="healthToday">live</span>
+    </div>
     <em class="box__more">›</em>
   </button>
   <button class="box" id="boxAlbum">
@@ -685,9 +772,9 @@
 
 <!-- Popup: Strava -->
 <div class="sheet" id="healthSheet">
-  <div class="sheet__card">
+  <div class="sheet__card health-sheet__card">
     <button class="sheet__close" data-close aria-label="Schließen">✕</button>
-    <h3 class="sheet__title">Touren & Health</h3>
+    <h3 class="sheet__title">Tour in Zahlen</h3>
     <p class="sheet__sub" id="healthSheetSub">Strava</p>
     <div id="healthContent"></div>
   </div>
@@ -1092,9 +1179,22 @@
 
   function fmtHours(seconds) {
     if (!seconds) return "–";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.round((seconds % 3600) / 60);
+    const totalMinutes = Math.round(seconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
     return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")} h` : `${minutes} min`;
+  }
+
+  function fmtCalories(calories) {
+    return calories ? `${Math.round(calories).toLocaleString("de-DE")} kcal` : "–";
+  }
+
+  function fmtPulse(value) {
+    return value ? `${Math.round(value)} bpm` : "–";
+  }
+
+  function fmtDistanceNumber(km) {
+    return Math.round(km ?? 0).toLocaleString("de-DE");
   }
 
   function fmtDateShort(dateKey) {
@@ -1117,6 +1217,7 @@
       acc.elevationM += day.elevationM ?? 0;
       acc.calories += day.calories ?? 0;
       acc.movingTime += day.movingTime ?? 0;
+      acc.elapsedTime += day.elapsedTime ?? 0;
       acc.rides += day.rides ?? 0;
       if (day.avgHeartrate != null) {
         const weight = Math.max(1, day.movingTime ?? 1);
@@ -1130,6 +1231,7 @@
       elevationM: 0,
       calories: 0,
       movingTime: 0,
+      elapsedTime: 0,
       rides: 0,
       hrSum: 0,
       hrWeight: 0,
@@ -1144,6 +1246,10 @@
       $("healthLabel").textContent = "Strava";
       $("healthValue").textContent = "–";
       $("healthSub").textContent = "noch nicht verbunden";
+      $("healthToday").textContent = "offline";
+      $("healthToday").classList.remove("health-tile__live");
+      $("healthBarCompleted").style.width = "0";
+      $("healthBarToday").style.width = "0";
       $("healthSheetSub").textContent = "Strava ist noch nicht eingerichtet";
       $("healthContent").innerHTML = `
         <div class="setup-hint">
@@ -1164,55 +1270,98 @@
     const todayKm = state.stats.sources?.today === "traccar" ? state.stats.todayKm : null;
     const totalKm = completed.distanceKm + (todayKm ?? 0);
     const avgHr = completed.hrWeight > 0 ? Math.round(completed.hrSum / completed.hrWeight) : null;
+    const completedShare = totalKm > 0 ? completed.distanceKm / totalKm * 100 : 0;
+    const todayShare = totalKm > 0 ? (todayKm ?? 0) / totalKm * 100 : 0;
 
     $("healthLabel").textContent = "Tour bisher";
-    $("healthValue").textContent = fmtKm(totalKm);
-    $("healthSub").textContent = `${completedEntries.length} Etappen · heute ${todayKm != null ? Math.round(todayKm) + " km" : "live"}`;
-    $("healthSheetSub").textContent = `Abgeschlossene Tage aus Strava, aktueller Tag aus Traccar`;
-
-    const rows = [
-      ["Strava-Etappen", String(completedEntries.length)],
-      ["Strava-Distanz", fmtKm(completed.distanceKm)],
-      ["Höhenmeter", fmtHm(completed.elevationM)],
-      ["Fahrzeit", fmtHours(completed.movingTime)],
-      completed.calories ? ["Kalorien", `${Math.round(completed.calories).toLocaleString("de-DE")} kcal`] : null,
-      avgHr ? ["Ø Puls", `${avgHr} bpm`] : null,
-      completed.maxHeartrate ? ["Max. Puls", `${completed.maxHeartrate} bpm`] : null,
-    ].filter(Boolean);
+    $("healthValue").textContent = fmtDistanceNumber(totalKm);
+    $("healthSub").textContent = `${completedEntries.length} ${completedEntries.length === 1 ? "Etappe" : "Etappen"}`;
+    $("healthToday").textContent = todayKm != null ? `heute ${fmtDistanceNumber(todayKm)}` : "heute live";
+    $("healthToday").classList.add("health-tile__live");
+    $("healthBarCompleted").style.width = `${completedShare}%`;
+    $("healthBarToday").style.width = `${todayShare}%`;
+    $("healthSheetSub").textContent = `Heute live mit Traccar · abgeschlossene Tage aus Strava`;
 
     const tours = (strava.tripTours ?? [])
       .filter((tour) => tour.date < today)
       .slice(0, 12);
 
     $("healthContent").innerHTML = `
-      <div class="health-summary">
-        <div class="health-stat"><span>Heute</span><strong>${todayKm != null ? fmtKm(todayKm) : "live"}</strong><small>Traccar</small></div>
-        <div class="health-stat"><span>Abgeschlossen</span><strong>${fmtKm(completed.distanceKm)}</strong><small>Strava</small></div>
-        <div class="health-stat"><span>Tour bisher</span><strong>${fmtKm(totalKm)}</strong><small>kombiniert</small></div>
+      <div class="health-hero">
+        <div>
+          <span class="health-hero__eyebrow">Tour bisher</span>
+          <div class="health-hero__total"><strong>${fmtDistanceNumber(totalKm)}</strong><span>km</span></div>
+          <p class="health-hero__caption">${completedEntries.length} abgeschlossene ${completedEntries.length === 1 ? "Etappe" : "Etappen"} · ${completed.rides} ${completed.rides === 1 ? "Aktivität" : "Aktivitäten"}</p>
+        </div>
+        <div class="health-source">
+          <div class="health-source__bar" aria-label="Distanzanteile aus Strava und Traccar">
+            <span class="health-source__completed" style="width:${completedShare}%"></span>
+            <span class="health-source__today" style="width:${todayShare}%"></span>
+          </div>
+          <div class="health-source__labels">
+            <div><span>Strava · fertig</span><b>${fmtKm(completed.distanceKm)}</b></div>
+            <div><span>Traccar · heute</span><b>${todayKm != null ? fmtKm(todayKm) : "live"}</b></div>
+          </div>
+        </div>
       </div>
-      <p class="health-note">Aktueller Tag: Live-Distanz von Traccar. Vergangene Tage: abgeschlossene Strava-Aktivitäten.</p>
-      <div class="health-list">
-        ${rows.map(([label, value]) => `<div>${label} <strong>${value}</strong></div>`).join("")}
+      <div class="health-metrics" aria-label="Werte abgeschlossener Etappen">
+        <div class="health-metric" style="--metric-color:#eb8f34">
+          <i class="health-metric__icon">↗</i><span>Höhenmeter</span><strong>${fmtHm(completed.elevationM)}</strong><small>Strava gesamt</small>
+        </div>
+        <div class="health-metric" style="--metric-color:#397a9b">
+          <i class="health-metric__icon">h</i><span>Fahrzeit</span><strong>${fmtHours(completed.movingTime)}</strong><small>${completed.elapsedTime ? `${fmtHours(completed.elapsedTime)} verstrichen` : "in Bewegung"}</small>
+        </div>
+        <div class="health-metric" style="--metric-color:#b8732f">
+          <i class="health-metric__icon">k</i><span>Energie</span><strong>${fmtCalories(completed.calories)}</strong><small>Kalorien</small>
+        </div>
+        <div class="health-metric" style="--metric-color:#bd4e5b">
+          <i class="health-metric__icon">♥</i><span>Ø Puls</span><strong>${fmtPulse(avgHr)}</strong><small>max. ${fmtPulse(completed.maxHeartrate)}</small>
+        </div>
       </div>
       ${completedEntries.length ? `
-        <div class="tour-list">
-          <h4>Abgeschlossene Tage</h4>
-          ${completedEntries.map(([day, values]) => `
-            <div>
-              <b>${fmtDateShort(day)}</b>
-              <em>${fmtKm(values.distanceKm)} · ${fmtHm(values.elevationM)}</em>
-            </div>`).join("")}
-        </div>` : `
-        <div class="setup-hint">Noch keine abgeschlossene Strava-Etappe seit Tourstart. Sobald der erste Tag abgeschlossen und synchronisiert ist, erscheint er hier.</div>`}
+        <section class="health-section">
+          <div class="health-section__head"><h4>Etappen</h4><span>neueste zuerst</span></div>
+          <div class="stage-list">
+            ${completedEntries.map(([day, values]) => `
+              <article class="stage-item">
+                <div class="stage-item__head">
+                  <span class="stage-item__date">${fmtDateShort(day)}</span>
+                  <strong class="stage-item__distance">${fmtKm(values.distanceKm)}</strong>
+                </div>
+                <div class="stage-item__metrics">
+                  <span>↗ ${fmtHm(values.elevationM)}</span>
+                  <span>Fahrt ${fmtHours(values.movingTime)}</span>
+                  <span>Gesamt ${fmtHours(values.elapsedTime)}</span>
+                  <span>${fmtCalories(values.calories)}</span>
+                  <span>Ø ${fmtPulse(values.avgHeartrate)}</span>
+                  <span>max. ${fmtPulse(values.maxHeartrate)}</span>
+                  <span>${values.rides ?? 0} ${values.rides === 1 ? "Aktivität" : "Aktivitäten"}</span>
+                </div>
+              </article>`).join("")}
+          </div>
+        </section>` : `
+        <div class="setup-hint">Noch keine abgeschlossene Strava-Etappe seit Tourstart. Der erste abgeschlossene Tourtag erscheint hier automatisch.</div>`}
       ${tours.length ? `
-        <div class="tour-list">
-          <h4>Aktivitäten</h4>
-          ${tours.map((tour) => `
-            <div>
-              <b>${escapeHtml(tour.name)}<small>${fmtDateShort(tour.date)} · ${fmtHours(tour.movingTime)}</small></b>
-              <em>${tour.distanceKm.toLocaleString("de-DE")} km</em>
-            </div>`).join("")}
-        </div>` : ""}
+        <section class="health-section">
+          <div class="health-section__head"><h4>Aktivitäten</h4><span>${tours.length} Einträge</span></div>
+          <div class="activity-list">
+            ${tours.map((tour) => `
+              <details class="activity-item">
+                <summary>
+                  <span class="activity-item__name"><b>${escapeHtml(tour.name)}</b><small>${fmtDateShort(tour.date)}</small></span>
+                  <strong class="activity-item__distance">${fmtKm(tour.distanceKm)}</strong>
+                </summary>
+                <div class="activity-item__details">
+                  <span>Höhenmeter<b>${fmtHm(tour.elevationM)}</b></span>
+                  <span>Fahrzeit<b>${fmtHours(tour.movingTime)}</b></span>
+                  <span>Gesamtzeit<b>${fmtHours(tour.elapsedTime)}</b></span>
+                  <span>Kalorien<b>${fmtCalories(tour.calories)}</b></span>
+                  <span>Ø Puls<b>${fmtPulse(tour.avgHeartrate)}</b></span>
+                  <span>Max. Puls<b>${fmtPulse(tour.maxHeartrate)}</b></span>
+                </div>
+              </details>`).join("")}
+          </div>
+        </section>` : ""}
     `;
   }
 
