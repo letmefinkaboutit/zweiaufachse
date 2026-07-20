@@ -156,6 +156,7 @@ $pastTours = [];
 // was rausfaellt.
 $seenSportTypes = [];
 $skipped = [];
+$skippedCount = 0;
 $newest = [];
 
 foreach ($activities as $activity) {
@@ -184,7 +185,13 @@ foreach ($activities as $activity) {
     $isRide = in_array($sportType, RIDE_TYPES, true) || in_array($legacyType, RIDE_TYPES, true);
 
     if (!$isRide) {
-        $skipped[] = ['date' => $startLocal, 'type' => $legacyType, 'sport_type' => $sportType];
+        // Nur die juengsten paar zeigen — bei taeglichem HIIT-Training sind das
+        // sonst hunderte Zeilen, in denen die eine interessante untergeht.
+        // Die Gesamtzahl steht in 'sportarten'.
+        $skippedCount++;
+        if (count($skipped) < 12) {
+            $skipped[] = ['date' => $startLocal, 'type' => $legacyType, 'sport_type' => $sportType];
+        }
         continue;
     }
 
@@ -298,7 +305,8 @@ if ($debug) {
         'aktivitaetenGesamt' => count($activities),
         'davonRadfahrten'    => $totals['rides'],
         'sportarten'         => $seenSportTypes,
-        'verworfen'          => $skipped,
+        'verworfenGesamt'    => $skippedCount,
+        'verworfenNeueste'   => $skipped,
         'neueste'            => $newest,
         'tripTage'           => array_keys($tripDays),
         'akzeptierteTypen'   => RIDE_TYPES,
