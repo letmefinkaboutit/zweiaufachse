@@ -3,7 +3,9 @@
 // Liefert: Lifetime-Summen, Tageswerte der Tour, Liste vergangener Touren.
 
 const STRAVA_API_URL = "https://zweiaufachse.thefinks.de/api/strava.php";
-const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
+// 5 min, im Gleichschritt mit dem Traccar-Dienst und dem Server-Cache — sonst
+// summieren sich Cache-TTL und Poll-Intervall zur doppelten Wartezeit.
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 const EMPTY = {
   configured: false,

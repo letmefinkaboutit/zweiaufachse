@@ -31,7 +31,10 @@ const RIDE_TYPES = [
     'Handcycle',
 ];
 
-const CACHE_TTL_SECONDS = 900;          // 15 min — Strava erlaubt 100 Calls/15 min
+// 5 min — der Cache liegt serverseitig und gilt fuer alle Besucher, bestimmt
+// also allein den Verbrauch: 3 Refreshes/15 min x ACTIVITY_PAGES = ~9 Calls.
+// Strava erlaubt 100 Calls/15 min, da ist reichlich Luft.
+const CACHE_TTL_SECONDS = 300;
 const ACTIVITY_PAGES    = 3;            // bis zu 3 x 100 Aktivitaeten
 const CACHE_FILE        = __DIR__ . '/strava-cache.json';
 const TOKEN_FILE        = __DIR__ . '/strava-token.json';
