@@ -27,4 +27,10 @@ return [
 
     // Zeitzone fuer die Tages-Abgrenzung (Kalendertag der Fahrer)
     'timezone' => 'Europe/Berlin',
+
+    // Ab wann die tatsaechlich gefahrene Spur gesammelt wird. Frueher liegende
+    // Testfahrten bleiben damit aus der Karte.
+    'trip' => [
+        'start_date' => '2026-07-19',
+    ],
 ];

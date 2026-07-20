@@ -9,6 +9,11 @@
 //
 // Antwort:
 //   { "configured": bool, "position": {...}, "daily": { "todayKm":, "yesterdayKm": } }
+//
+// Mit ?track=1 kommt zusaetzlich die tatsaechlich gefahrene Spur seit Reisestart:
+//   "track": { "points": [[lat,lon], ...], "complete": bool, "pointCount": int }
+// Die ist um ein Vielfaches groesser als eine Position — deshalb nur auf
+// Anforderung, nicht bei jedem Positions-Poll.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -16,6 +21,18 @@ header('Access-Control-Allow-Origin: *');
 const POSITION_TTL = 20;    // s — Traccar-Client sendet eh nur alle 30-60 s
 const DAILY_TTL    = 300;   // s — Tageskilometer aendern sich langsam
 const DEVICE_TTL   = 3600;  // s — Geraete-ID aendert sich praktisch nie
+const TRACK_TTL    = 300;   // s — nur der laufende Tag waechst ueberhaupt noch
+
+// Ein Reisetag hat bei 30-60 s Sendetakt ~1500 Rohpunkte. Ueber drei Wochen
+// waeren das 30.000 — viel zu viel fuer eine Handy-Karte. Deshalb wird jeder
+// Tag einmal geholt, auf ~20 m Genauigkeit ausgeduennt und dauerhaft behalten:
+// vergangene Tage aendern sich nicht mehr.
+const TRACK_SIMPLIFY_M     = 20;
+const TRACK_MAX_ACCURACY_M = 150;   // Ausreisser (Tunnel, Zug) fliegen raus
+const TRACK_MAX_POINTS     = 6000;
+// Beim allerersten Aufruf fehlen alle Tage. Statt sie in einem Request zu
+// holen (Timeout), fuellt sich der Cache ueber mehrere Aufrufe auf.
+const TRACK_MAX_DAYS_PER_REQUEST = 3;
 
 const CACHE_FILE  = __DIR__ . '/traccar-cache.json';
 const CONFIG_FILE = __DIR__ . '/traccar-config.php';
@@ -77,18 +94,25 @@ function failAuth(array $cache, string $reason, string $raw = '', string $baseUr
     exit;
 }
 
+$wantTrack = isset($_GET['track']) && $_GET['track'] !== '0';
+
 // Alles noch frisch? Dann direkt ausliefern.
 if (
     isset($cache['position'], $cache['positionAt'], $cache['daily'], $cache['dailyAt'])
     && ($now - $cache['positionAt']) < POSITION_TTL
     && ($now - $cache['dailyAt']) < DAILY_TTL
+    && (!$wantTrack || (isset($cache['trackAt']) && ($now - $cache['trackAt']) < TRACK_TTL))
 ) {
-    echo json_encode([
+    $payload = [
         'configured' => true,
         'position'   => $cache['position'],
         'daily'      => $cache['daily'],
         'cached'     => true,
-    ], JSON_UNESCAPED_UNICODE);
+    ];
+    if ($wantTrack) {
+        $payload['track'] = trackPayload($cache['trackDays'] ?? [], $cache['trackComplete'] ?? false);
+    }
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -164,6 +188,155 @@ function traccarGet(string $path, array $config): ?array
     }
 
     return $result['data'];
+}
+
+// ── Gefahrene Spur ──────────────────────────────────────
+
+// Douglas-Peucker: behaelt die Form der Strecke, wirft aber alles weg, was
+// weniger als $epsilon von der Verbindungslinie abweicht. Iterativ statt
+// rekursiv — bei einem Tag am Stueck waere die Rekursion sonst tief.
+function trackSimplify(array $points, float $epsilonMeters): array
+{
+    $count = count($points);
+    if ($count < 3) {
+        return $points;
+    }
+
+    // Grad → Meter, lokal linearisiert. Auf Reiselaenge genau genug.
+    $latToM = 111320.0;
+    $lonToM = 111320.0 * max(0.1, cos(deg2rad($points[0][0])));
+
+    $keep = array_fill(0, $count, false);
+    $keep[0] = true;
+    $keep[$count - 1] = true;
+
+    $stack = [[0, $count - 1]];
+
+    while ($stack) {
+        [$first, $last] = array_pop($stack);
+        if ($last <= $first + 1) {
+            continue;
+        }
+
+        $ax = $points[$first][1] * $lonToM;
+        $ay = $points[$first][0] * $latToM;
+        $bx = $points[$last][1] * $lonToM;
+        $by = $points[$last][0] * $latToM;
+        $dx = $bx - $ax;
+        $dy = $by - $ay;
+        $lengthSquared = ($dx * $dx) + ($dy * $dy);
+
+        $maxDistance = -1.0;
+        $maxIndex = $first;
+
+        for ($i = $first + 1; $i < $last; $i++) {
+            $px = $points[$i][1] * $lonToM;
+            $py = $points[$i][0] * $latToM;
+
+            if ($lengthSquared <= 0.0) {
+                // Start und Ende identisch (Standzeit) → reiner Abstand zum Punkt
+                $distance = sqrt((($px - $ax) ** 2) + (($py - $ay) ** 2));
+            } else {
+                $t = ((($px - $ax) * $dx) + (($py - $ay) * $dy)) / $lengthSquared;
+                $t = max(0.0, min(1.0, $t));
+                $distance = sqrt(((($ax + ($t * $dx)) - $px) ** 2) + ((($ay + ($t * $dy)) - $py) ** 2));
+            }
+
+            if ($distance > $maxDistance) {
+                $maxDistance = $distance;
+                $maxIndex = $i;
+            }
+        }
+
+        if ($maxDistance > $epsilonMeters) {
+            $keep[$maxIndex] = true;
+            $stack[] = [$first, $maxIndex];
+            $stack[] = [$maxIndex, $last];
+        }
+    }
+
+    $result = [];
+    for ($i = 0; $i < $count; $i++) {
+        if ($keep[$i]) {
+            $result[] = $points[$i];
+        }
+    }
+
+    return $result;
+}
+
+// Tages-Spuren (Schluessel = Datum) in eine durchgehende Linie giessen.
+function trackPayload(array $days, bool $complete): array
+{
+    ksort($days);
+
+    $points = [];
+    foreach ($days as $dayPoints) {
+        foreach ($dayPoints as $point) {
+            $points[] = $point;
+        }
+    }
+
+    // Notbremse: sollte die Ausduennung mal nicht reichen, gleichmaessig kuerzen.
+    $total = count($points);
+    if ($total > TRACK_MAX_POINTS) {
+        $stride = (int) ceil($total / TRACK_MAX_POINTS);
+        $thinned = [];
+        for ($i = 0; $i < $total; $i += $stride) {
+            $thinned[] = $points[$i];
+        }
+        $thinned[] = $points[$total - 1];
+        $points = $thinned;
+    }
+
+    return [
+        'points'     => $points,
+        'pointCount' => count($points),
+        // false, solange noch Tage nachgeladen werden — die App zeichnet
+        // trotzdem schon, was da ist.
+        'complete'   => $complete,
+    ];
+}
+
+function fetchDayTrack(string $day, array $config, $deviceId, DateTimeZone $timezone): ?array
+{
+    $from = new DateTime($day . ' 00:00:00', $timezone);
+    $to   = (clone $from)->modify('+1 day');
+
+    $nowLocal = new DateTime('now', $timezone);
+    if ($from > $nowLocal) {
+        return [];   // Tag liegt in der Zukunft
+    }
+    if ($to > $nowLocal) {
+        $to = $nowLocal;
+    }
+
+    $utc = new DateTimeZone('UTC');
+    $positions = traccarGet(
+        '/reports/route'
+        . '?deviceId=' . rawurlencode((string) $deviceId)
+        . '&from=' . rawurlencode((clone $from)->setTimezone($utc)->format('Y-m-d\TH:i:s\Z'))
+        . '&to=' . rawurlencode((clone $to)->setTimezone($utc)->format('Y-m-d\TH:i:s\Z')),
+        $config
+    );
+
+    if (!is_array($positions)) {
+        return null;   // Fehler → Tag bleibt offen, naechster Aufruf versucht es erneut
+    }
+
+    $points = [];
+    foreach ($positions as $position) {
+        if (!isset($position['latitude'], $position['longitude'])) {
+            continue;
+        }
+        if (isset($position['accuracy']) && (float) $position['accuracy'] > TRACK_MAX_ACCURACY_M) {
+            continue;
+        }
+        // 5 Nachkommastellen ≈ 1 m — mehr braucht eine gezeichnete Linie nicht.
+        $points[] = [round((float) $position['latitude'], 5), round((float) $position['longitude'], 5)];
+    }
+
+    return trackSimplify($points, TRACK_SIMPLIFY_M);
 }
 
 // ── Geraet aufloesen (gecacht) ──────────────────────────
@@ -314,19 +487,79 @@ if (($now - $dailyAt) >= DAILY_TTL) {
     $dailyAt = $now;
 }
 
+// ── Gefahrene Spur nachfuehren ──────────────────────────
+$trackDays     = $cache['trackDays'] ?? [];
+$trackAt       = $cache['trackAt'] ?? 0;
+$trackComplete = $cache['trackComplete'] ?? false;
+
+if ($wantTrack && ($now - $trackAt) >= TRACK_TTL) {
+    $timezone  = new DateTimeZone($config['timezone'] ?? 'Europe/Berlin');
+    $tripStart = (string) ($config['trip']['start_date'] ?? '2026-07-19');
+    $today     = (new DateTime('now', $timezone))->format('Y-m-d');
+
+    // Alle Reisetage bis heute auflisten.
+    $wanted = [];
+    $cursor = new DateTime($tripStart . ' 00:00:00', $timezone);
+    $end    = new DateTime($today . ' 00:00:00', $timezone);
+    while ($cursor <= $end) {
+        $wanted[] = $cursor->format('Y-m-d');
+        $cursor->modify('+1 day');
+    }
+
+    // Der laufende Tag waechst noch — der wird immer neu geholt. Alle
+    // frueheren Tage nur, solange sie noch fehlen.
+    $missing = array_values(array_filter(
+        $wanted,
+        fn(string $day) => $day === $today || !array_key_exists($day, $trackDays)
+    ));
+
+    $budget = TRACK_MAX_DAYS_PER_REQUEST;
+    foreach ($missing as $day) {
+        if ($budget <= 0) {
+            break;
+        }
+        $budget--;
+
+        $dayTrack = fetchDayTrack($day, $config, $deviceId, $timezone);
+        if ($dayTrack === null) {
+            // Antwortet Traccar nicht, hat es keinen Zweck, es fuer die
+            // naechsten Tage im selben Aufruf nochmal zu versuchen.
+            break;
+        }
+
+        $trackDays[$day] = $dayTrack;
+    }
+
+    // Tage ausserhalb der Reise (z. B. nach Verschieben des Startdatums)
+    // wieder loswerden, damit der Cache nicht ewig mitwaechst.
+    $trackDays = array_intersect_key($trackDays, array_flip($wanted));
+
+    $trackComplete = count(array_diff($wanted, array_keys($trackDays))) === 0;
+    $trackAt = $now;
+}
+
 @file_put_contents(CACHE_FILE, json_encode([
     // Erfolg: eine evtl. gesetzte Abkuehl-Markierung faellt hier weg
-    'deviceId'   => $deviceId,
-    'deviceName' => $deviceName,
-    'deviceAt'   => $deviceAt,
-    'position'   => $position,
-    'positionAt' => $positionAt,
-    'daily'      => $daily,
-    'dailyAt'    => $dailyAt,
+    'deviceId'      => $deviceId,
+    'deviceName'    => $deviceName,
+    'deviceAt'      => $deviceAt,
+    'position'      => $position,
+    'positionAt'    => $positionAt,
+    'daily'         => $daily,
+    'dailyAt'       => $dailyAt,
+    'trackDays'     => $trackDays,
+    'trackAt'       => $trackAt,
+    'trackComplete' => $trackComplete,
 ]));
 
-echo json_encode([
+$payload = [
     'configured' => true,
     'position'   => $position,
     'daily'      => $daily,
-], JSON_UNESCAPED_UNICODE);
+];
+
+if ($wantTrack) {
+    $payload['track'] = trackPayload($trackDays, $trackComplete);
+}
+
+echo json_encode($payload, JSON_UNESCAPED_UNICODE);

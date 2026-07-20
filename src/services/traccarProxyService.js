@@ -58,6 +58,58 @@ export async function fetchTraccar({ force = false } = {}) {
   }
 }
 
+// ── Tatsaechlich gefahrene Spur ──
+// Die Spur haengt bewusst NICHT am Positions-Poll: sie ist um Groessenordnungen
+// groesser und aendert sich nur am aktuellen Ende. Der Proxy liefert sie
+// serverseitig ausgeduennt und tageweise gecacht.
+
+const TRACK_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let cachedTrack = null;
+let cachedTrackAt = 0;
+let trackInFlight = null;
+
+export async function fetchTraccarTrack({ force = false } = {}) {
+  if (cachedTrack && !force && Date.now() - cachedTrackAt < TRACK_CACHE_TTL_MS) {
+    return cachedTrack;
+  }
+
+  if (trackInFlight) {
+    return trackInFlight;
+  }
+
+  trackInFlight = (async () => {
+    try {
+      const response = await fetch(`${TRACCAR_API_URL}?track=1`, { cache: "no-store" });
+      if (!response.ok) {
+        return { points: [], complete: false };
+      }
+
+      const data = await response.json();
+      if (!data.configured || !Array.isArray(data.track?.points)) {
+        return { points: [], complete: false };
+      }
+
+      return {
+        points: data.track.points.filter(
+          (point) => Array.isArray(point) && Number.isFinite(point[0]) && Number.isFinite(point[1]),
+        ),
+        complete: Boolean(data.track.complete),
+      };
+    } catch {
+      return { points: [], complete: false };
+    }
+  })();
+
+  try {
+    cachedTrack = await trackInFlight;
+    cachedTrackAt = Date.now();
+    return cachedTrack;
+  } finally {
+    trackInFlight = null;
+  }
+}
+
 // Traccar-Position → internes Snapshot-Format (wie beim direkten Provider)
 export function normalizeTraccarPosition(position) {
   if (!position || position.latitude == null || position.longitude == null) {

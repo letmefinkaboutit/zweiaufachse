@@ -218,7 +218,7 @@
     font-size: 11px; color: #1f2a2f; pointer-events: none;
     background: rgba(255, 253, 248, 0.85); border-radius: 6px; padding: 0 3px;
   }
-  .live-pos-marker { position: relative; width: 32px; height: 32px; }
+  .live-pos-marker { position: relative; width: 32px; height: 32px; pointer-events: none; }
   .live-pos-marker__dot {
     position: absolute; left: 10px; top: 10px; width: 12px; height: 12px;
     border-radius: 50%; background: #0c6b58; border: 2.5px solid #fff;
@@ -482,6 +482,87 @@
   html.very-compact-height .poi-row:nth-child(n+3) { display: none; }
   #bigmap { width: 100%; height: min(64vh, 560px); border-radius: 14px; }
   .map-modal__card { padding: 12px; }
+
+  /* ── Grosse Karte: Fotos & POIs ── */
+  .map-legend {
+    display: flex; flex-wrap: wrap; gap: 4px 10px;
+    margin-top: 8px; font-size: 10px; color: #58656b;
+  }
+  .map-legend span { display: inline-flex; align-items: center; gap: 3px; }
+  .map-legend i { width: 9px; height: 9px; border-radius: 50%; font-style: normal; }
+
+  .poi-map-marker {
+    position: relative;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--poi-color, #eb8f34);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,.35);
+    cursor: pointer; transition: transform .12s ease;
+  }
+  .poi-map-marker:hover { transform: scale(1.18); }
+  .poi-map-marker span { font-size: 12px; line-height: 1; }
+
+  /* Was gerade am Weg liegt, pulsiert leicht — das ist der Punkt, den man
+     als Zuhausegebliebener sucht. */
+  .poi-map-marker--live {
+    width: 32px; height: 32px;
+    border-color: #fffdf8;
+    box-shadow: 0 0 0 2px var(--poi-color, #eb8f34), 0 2px 8px rgba(0,0,0,.4);
+  }
+  .poi-map-marker--live span { font-size: 15px; }
+  .poi-map-marker--live::after {
+    content: ""; position: absolute; inset: -6px;
+    border-radius: 50%; border: 2px solid var(--poi-color, #eb8f34);
+    animation: poipulse 2s ease-out infinite;
+  }
+  @keyframes poipulse {
+    from { transform: scale(0.75); opacity: 0.9; }
+    to   { transform: scale(1.45); opacity: 0; }
+  }
+
+  /* overflow sichtbar, damit das Stapel-Badge nicht abgeschnitten wird —
+     der Kreis entsteht darum am img statt am Container. */
+  .photo-map-marker {
+    position: relative; width: 40px; height: 40px;
+    overflow: visible; border: 0; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .photo-map-marker:hover { transform: scale(1.1); }
+  .photo-map-marker img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .photo-map-marker__count {
+    position: absolute; right: -3px; bottom: -3px;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 999px; background: #eb8f34; border: 2px solid #fff;
+    color: #fff; font-size: 9px; font-weight: 800; line-height: 13px; text-align: center;
+  }
+
+  .map-popup__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+  .map-popup__chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 7px; border-radius: 999px; background: rgba(0,0,0,.06);
+    font-size: 10.5px; font-weight: 600; color: #084c40; white-space: nowrap;
+  }
+  .map-popup__dist { font-size: 10px; font-weight: 700; color: #58656b; }
+
+  .map-popup__live {
+    display: inline-block; margin-bottom: 4px;
+    padding: 2px 7px; border-radius: 999px;
+    background: #eb8f34; color: #fff;
+    font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  }
+  /* "Warum ist das gerade spannend" — der eigentliche Grund, den Punkt
+     anzutippen, deshalb abgesetzt vom nuechternen Kurztext. */
+  .map-popup__why {
+    margin-top: 5px; padding-left: 7px;
+    border-left: 2px solid #eb8f34;
+    font-size: 11px; line-height: 1.35; color: #2f4650;
+  }
+  .map-popup--photo .map-popup__img { height: 130px; cursor: zoom-in; }
 
   @media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
 </style>
@@ -862,6 +943,15 @@
   <div class="sheet__card map-modal__card" style="width: min(94vw, 640px);">
     <button class="sheet__close" data-close aria-label="Schließen">✕</button>
     <div id="bigmap"></div>
+    <div class="map-legend">
+      <span><i style="background:#eb8f34"></i><span id="legendDone">Fortschritt</span></span>
+      <span><i style="background:#90a4ae"></i>geplant</span>
+      <span>📸 Fotos antippen</span>
+      <span>✨ Pulsiert = gerade spannend</span>
+      <span>🏰 Highlights</span>
+      <span>⛰ Natur</span>
+      <span>🏙 Städte</span>
+    </div>
   </div>
 </div>
 
@@ -881,6 +971,7 @@
   import { mapLocationToRoute, computeMovementStatus } from "./src/services/routePositionService.js";
   import { buildCountrySegments, COUNTRY_NAMES } from "./src/services/routeCountryService.js";
   import { reverseGeocode, geocodeOnce } from "./src/services/geocodeService.js";
+  import { fetchTraccarTrack } from "./src/services/traccarProxyService.js";
   import { loadPoiData } from "./src/services/poiService.js";
   import { startPhotoService } from "./src/services/photoService.js";
   import { fetchWeather } from "./src/services/weatherService.js";
@@ -905,6 +996,8 @@
     countrySegments: [],
     poiData: null,
     photos: [],
+    // Tatsaechlich gefahrene Spur seit Reisestart (leer, solange Traccar fehlt)
+    track: { points: [], complete: false },
     weather: null,
     stats: { todayKm: null, yesterdayKm: null, strava: { configured: false } },
     mode: "unknown",
@@ -1483,6 +1576,8 @@
       carouselStarted = true;
       startCarousel();
     }
+
+    renderBigMapLayers();
   }
 
   function startCarousel() {
@@ -1617,14 +1712,75 @@
     });
   }
 
-  function drawRoute(map, routeData, doneMeters, step) {
+  const ROUTE_PLANNED_COLOR = "#90a4ae";
+  const ROUTE_DONE_COLOR = "#eb8f34";
+
+  // Pro Karte gemerkt, damit die echte Spur die eingefaerbte Planung ersetzen
+  // kann, sobald Traccar Daten liefert.
+  const routeLayers = new Map();
+
+  function drawRoute(map, routeData, doneMeters, step, trackWeight) {
     const pts = routeData.points.filter((_, i) => i % step === 0);
     let split = pts.findIndex((p) => p.cumulativeDistanceMeters >= doneMeters);
     if (split < 1) split = 1;
     const toLL = (p) => [p.lat, p.lon];
 
-    window.L.polyline(pts.slice(split).map(toLL), { color: "#90a4ae", weight: 3, opacity: 0.75, lineCap: "round" }).addTo(map);
-    window.L.polyline(pts.slice(0, split + 1).map(toLL), { color: "#eb8f34", weight: 3.4, opacity: 0.95, lineCap: "round" }).addTo(map);
+    window.L.polyline(pts.map(toLL), { color: ROUTE_PLANNED_COLOR, weight: 3, opacity: 0.75, lineCap: "round" }).addTo(map);
+
+    // Ersatzdarstellung, solange keine echte Spur da ist (Mock-Modus oder
+    // Traccar noch nicht eingerichtet): der geplante Verlauf bis zum
+    // Fortschritt. Sobald die gefahrene Spur kommt, fliegt sie raus — dann
+    // zeigt Orange wirklich Gefahrenes und nicht mehr Geplantes.
+    const plannedDone = window.L
+      .polyline(pts.slice(0, split + 1).map(toLL), { color: ROUTE_DONE_COLOR, weight: 3.4, opacity: 0.95, lineCap: "round" })
+      .addTo(map);
+
+    routeLayers.set(map, { plannedDone, track: null, trackWeight });
+    syncTrack(map);
+  }
+
+  // ── Tatsaechlich gefahrene Spur (Traccar) ──
+  function syncTrack(map) {
+    const entry = routeLayers.get(map);
+    const points = state.track.points;
+    if (!entry || points.length < 2) return;
+
+    if (entry.track) {
+      entry.track.setLatLngs(points);
+    } else {
+      entry.track = window.L.polyline(points, {
+        color: ROUTE_DONE_COLOR, weight: entry.trackWeight, opacity: 0.95,
+        lineCap: "round", lineJoin: "round",
+      }).addTo(map);
+    }
+
+    if (entry.plannedDone) {
+      map.removeLayer(entry.plannedDone);
+      entry.plannedDone = null;
+    }
+
+    // Erst jetzt stimmt die Beschriftung: vorher war Orange nur der geplante
+    // Verlauf bis zum Fortschritt.
+    const legend = $("legendDone");
+    if (legend) legend.textContent = "wirklich gefahren";
+  }
+
+  // Der Proxy fuellt seinen Tages-Cache ueber mehrere Aufrufe auf. Solange er
+  // "complete: false" meldet, fragen wir schneller nach — aber nicht endlos.
+  let trackFillAttempts = 0;
+
+  function refreshTrack({ force = false } = {}) {
+    fetchTraccarTrack({ force })
+      .then((track) => {
+        state.track = track;
+        for (const map of routeLayers.keys()) syncTrack(map);
+
+        if (!track.complete && track.points.length && trackFillAttempts < 6) {
+          trackFillAttempts += 1;
+          setTimeout(() => refreshTrack({ force: true }), 20_000);
+        }
+      })
+      .catch(() => {});
   }
 
   function initMaps() {
@@ -1640,7 +1796,7 @@
     }).addTo(miniMap);
 
     const done = (state.locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000;
-    drawRoute(miniMap, state.routeData, done, 24);
+    drawRoute(miniMap, state.routeData, done, 24, 2.6);
     miniMap.fitBounds([
       [state.routeData.bounds.minLat, state.routeData.bounds.minLon],
       [state.routeData.bounds.maxLat, state.routeData.bounds.maxLon],
@@ -1655,14 +1811,37 @@
         window.L.control.attribution({ prefix: false })
           .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
           .addTo(bigMap);
-        drawRoute(bigMap, state.routeData, (state.locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000, 4);
+        drawRoute(bigMap, state.routeData, (state.locationData?.routeMatch?.distanceDoneKm ?? 0) * 1000, 4, 4);
+
+        // Fotos ueber POIs: die Bilder sind der Grund, warum man die Karte oeffnet.
+        poiLayer = window.L.layerGroup().addTo(bigMap);
+        photoLayer = window.L.layerGroup().addTo(bigMap);
+
+        // Stapelbildung und POI-Dichte haengen am Ausschnitt — nach jeder
+        // Bewegung neu aufbauen.
+        bigMap.on("zoomend moveend", renderBigMapLayers);
+        bigMap.on("popupopen", () => { popupOpen = true; });
+        bigMap.on("popupclose", () => {
+          popupOpen = false;
+          // Erst im naechsten Tick nachziehen: schliesst das Popup, weil gerade
+          // ein anderer Marker angeklickt wird, ist dessen Popup dann schon
+          // offen und der Neuaufbau verschiebt sich erneut — sonst wuerden wir
+          // den Marker unter dem Finger wegraeumen.
+          if (renderPending) setTimeout(renderBigMapLayers, 0);
+        });
       }
+      // Beim Oeffnen ist der beste Moment fuer frische Spurdaten.
+      refreshTrack();
+
       requestAnimationFrame(() => {
         bigMap.invalidateSize();
         if (state.locationData) {
           const ll = [state.locationData.latitude, state.locationData.longitude];
           if (bigMarker) bigMarker.setLatLng(ll);
-          else bigMarker = window.L.marker(ll, { icon: posIcon(), zIndexOffset: 1000 }).addTo(bigMap);
+          // interactive: false — der Positionspunkt hat kein Popup, wuerde aber
+          // sonst mit seinem Pulsring genau die Fotos und POIs abfangen, die
+          // dort liegen, wo die beiden gerade sind.
+          else bigMarker = window.L.marker(ll, { icon: posIcon(), zIndexOffset: 1000, interactive: false }).addTo(bigMap);
           bigMap.setView(ll, 9);
         } else {
           bigMap.fitBounds([
@@ -1670,11 +1849,252 @@
             [state.routeData.bounds.maxLat, state.routeData.bounds.maxLon],
           ], { padding: [18, 18] });
         }
+        renderBigMapLayers();
       });
     });
 
     updateMapMarker();
   }
+
+  // ── Fotos & POIs auf der grossen Karte ──
+  let poiLayer = null;
+  let photoLayer = null;
+  let popupOpen = false;
+  let renderPending = false;
+
+  // Fotos, die naeher als das beieinander liegen, werden zu einem Stapel
+  // zusammengefasst — sonst verdecken sich die Thumbnails gegenseitig.
+  const PHOTO_CLUSTER_PX = 54;
+
+  // Mindestabstand zwischen zwei POI-Markern (etwas mehr als ihre 26px Breite).
+  const POI_SPACING_PX = 30;
+
+  const POI_STYLE = {
+    "Nationalpark":        { color: "#3a8b37", icon: "🏞" },
+    "Naturhighlight":      { color: "#3a8b37", icon: "⛰" },
+    "Aussichtspunkt":      { color: "#3a8b37", icon: "🔭" },
+    "Sehenswürdigkeit":    { color: "#c47a1e", icon: "🏰" },
+    "Kulturort":           { color: "#c47a1e", icon: "🏛" },
+    "Highlight-Stadt":     { color: "#2c6fad", icon: "🏙" },
+    "Etappenort":          { color: "#2c6fad", icon: "🛏" },
+    "Ankommen":            { color: "#2c6fad", icon: "🏁" },
+    "Grenze":              { color: "#8a5ca7", icon: "🛂" },
+    "Pause & Versorgung":  { color: "#1a8a72", icon: "☕" },
+  };
+
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (ch) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+  }
+
+  // Der Datensatz hat unterhalb davon fast nur noch automatisch erzeugte
+  // "Route km 5"-Anker (needsEnrichment) — die waeren Rauschen statt Inhalt.
+  // Bleiben ~48 echte POIs auf 3000 km; die duennt sich von selbst aus.
+  const POI_MIN_SCORE = 0.5;
+
+  function poiDistanceLabel(poi) {
+    const doneKm = state.locationData?.routeMatch?.distanceDoneKm;
+    if (doneKm == null || poi.routeKm == null) return "";
+    const delta = poi.routeKm - doneKm;
+    const abs = Math.abs(delta);
+    const rounded = abs < 10 ? abs.toFixed(1) : abs.toFixed(0);
+    if (abs <= 3) return "direkt hier";
+    return delta > 0 ? `noch ${rounded} km` : `${rounded} km zurück`;
+  }
+
+  // "Gerade spannend" ist alles im 20-km-Fenster um die Live-Position — dieselbe
+  // Grenze, die auch die Zuschauer-Ansicht der App verwendet.
+  const POI_LIVE_WINDOW_KM = 20;
+
+  function isPoiLive(poi) {
+    const doneKm = state.locationData?.routeMatch?.distanceDoneKm;
+    if (doneKm == null || poi.routeKm == null) return false;
+    return Math.abs(poi.routeKm - doneKm) <= POI_LIVE_WINDOW_KM;
+  }
+
+  function poiPopupHtml(poi, imgUrl) {
+    const distance = poiDistanceLabel(poi);
+    const live = isPoiLive(poi);
+
+    return `<div class="map-popup">
+      ${imgUrl ? `<img src="${esc(imgUrl)}" class="map-popup__img" alt="${esc(poi.name)}" />` : ""}
+      ${live ? `<span class="map-popup__live">Gerade spannend</span>` : ""}
+      <strong class="map-popup__name">${esc(poi.name)}</strong>
+      ${poi.shortDescription ? `<p class="map-popup__desc">${esc(poi.shortDescription)}</p>` : ""}
+      ${poi.whyItMattersForApp ? `<p class="map-popup__why">${esc(poi.whyItMattersForApp)}</p>` : ""}
+      <div class="map-popup__meta">
+        <span class="map-popup__cat">${esc(poi.viewerCategory ?? "")}</span>
+        ${distance ? `<span class="map-popup__dist">${esc(distance)}</span>` : ""}
+      </div>
+    </div>`;
+  }
+
+  async function fetchWikiImage(name) {
+    try {
+      const res = await fetch(
+        `https://de.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`,
+        { headers: { Accept: "application/json" } });
+      if (!res.ok) return null;
+      return (await res.json()).thumbnail?.source ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function renderBigMapPois() {
+    if (!poiLayer || !bigMap) return;
+    poiLayer.clearLayers();
+
+    const pois = state.poiData?.pois;
+    if (!pois?.length) return;
+
+    const bounds = bigMap.getBounds().pad(0.3);
+
+    const inView = pois.filter((poi) =>
+      !poi.needsEnrichment &&
+      poi.latitude != null && poi.longitude != null &&
+      // Im Live-Fenster zaehlt auch der kleinere Ort — dort ist er gerade der
+      // interessanteste Punkt der ganzen Karte.
+      (poi.score >= POI_MIN_SCORE || (isPoiLive(poi) && poi.score >= 0.35)) &&
+      bounds.contains([poi.latitude, poi.longitude]));
+
+    // Rausgezoomt liegen die POIs sonst als Kette uebereinander und verdecken
+    // die Route: pro Rasterzelle gewinnt der staerkste. Reingezoomt faellt
+    // jeder in seine eigene Zelle — dann sind wieder alle da.
+    // Was gerade spannend ist, gewinnt seine Zelle immer — sonst verdraengt ein
+    // staerkerer, aber weit entfernter POI genau den Ort, an dem die beiden
+    // gerade sind.
+    const rank = (poi) => poi.score + (isPoiLive(poi) ? 10 : 0);
+
+    const bestPerCell = new Map();
+    for (const poi of inView) {
+      const point = bigMap.latLngToLayerPoint([poi.latitude, poi.longitude]);
+      const key = `${Math.round(point.x / POI_SPACING_PX)}_${Math.round(point.y / POI_SPACING_PX)}`;
+      const held = bestPerCell.get(key);
+      if (!held || rank(poi) > rank(held)) bestPerCell.set(key, poi);
+    }
+
+    for (const poi of bestPerCell.values()) {
+      const { color, icon } = POI_STYLE[poi.viewerCategory] ?? { color: "#eb8f34", icon: "📍" };
+      const live = isPoiLive(poi);
+
+      const marker = window.L.marker([poi.latitude, poi.longitude], {
+        icon: window.L.divIcon({
+          className: "",
+          html: `<div class="poi-map-marker${live ? " poi-map-marker--live" : ""}" style="--poi-color:${color}"><span>${icon}</span></div>`,
+          iconSize: [26, 26], iconAnchor: [13, 13],
+        }),
+        zIndexOffset: live ? 300 : 0,
+      }).addTo(poiLayer);
+
+      const popup = window.L.popup({ maxWidth: 220, className: "map-popup-wrap" })
+        .setContent(poiPopupHtml(poi, null));
+      marker.bindPopup(popup);
+
+      // Bild erst beim Oeffnen holen — sonst haemmert jedes Pannen Wikipedia.
+      marker.on("popupopen", async () => {
+        const imgUrl = await fetchWikiImage(poi.name);
+        if (imgUrl && popup.isOpen()) popup.setContent(poiPopupHtml(poi, imgUrl));
+      });
+    }
+  }
+
+  function photoPopupHtml(photo, index, extraCount) {
+    const date = photo.date ? new Date(photo.date) : null;
+    const dateLabel = date ? date.toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" }) : null;
+    const timeLabel = date ? `${date.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr` : null;
+
+    return `<div class="map-popup map-popup--photo">
+      <img src="${PHOTO_HOST}${esc(photo.thumbUrl)}" class="map-popup__img" alt="Foto von unterwegs" data-map-photo-idx="${index}" />
+      <div class="map-popup__meta">
+        ${dateLabel ? `<span class="map-popup__chip">📅 ${esc(dateLabel)}</span>` : ""}
+        ${timeLabel ? `<span class="map-popup__chip">🕑 ${esc(timeLabel)}</span>` : ""}
+        ${photo.lat != null ? `<span class="map-popup__chip" data-photo-loc>📍 <span>…</span></span>` : ""}
+      </div>
+      ${extraCount > 0 ? `<p class="map-popup__desc">+ ${extraCount} weitere von hier — reinzoomen zeigt alle.</p>` : ""}
+    </div>`;
+  }
+
+  function renderBigMapPhotos() {
+    if (!photoLayer || !bigMap) return;
+    photoLayer.clearLayers();
+
+    // Index passend zu albumPhotos() — die Lightbox navigiert ueber diese Liste.
+    const bounds = bigMap.getBounds().pad(0.25);
+    const visible = albumPhotos()
+      .map((photo, index) => ({ photo, index }))
+      .filter(({ photo }) =>
+        photo.lat != null && photo.lon != null && bounds.contains([photo.lat, photo.lon]));
+
+    if (!visible.length) return;
+
+    // Rasterclustering im Bildschirmraum: was in dieselbe Zelle faellt, wird ein Stapel.
+    const cells = new Map();
+    for (const entry of visible) {
+      const point = bigMap.latLngToLayerPoint([entry.photo.lat, entry.photo.lon]);
+      const key = `${Math.round(point.x / PHOTO_CLUSTER_PX)}_${Math.round(point.y / PHOTO_CLUSTER_PX)}`;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push(entry);
+    }
+
+    for (const group of cells.values()) {
+      // state.photos ist datumssortiert — das neueste Foto fuehrt den Stapel an.
+      const [lead, ...rest] = group;
+      const badge = rest.length ? `<span class="photo-map-marker__count">${group.length}</span>` : "";
+
+      const marker = window.L.marker([lead.photo.lat, lead.photo.lon], {
+        icon: window.L.divIcon({
+          className: "",
+          html: `<div class="photo-map-marker"><img src="${PHOTO_HOST}${esc(lead.photo.thumbUrl)}" alt="" />${badge}</div>`,
+          iconSize: [40, 40], iconAnchor: [20, 20],
+        }),
+        zIndexOffset: 500,
+      }).addTo(photoLayer);
+
+      const popup = window.L.popup({ maxWidth: 220, className: "map-popup-wrap" })
+        .setContent(photoPopupHtml(lead.photo, lead.index, rest.length));
+      marker.bindPopup(popup);
+
+      // Ortsname erst beim Oeffnen holen — sonst laufen hunderte Nominatim-Requests.
+      marker.on("popupopen", () => {
+        if (lead.photo.lat == null) return;
+        geocodeOnce(lead.photo.lat, lead.photo.lon)
+          .then((geo) => {
+            const chip = popup.getElement()?.querySelector("[data-photo-loc] span");
+            if (chip) chip.textContent = geo?.locationLabel ?? "unterwegs";
+          })
+          .catch(() => {
+            const chip = popup.getElement()?.querySelector("[data-photo-loc] span");
+            if (chip) chip.textContent = "unterwegs";
+          });
+      });
+    }
+  }
+
+  function renderBigMapLayers() {
+    if (!bigMap) return;
+
+    // Ein offenes Popup haengt an seinem Marker — ein Neuaufbau der Layer wuerde
+    // es sofort wieder schliessen. Leaflets autoPan feuert beim Oeffnen selbst
+    // ein moveend, deshalb erst nachziehen, wenn das Popup zu ist.
+    if (popupOpen) {
+      renderPending = true;
+      return;
+    }
+
+    renderPending = false;
+    renderBigMapPois();
+    renderBigMapPhotos();
+  }
+
+  // Foto im Karten-Popup oeffnet dieselbe Lightbox wie das Album.
+  $("bigmap").addEventListener("click", (event) => {
+    const img = event.target.closest("img[data-map-photo-idx]");
+    if (!img) return;
+    lbIdx = Number(img.dataset.mapPhotoIdx);
+    showLightbox();
+    lightbox.showModal();
+  });
 
   function updateMapMarker() {
     if (!miniMap || !state.locationData) return;
@@ -1691,7 +2111,7 @@
   renderProgressTrack();
 
   loadPoiData()
-    .then((poiData) => { state.poiData = poiData; renderPois(); })
+    .then((poiData) => { state.poiData = poiData; renderPois(); renderBigMapLayers(); })
     .catch(() => {});
 
   startPhotoService({
@@ -1724,6 +2144,8 @@
       renderPois();
       renderTimeline();
       updateMapMarker();
+      // "Gerade spannend" haengt an der Live-Position — Marker mitziehen.
+      renderBigMapLayers();
 
       reverseGeocode(snapshot.latitude, snapshot.longitude)
         .then((geo) => { if (geo) { state.geocodeData = geo; renderScene(); } })
@@ -1747,6 +2169,9 @@
 
   if (window.L) initMaps();
   else window.addEventListener("load", initMaps, { once: true });
+
+  refreshTrack();
+  setInterval(() => refreshTrack({ force: true }), 5 * 60 * 1000);
 
   // Frische-Anzeige und Zustand aktuell halten, auch ohne neue Fixes
   setInterval(() => {
