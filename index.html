@@ -987,7 +987,7 @@
   import { loadRouteData } from "./src/services/gpxRouteService.js";
   import { createLocationProvider } from "./src/location/LocationProvider.js";
   import { mapLocationToRoute, computeMovementStatus } from "./src/services/routePositionService.js";
-  import { buildCountrySegments, COUNTRY_NAMES } from "./src/services/routeCountryService.js";
+  import { loadCountrySegments, COUNTRY_NAMES } from "./src/services/routeCountryService.js";
   import { reverseGeocode, geocodeOnce } from "./src/services/geocodeService.js";
   import { fetchTraccarTrack } from "./src/services/traccarProxyService.js";
   import { loadPoiData } from "./src/services/poiService.js";
@@ -2186,7 +2186,7 @@
 
   // ── Start ──
   state.routeData = await loadRouteData();
-  state.countrySegments = buildCountrySegments(state.routeData);
+  state.countrySegments = await loadCountrySegments(state.routeData);
   renderProgressTrack();
 
   loadPoiData()

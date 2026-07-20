@@ -8,3 +8,6 @@ api/strava-cache.json
 api/strava-token.json
 api/traccar-config.php
 api/traccar-cache.json
+
+# Build-Cache der Nominatim-Abfragen (tools/build-country-crossings.mjs)
+tools/.nominatim-cache.json

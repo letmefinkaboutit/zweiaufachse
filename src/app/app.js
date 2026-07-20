@@ -6,7 +6,7 @@ import { createLocationProvider } from "../location/LocationProvider.js";
 import { mapLocationToRoute, computeMovementStatus } from "../services/routePositionService.js";
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
 import { reverseGeocode, geocodeOnce } from "../services/geocodeService.js";
-import { buildCountrySegments } from "../services/routeCountryService.js";
+import { loadCountrySegments } from "../services/routeCountryService.js";
 import { startDailyStatsService } from "../services/traccarHistoryService.js";
 import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 import { startPhotoService } from "../services/photoService.js";
@@ -240,7 +240,7 @@ export async function createApp(root) {
 
   try {
     state.routeData = await loadRouteData();
-    state.countrySegments = buildCountrySegments(state.routeData);
+    state.countrySegments = await loadCountrySegments(state.routeData);
 
     try {
       state.poiData = await loadPoiData();

@@ -1,0 +1,137 @@
+{
+  "generatedAt": "2026-07-20T08:54:12.464Z",
+  "generatedBy": "tools/build-country-crossings.mjs",
+  "source": "Nominatim reverse geocoding (OpenStreetMap), zoom=3",
+  "totalDistanceKm": 2106.6,
+  "precisionMeters": 100,
+  "coarseStepKm": 10,
+  "segments": [
+    {
+      "code": "DE",
+      "fromKm": 0,
+      "toKm": 269.06
+    },
+    {
+      "code": "AT",
+      "fromKm": 269.06,
+      "toKm": 344.84
+    },
+    {
+      "code": "IT",
+      "fromKm": 344.84,
+      "toKm": 461.72
+    },
+    {
+      "code": "AT",
+      "fromKm": 461.72,
+      "toKm": 591.88
+    },
+    {
+      "code": "IT",
+      "fromKm": 591.88,
+      "toKm": 607.58
+    },
+    {
+      "code": "SI",
+      "fromKm": 607.58,
+      "toKm": 811.02
+    },
+    {
+      "code": "HR",
+      "fromKm": 811.02,
+      "toKm": 915.86
+    },
+    {
+      "code": "BA",
+      "fromKm": 915.86,
+      "toKm": 1325.31
+    },
+    {
+      "code": "ME",
+      "fromKm": 1325.31,
+      "toKm": 1455.16
+    },
+    {
+      "code": "AL",
+      "fromKm": 1455.16,
+      "toKm": 1794.14
+    },
+    {
+      "code": "GR",
+      "fromKm": 1794.14,
+      "toKm": 2106.6
+    }
+  ],
+  "crossings": [
+    {
+      "fromCode": "DE",
+      "toCode": "AT",
+      "km": 269.06,
+      "lat": 47.39918,
+      "lon": 11.26339
+    },
+    {
+      "fromCode": "AT",
+      "toCode": "IT",
+      "km": 344.84,
+      "lat": 47.00577,
+      "lon": 11.50547
+    },
+    {
+      "fromCode": "IT",
+      "toCode": "AT",
+      "km": 461.72,
+      "lat": 46.74098,
+      "lon": 12.36971
+    },
+    {
+      "fromCode": "AT",
+      "toCode": "IT",
+      "km": 591.88,
+      "lat": 46.53515,
+      "lon": 13.63919
+    },
+    {
+      "fromCode": "IT",
+      "toCode": "SI",
+      "km": 607.58,
+      "lat": 46.49576,
+      "lon": 13.70376
+    },
+    {
+      "fromCode": "SI",
+      "toCode": "HR",
+      "km": 811.02,
+      "lat": 45.45336,
+      "lon": 15.2512
+    },
+    {
+      "fromCode": "HR",
+      "toCode": "BA",
+      "km": 915.86,
+      "lat": 44.87683,
+      "lon": 15.76092
+    },
+    {
+      "fromCode": "BA",
+      "toCode": "ME",
+      "km": 1325.31,
+      "lat": 42.93672,
+      "lon": 18.48491
+    },
+    {
+      "fromCode": "ME",
+      "toCode": "AL",
+      "km": 1455.16,
+      "lat": 42.3306,
+      "lon": 19.42093
+    },
+    {
+      "fromCode": "AL",
+      "toCode": "GR",
+      "km": 1794.14,
+      "lat": 40.62321,
+      "lon": 21.05647
+    }
+  ]
+}

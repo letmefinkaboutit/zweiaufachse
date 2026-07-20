@@ -4,8 +4,32 @@ export const COUNTRY_NAMES = {
   ME: "Montenegro", AL: "Albanien", MK: "Nordmazedonien", GR: "Griechenland",
 };
 
+// Flagge und Farbe pro Land — unabhaengig davon, woher die Grenzen kommen.
+const COUNTRY_META = {
+  DE: { flag: "🇩🇪", color: "#1a1a1a" },
+  AT: { flag: "🇦🇹", color: "#ED2939" },
+  IT: { flag: "🇮🇹", color: "#009246" },
+  SI: { flag: "🇸🇮", color: "#003DA5" },
+  HR: { flag: "🇭🇷", color: "#FF0000" },
+  BA: { flag: "🇧🇦", color: "#002395" },
+  ME: { flag: "🇲🇪", color: "#D4AF37" },
+  AL: { flag: "🇦🇱", color: "#E41E20" },
+  MK: { flag: "🇲🇰", color: "#CE2028" },
+  GR: { flag: "🇬🇷", color: "#0D5EAF" },
+  RS: { flag: "🇷🇸", color: "#C6363C" },
+  XK: { flag: "🇽🇰", color: "#244AA5" },
+  HU: { flag: "🇭🇺", color: "#436F4D" },
+  CH: { flag: "🇨🇭", color: "#D52B1E" },
+};
+
 // Bounding boxes ordered by expected route traversal.
 // When a point matches multiple boxes, the smallest-area box wins (most specific country).
+//
+// ACHTUNG: Nur noch Notnagel. Rechtecke koennen echte Grenzverlaeufe nicht
+// abbilden — die DE- und die AT-Box ueberlappen sich ueber halb Oberbayern,
+// und weil die kleinere gewinnt, galt dort alles suedlich von 47.8 N als
+// Oesterreich (Uebertritt rund 75 km zu frueh). Der reale Verlauf kommt aus
+// src/route/country-crossings.json, gebaut von tools/build-country-crossings.mjs.
 const COUNTRY_BOXES = [
   { code: "DE", flag: "🇩🇪", color: "#1a1a1a", minLat: 47.3, maxLat: 55.1, minLon:  5.9, maxLon: 15.2 },
   { code: "AT", flag: "🇦🇹", color: "#ED2939", minLat: 46.4, maxLat: 47.8, minLon:  9.5, maxLon: 17.2 },
@@ -86,4 +110,36 @@ export function buildCountrySegments(routeData) {
   }
 
   return segments.filter((s) => s.code && s.flag);
+}
+
+// Projekt-relativ aufgeloest, damit es auch aus Unterseiten wie /backup/ stimmt.
+const projectRoot = new URL("../../", import.meta.url);
+
+// Vorberechnete, echte Grenzuebertritte laden. Fallback ist die alte
+// Box-Heuristik: die ist nachweislich ungenau, haelt aber Fortschrittsbalken
+// und Zeitstrahl am Leben, falls die Datei mal fehlt.
+export async function loadCountrySegments(routeData) {
+  try {
+    const response = await fetch(new URL("./src/route/country-crossings.json", projectRoot));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const totalKm = data.totalDistanceKm || routeData.totalDistanceKm;
+    if (!Array.isArray(data.segments) || !data.segments.length || !totalKm) {
+      throw new Error("country-crossings.json ohne verwertbare Segmente");
+    }
+
+    return data.segments
+      .filter((segment) => COUNTRY_META[segment.code])
+      .map((segment) => ({
+        code: segment.code,
+        flag: COUNTRY_META[segment.code].flag,
+        color: COUNTRY_META[segment.code].color,
+        fromPercent: segment.fromKm / totalKm,
+        toPercent: Math.min(segment.toKm / totalKm, 1),
+      }));
+  } catch (error) {
+    console.warn("[Laender] Vorberechnete Grenzen nicht nutzbar, nutze Box-Heuristik:", error.message);
+    return buildCountrySegments(routeData);
+  }
 }
