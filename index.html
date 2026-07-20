@@ -360,6 +360,46 @@
   .album-day__head h4 { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; }
   .album-day__head span { font-size: 10.5px; font-weight: 700; color: #58656b; white-space: nowrap; }
   .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+  /* ── Videokachel ── */
+  .album-video {
+    position: relative; padding: 0; border: 0; background: #1f2a2f;
+    width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+    cursor: pointer; display: block;
+  }
+  .album-video img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Ohne Standbild bleibt die Kachel eine reine Farbflaeche — null Ladung. */
+  .album-video__play {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(0, 0, 0, .5); backdrop-filter: blur(2px);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .4);
+  }
+  .album-video__play::after {
+    content: ""; position: absolute; left: 11px; top: 9px;
+    border-style: solid; border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent #fff;
+  }
+  .album-video__dauer {
+    position: absolute; right: 4px; bottom: 4px;
+    padding: 1px 5px; border-radius: 999px;
+    background: rgba(0, 0, 0, .6); color: #fff;
+    font-size: 9.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+
+  .photo-lightbox__video {
+    max-width: 100%; max-height: 80vh; border-radius: 10px;
+    background: #000; display: block;
+  }
+
+  /* Abspielsymbol auf dem Kartenmarker */
+  .photo-map-marker--video::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    border-style: solid; border-width: 5px 0 5px 9px;
+    border-color: transparent transparent transparent #fff;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .8));
+  }
   .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; cursor: pointer; }
   .health-sheet__card { width: min(94vw, 600px); max-height: min(88vh, 780px); padding: 20px 18px 18px; }
   .health-hero {
@@ -980,6 +1020,10 @@
 <dialog id="photo-lightbox" class="photo-lightbox">
   <button class="photo-lightbox__close" data-lightbox-close aria-label="Schließen">&#x2715;</button>
   <img class="photo-lightbox__img" src="" alt="" />
+  <!-- Ohne src laedt ein <video> nichts. preload="none" sorgt zusaetzlich
+       dafuer, dass selbst nach dem Setzen der Quelle erst auf Abspielen
+       hin geladen wird. -->
+  <video class="photo-lightbox__video" preload="none" playsinline controls hidden></video>
   <p class="photo-lightbox__caption"></p>
 </dialog>
 
@@ -1571,11 +1615,58 @@
       .toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
   }
 
+  // Ein Video ohne Vorschaubild bleibt im Album — es bekommt eine
+  // Platzhalterkachel. Nur ein Foto ohne Bild waere sinnlos.
+  const istVideo = (medium) => medium?.kind === "video";
+  const gehoertInsAlbum = (medium) => Boolean(medium.thumbUrl) || istVideo(medium);
+
+  // "3 Fotos" waere gelogen, sobald ein Video dabei ist.
+  function medienLabel(medien) {
+    const videos = medien.filter(istVideo).length;
+    const fotos = medien.length - videos;
+    const teile = [];
+    if (fotos) teile.push(`${fotos} ${fotos === 1 ? "Foto" : "Fotos"}`);
+    if (videos) teile.push(`${videos} ${videos === 1 ? "Video" : "Videos"}`);
+    return teile.join(" · ") || "nichts";
+  }
+
+  function dauerLabel(sekunden) {
+    if (!sekunden) return "";
+    const ganze = Math.round(sekunden);
+    return `${Math.floor(ganze / 60)}:${String(ganze % 60).padStart(2, "0")}`;
+  }
+
+  // Die Kachel enthaelt NIE ein <video>. Das ist der ganze Trick: solange kein
+  // Video-Element im Dokument steht, kann der Browser auch keine Videodaten
+  // anfordern. Sichtbar ist nur ein Standbild (oder gar nichts) plus Abspiel-
+  // symbol; das Video wird erst beim Antippen im Popup erzeugt.
+  function albumTileHtml(photo, index) {
+    if (!istVideo(photo)) {
+      return `<img src="${PHOTO_HOST}${photo.thumbUrl}" data-idx="${index}" alt="Foto von unterwegs" loading="lazy" />`;
+    }
+
+    const dauer = dauerLabel(photo.duration);
+    const inhalt = photo.thumbUrl
+      ? `<img src="${PHOTO_HOST}${photo.thumbUrl}" alt="Video von unterwegs" loading="lazy" />`
+      // Ohne Standbild: reine CSS-Kachel, kostet keinen einzigen Byte Ladung.
+      // Kein Symbol noetig — der Abspielknopf sagt bereits alles, und ein
+      // zweites Zeichen laege exakt darunter.
+      : "";
+
+    return `<button type="button" class="album-video" data-idx="${index}"
+              aria-label="Video abspielen${dauer ? `, Länge ${dauer}` : ""}">
+        ${inhalt}
+        <span class="album-video__play" aria-hidden="true"></span>
+        ${dauer ? `<span class="album-video__dauer">${dauer}</span>` : ""}
+      </button>`;
+  }
+
   function renderPhotos() {
-    const photos = state.photos.filter((photo) => photo.thumbUrl);
+    const photos = state.photos.filter(gehoertInsAlbum);
 
     $("thumbStack").innerHTML =
-      photos.slice(0, 3).map((photo) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" alt="" loading="lazy" />`).join("") +
+      photos.filter((photo) => photo.thumbUrl).slice(0, 3)
+        .map((photo) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" alt="" loading="lazy" />`).join("") +
       (photos.length ? `<span class="thumb-stack__count">${photos.length}</span>` : "");
 
     // Nach Tagen gruppieren. Der Index bleibt der Index in albumPhotos() —
@@ -1598,7 +1689,7 @@
     $("albumGrid").innerHTML = orderedDays.map((day) => {
       const entries = dayGroups.get(day);
       const tourDay = tourDayNumber(day);
-      const meta = [tourDay ? `Tag ${tourDay}` : null, `${entries.length} ${entries.length === 1 ? "Foto" : "Fotos"}`]
+      const meta = [tourDay ? `Tag ${tourDay}` : null, medienLabel(entries.map((e) => e.photo))]
         .filter(Boolean)
         .join(" · ");
 
@@ -1609,15 +1700,14 @@
             <span>${meta}</span>
           </div>
           <div class="album-grid">
-            ${entries.map(({ photo, index }) =>
-              `<img src="${PHOTO_HOST}${photo.thumbUrl}" data-idx="${index}" alt="Foto von unterwegs" loading="lazy" />`).join("")}
+            ${entries.map(({ photo, index }) => albumTileHtml(photo, index)).join("")}
           </div>
         </section>`;
     }).join("");
 
     const dayCount = orderedDays.filter(Boolean).length;
     $("albumCount").textContent = photos.length
-      ? `${photos.length} Fotos an ${dayCount} ${dayCount === 1 ? "Tag" : "Tagen"}`
+      ? `${medienLabel(photos)} an ${dayCount} ${dayCount === 1 ? "Tag" : "Tagen"}`
       : "Noch keine Fotos";
 
     // Slider: nur Fotos des heutigen Kalendertages
@@ -1689,7 +1779,19 @@
   let lbIdx = 0;
 
   function albumPhotos() {
-    return state.photos.filter((photo) => photo.thumbUrl);
+    return state.photos.filter(gehoertInsAlbum);
+  }
+
+  // Haelt das Video an UND bricht einen laufenden Download ab. Ohne das
+  // removeAttribute + load() laedt der Browser munter weiter, auch wenn das
+  // Popup laengst zu ist.
+  function videoAnhalten() {
+    const video = lightbox.querySelector(".photo-lightbox__video");
+    if (!video.getAttribute("src")) return;
+    video.pause();
+    video.removeAttribute("src");
+    video.removeAttribute("poster");
+    video.load();
   }
 
   function showLightbox(dir = 0) {
@@ -1698,6 +1800,38 @@
     if (!photo) return;
 
     const img = lightbox.querySelector(".photo-lightbox__img");
+    const video = lightbox.querySelector(".photo-lightbox__video");
+
+    if (istVideo(photo)) {
+      videoAnhalten();
+      img.hidden = true;
+      img.removeAttribute("src");
+      video.hidden = false;
+      if (photo.lightboxUrl) video.poster = PHOTO_HOST + photo.lightboxUrl;
+      video.src = PHOTO_HOST + (photo.videoUrl ?? photo.url);
+      // Der Klick, der das Popup geoeffnet hat, zaehlt als Nutzergeste —
+      // meist darf damit sofort abgespielt werden. Wenn der Browser es
+      // ablehnt, steht die Steuerung ja bereit.
+      video.play().catch(() => {});
+      renderLightboxCaption(photo, photos);
+
+      // iPhones nehmen im Modus "Hohe Effizienz" in HEVC auf. Safari spielt
+      // das, viele Android- und Desktop-Browser nicht — die zeigen sonst
+      // wortlos ein schwarzes Feld. Dann wenigstens einen ehrlichen Hinweis
+      // und den direkten Weg zur Datei anbieten.
+      video.onerror = () => {
+        lightbox.querySelector(".photo-lightbox__caption").innerHTML = `
+          <div class="lc-chips">
+            <span class="lc-chip">Dieses Video kann der Browser nicht abspielen</span>
+            <a class="lc-chip" href="${PHOTO_HOST}${esc(photo.videoUrl ?? photo.url)}" download>herunterladen</a>
+          </div>`;
+      };
+      return;
+    }
+
+    videoAnhalten();
+    video.hidden = true;
+    img.hidden = false;
     img.src = PHOTO_HOST + (photo.lightboxUrl ?? photo.thumbUrl);
     if (dir !== 0 && typeof img.animate === "function") {
       img.animate(
@@ -1706,9 +1840,25 @@
       );
     }
 
+    renderLightboxCaption(photo, photos);
+
+    for (const n of [lbIdx - 1, lbIdx + 1]) {
+      const neighbor = photos[n];
+      // Nur Standbilder vorladen. Ein Video ohne Vorschaubild hat hier gar
+      // keine Adresse — ohne diese Pruefung entstuende eine Anfrage auf
+      // ".../null". Das Video selbst wird NIE vorgeladen.
+      const vorschau = neighbor?.lightboxUrl ?? neighbor?.thumbUrl;
+      if (vorschau) new Image().src = PHOTO_HOST + vorschau;
+    }
+  }
+
+  function renderLightboxCaption(photo, photos) {
     const date = photo.date ? new Date(photo.date) : null;
+    const dauer = istVideo(photo) ? dauerLabel(photo.duration) : "";
+
     lightbox.querySelector(".photo-lightbox__caption").innerHTML = `<div class="lc-chips">
       <span class="lc-chip">${lbIdx + 1}/${photos.length}</span>
+      ${dauer ? `<span class="lc-chip">🎬 ${dauer}</span>` : ""}
       ${date ? `<span class="lc-chip">${date.toLocaleDateString("de-DE", { day: "2-digit", month: "long" })}</span>` : ""}
       ${date ? `<span class="lc-chip">${date.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</span>` : ""}
       ${photo.lat != null ? `<span class="lc-chip">📍 <span id="lbLoc">…</span></span>` : ""}
@@ -1724,11 +1874,6 @@
         })
         .catch(() => {});
     }
-
-    for (const n of [lbIdx - 1, lbIdx + 1]) {
-      const neighbor = photos[n];
-      if (neighbor) new Image().src = PHOTO_HOST + (neighbor.lightboxUrl ?? neighbor.thumbUrl);
-    }
   }
 
   function navLightbox(dir) {
@@ -1739,7 +1884,7 @@
   }
 
   $("albumGrid").addEventListener("click", (event) => {
-    const img = event.target.closest("img[data-idx]");
+    const img = event.target.closest("[data-idx]");
     if (!img) return;
     lbIdx = Number(img.dataset.idx);
     trackEvent("foto", "live");
@@ -1748,6 +1893,8 @@
   });
   lightbox.querySelector("[data-lightbox-close]").addEventListener("click", () => lightbox.close());
   lightbox.addEventListener("click", (event) => { if (event.target === lightbox) lightbox.close(); });
+  // Deckt jeden Weg ab: Knopf, Klick daneben und die Escape-Taste des Dialogs.
+  lightbox.addEventListener("close", videoAnhalten);
   document.addEventListener("keydown", (event) => {
     if (!lightbox.open) return;
     if (event.key === "ArrowRight") navLightbox(1);
@@ -2106,6 +2253,9 @@
     const visible = albumPhotos()
       .map((photo, index) => ({ photo, index }))
       .filter(({ photo }) =>
+        // Ohne Standbild gaebe es nichts zu zeigen — ein Video ohne
+        // Vorschaubild bleibt deshalb von der Karte weg (im Album ist es da).
+        photo.thumbUrl &&
         photo.lat != null && photo.lon != null && bounds.contains([photo.lat, photo.lon]));
 
     if (!visible.length) return;
@@ -2127,7 +2277,7 @@
       const marker = window.L.marker([lead.photo.lat, lead.photo.lon], {
         icon: window.L.divIcon({
           className: "",
-          html: `<div class="photo-map-marker"><img src="${PHOTO_HOST}${esc(lead.photo.thumbUrl)}" alt="" />${badge}</div>`,
+          html: `<div class="photo-map-marker${istVideo(lead.photo) ? " photo-map-marker--video" : ""}"><img src="${PHOTO_HOST}${esc(lead.photo.thumbUrl)}" alt="" />${badge}</div>`,
           iconSize: [40, 40], iconAnchor: [20, 20],
         }),
         zIndexOffset: 500,

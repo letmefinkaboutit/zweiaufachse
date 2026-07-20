@@ -2,7 +2,8 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
-// Liefert die Fotoliste inkl. EXIF-Daten und Thumbnail-URLs.
+// Liefert die Liste der Fotos UND Videos inkl. Aufnahmedaten und
+// Vorschaubildern.
 // - EXIF wird pro Datei nur einmal gelesen (Cache in exif-cache.json).
 // - Thumbnails (s = Grid/Kachel, l = Lightbox) werden per GD erzeugt und in
 //   thumbs/ abgelegt; pro Request werden maximal MAX_THUMB_OPS neue erzeugt,
@@ -15,6 +16,15 @@ const THUMB_PREFIX = '/bilderupload/thumbs/v2/';
 const THUMB_SIZES  = ['s' => 480, 'l' => 1600];
 const MAX_THUMB_OPS = 12;
 const JPEG_QUALITY  = 82;
+
+const PHOTO_EXTENSIONS = ['jpg', 'jpeg'];
+const VIDEO_EXTENSIONS = ['mov', 'mp4', 'm4v'];
+
+// Ein Videobild zu ziehen dauert deutlich laenger als ein Foto zu skalieren,
+// deshalb ein eigenes, knapperes Budget pro Aufruf.
+const MAX_POSTER_OPS = 2;
+
+require_once __DIR__ . '/video-meta.php';
 
 $photoDir  = __DIR__ . '/iPhone/Recents/';
 $thumbBase = __DIR__ . '/thumbs/v2';
@@ -44,8 +54,20 @@ foreach (array_keys(THUMB_SIZES) as $sizeKey) {
     }
 }
 
-$thumbOpsLeft = MAX_THUMB_OPS;
+$thumbOpsLeft  = MAX_THUMB_OPS;
+$posterOpsLeft = MAX_POSTER_OPS;
 $results = [];
+
+// Vorab alle Dateinamen sammeln: fuer Live-Photo-Paare (IMG_1234.mov neben
+// IMG_1234.jpg) dient das Foto als Vorschaubild des Videos — kostenlos und
+// besser als jedes automatisch gezogene Einzelbild.
+$photoBasenames = [];
+foreach (new DirectoryIterator($photoDir) as $f) {
+    if ($f->isDot() || $f->isDir()) continue;
+    if (in_array(strtolower($f->getExtension()), PHOTO_EXTENSIONS, true)) {
+        $photoBasenames[strtolower(pathinfo($f->getFilename(), PATHINFO_FILENAME))] = $f->getFilename();
+    }
+}
 
 foreach (new DirectoryIterator($photoDir) as $file) {
     if ($file->isDot() || $file->isDir()) {
@@ -53,7 +75,8 @@ foreach (new DirectoryIterator($photoDir) as $file) {
     }
 
     $ext = strtolower($file->getExtension());
-    if (!in_array($ext, ['jpg', 'jpeg'])) {
+    $isVideo = in_array($ext, VIDEO_EXTENSIONS, true);
+    if (!$isVideo && !in_array($ext, PHOTO_EXTENSIONS, true)) {
         continue;
     }
 
@@ -62,40 +85,89 @@ foreach (new DirectoryIterator($photoDir) as $file) {
     $mtime    = $file->getMTime();
     $size     = $file->getSize();
 
-    // EXIF aus Cache oder frisch lesen
+    // Aufnahmedaten aus Cache oder frisch lesen (Videos haben kein EXIF)
     $entry = $cache[$filename] ?? null;
     if (!is_array($entry) || ($entry['mtime'] ?? null) !== $mtime || ($entry['size'] ?? null) !== $size) {
-        $entry = readPhotoMeta($path, $mtime, $size);
+        $entry = $isVideo ? readVideoMeta($path, $mtime, $size) : readPhotoMeta($path, $mtime, $size);
         $cache[$filename] = $entry;
         $cacheDirty = true;
     }
 
-    // Thumbnails erzeugen (budgetiert) bzw. vorhandene verlinken
+    $originalUrl = URL_PREFIX . rawurlencode($filename);
     $urls = ['s' => null, 'l' => null];
-    if ($thumbsWritable) {
+
+    if ($isVideo) {
+        // ── Vorschaubild fuer ein Video ──
+        // Nie das Video selbst verlinken: die Galerie darf keine Videodaten
+        // anfordern, bevor jemand darauf tippt. Ohne Vorschaubild bleibt
+        // thumbUrl null, die App zeigt dann eine Platzhalterkachel — die
+        // kostet null Bytes.
+        $stem = strtolower(pathinfo($filename, PATHINFO_FILENAME));
+        $posterName = $filename . '.jpg';
+
+        // 1. Live-Photo-Paar: das gleichnamige Foto ist das beste Standbild
+        //    und ist bereits skaliert vorhanden bzw. wird es gleich sein.
+        $sibling = $photoBasenames[$stem] ?? null;
+
         foreach (THUMB_SIZES as $sizeKey => $maxDim) {
-            $thumbPath = $thumbBase . '/' . $sizeKey . '/' . $filename;
-            if (!is_file($thumbPath) && $thumbOpsLeft > 0) {
-                $thumbOpsLeft--;
-                createThumb($path, $thumbPath, $maxDim, $entry['orientation'] ?? 1);
+            if ($sibling !== null) {
+                $siblingThumb = $thumbBase . '/' . $sizeKey . '/' . $sibling;
+                if (is_file($siblingThumb)) {
+                    $urls[$sizeKey] = THUMB_PREFIX . $sizeKey . '/' . rawurlencode($sibling);
+                    continue;
+                }
             }
-            if (is_file($thumbPath)) {
-                $urls[$sizeKey] = THUMB_PREFIX . $sizeKey . '/' . rawurlencode($filename);
+
+            // 2. Einzelbild aus dem Video ziehen — nur wenn ffmpeg da ist.
+            $posterPath = $thumbBase . '/' . $sizeKey . '/' . $posterName;
+            if ($thumbsWritable && !is_file($posterPath) && $posterOpsLeft > 0 && ffmpegBinary() !== null) {
+                $posterOpsLeft--;
+                createVideoPoster($path, $posterPath, $maxDim);
+            }
+            if (is_file($posterPath)) {
+                $urls[$sizeKey] = THUMB_PREFIX . $sizeKey . '/' . rawurlencode($posterName);
             }
         }
+
+        $results[] = [
+            'kind'        => 'video',
+            'url'         => $originalUrl,
+            'videoUrl'    => $originalUrl,
+            'thumbUrl'    => $urls['s'],            // null = Platzhalter zeigen
+            'lightboxUrl' => $urls['l'] ?? $urls['s'],
+            'filename'    => $filename,
+            'date'        => $entry['date'],
+            'lat'         => $entry['lat'],
+            'lon'         => $entry['lon'],
+            'duration'    => $entry['duration'] ?? null,
+            'sizeBytes'   => $size,
+        ];
+    } else {
+        // Thumbnails erzeugen (budgetiert) bzw. vorhandene verlinken
+        if ($thumbsWritable) {
+            foreach (THUMB_SIZES as $sizeKey => $maxDim) {
+                $thumbPath = $thumbBase . '/' . $sizeKey . '/' . $filename;
+                if (!is_file($thumbPath) && $thumbOpsLeft > 0) {
+                    $thumbOpsLeft--;
+                    createThumb($path, $thumbPath, $maxDim, $entry['orientation'] ?? 1);
+                }
+                if (is_file($thumbPath)) {
+                    $urls[$sizeKey] = THUMB_PREFIX . $sizeKey . '/' . rawurlencode($filename);
+                }
+            }
+        }
+
+        $results[] = [
+            'kind'        => 'photo',
+            'url'         => $originalUrl,
+            'thumbUrl'    => $urls['s'] ?? $originalUrl,
+            'lightboxUrl' => $urls['l'] ?? $originalUrl,
+            'filename'    => $filename,
+            'date'        => $entry['date'],
+            'lat'         => $entry['lat'],
+            'lon'         => $entry['lon'],
+        ];
     }
-
-    $originalUrl = URL_PREFIX . rawurlencode($filename);
-
-    $results[] = [
-        'url'         => $originalUrl,
-        'thumbUrl'    => $urls['s'] ?? $originalUrl,
-        'lightboxUrl' => $urls['l'] ?? $originalUrl,
-        'filename'    => $filename,
-        'date'        => $entry['date'],
-        'lat'         => $entry['lat'],
-        'lon'         => $entry['lon'],
-    ];
 }
 
 // Verwaiste Cache-Eintraege (geloeschte Fotos) entfernen
@@ -133,7 +205,9 @@ function readPhotoMeta(string $path, int $mtime, int $size): array
     $lon  = null;
     $orientation = 1;
 
-    $exif = @exif_read_data($path);
+    // Wie bei GD weiter unten: fehlt die Erweiterung, liefern wir lieber eine
+    // Liste ohne Aufnahmedaten als einen Fehler fuer die ganze Galerie.
+    $exif = function_exists('exif_read_data') ? @exif_read_data($path) : false;
 
     if ($exif) {
         if (!empty($exif['DateTimeOriginal'])) {
