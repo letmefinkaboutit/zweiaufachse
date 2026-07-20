@@ -2281,6 +2281,41 @@
     document.title = `Timo & Tino · Tag ${day}`;
   }
   renderTripDay();
+
+  // ── Neue Version bemerken ──
+  // Waehrend der Tour wird mehrmals taeglich deployt, und die Seite laeuft bei
+  // manchen den ganzen Tag offen. Ohne das hier sehen die erst beim naechsten
+  // manuellen Neuladen etwas. Die Version steht im Deploy-Stempel unten rechts,
+  // die aktuelle in version.json — unterscheiden sie sich, wird neu geladen.
+  const UPDATE_CHECK_MS = 10 * 60 * 1000;
+  // Ueber die Klasse, nicht ueber eine id: der Deploy ersetzt diesen Knoten
+  // per sed anhand seines exakten Markups — eine id wuerde das brechen.
+  const loadedVersion = document.querySelector(".deploy-version")?.textContent.trim().split(" ")[0] ?? null;
+
+  async function checkForUpdate() {
+    // Lokal ("lokal") gibt es keinen Deploy, gegen den man vergleichen koennte.
+    if (!loadedVersion || loadedVersion === "lokal") return;
+
+    // Mitten im Anschauen nicht dazwischenfunken — ein offenes Popup oder die
+    // Lightbox waere sonst ploetzlich weg. Der naechste Durchlauf holt es nach.
+    if (document.querySelector(".sheet.open") || lightbox.open) return;
+
+    try {
+      const response = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) return;
+
+      const { commit } = await response.json();
+      if (commit && commit !== loadedVersion) window.location.reload();
+    } catch {
+      // Offline oder Datei fehlt: einfach beim naechsten Mal wieder versuchen.
+    }
+  }
+
+  setInterval(checkForUpdate, UPDATE_CHECK_MS);
+  // Zurueck aus der Hosentasche ist der unauffaelligste Moment zum Aktualisieren.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
 </script>
 </body>
 </html>

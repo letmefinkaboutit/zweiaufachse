@@ -89,9 +89,25 @@ jobs:
       - name: Stamp deploy version
         shell: bash
         run: |
-          VERSION="${GITHUB_SHA:0:7} · $(TZ='Europe/Berlin' date '+%d.%m. %H:%M')"
+          SHORT="${GITHUB_SHA:0:7}"
+          VERSION="${SHORT} · $(TZ='Europe/Berlin' date '+%d.%m. %H:%M')"
           sed -i "s|<div class=\"deploy-version\">lokal</div>|<div class=\"deploy-version\">${VERSION}</div>|" index.html
-          grep -q "deploy-version\">${GITHUB_SHA:0:7}" index.html
+          grep -q "deploy-version\">${SHORT}" index.html
+
+          # Die klassische Ansicht haengt feste ?v=-Marken an CSS und Einstieg.
+          # Die wurden von Hand gepflegt und blieben deshalb stehen — wer die
+          # Seite schon einmal offen hatte, bekam altes CSS. Jetzt zieht die
+          # Marke bei jedem Deploy mit dem Commit mit.
+          sed -i "s|app\.css?v=[A-Za-z0-9]*|app.css?v=${SHORT}|g" backup/index.html
+          sed -i "s|main\.js?v=[A-Za-z0-9]*|main.js?v=${SHORT}|g" backup/index.html
+          grep -q "app.css?v=${SHORT}" backup/index.html
+          grep -q "main.js?v=${SHORT}" backup/index.html
+
+          # Kleine Datei, an der eine offene Seite merkt, dass es etwas Neues
+          # gibt. Bewusst separat und winzig — sie wird regelmaessig geholt.
+          printf '{"commit":"%s","deployedAt":"%s"}\n' \
+            "${SHORT}" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > version.json
+          cat version.json
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
