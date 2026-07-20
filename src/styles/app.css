@@ -2379,6 +2379,33 @@ img {
   color: var(--primary);
 }
 
+/* Der Ausgang zurueck zur Live-Ansicht. Bewusst in Akzent-Orange statt im
+   Primaergruen: Gruen markiert hier die aktuelle Seite, und dieser Punkt ist
+   keine Seite. So bleiben drei Zustaende unterscheidbar — grau: andere Seite,
+   gruen: aktuelle Seite, orange: raus zur Live-Ansicht. */
+.bottom-nav__item--live {
+  position: relative;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bottom-nav__item--live::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 5px;
+  height: 5px;
+  margin-left: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: navlivepulse 2s ease-in-out infinite;
+}
+
+@keyframes navlivepulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
 /* Platz fuer die fixe Nav-Leiste */
 .app-shell {
   padding-bottom: calc(84px + env(safe-area-inset-bottom));
