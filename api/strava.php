@@ -10,9 +10,26 @@
 //
 // Antwort:
 //   { "configured": bool, "totals": {...}, "tripDays": {...}, "tripTours": [...], "pastTours": [...] }
+//
+// Mit ?debug=1 kommt stattdessen eine Diagnose: wie viele Aktivitaeten Strava
+// liefert, welche Sportarten dabei sind und welcher trip_start konfiguriert
+// ist. Umgeht den Cache — sonst diagnostiziert man den alten Stand.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
+
+// Strava kennt mehrere Rad-Sportarten. Frueher zaehlte nur exakt "Ride" —
+// eine als E-Bike- oder Gravel-Fahrt aufgezeichnete Etappe fiel damit aus
+// BEIDEN Listen und war schlicht unsichtbar, ohne Fehlermeldung.
+const RIDE_TYPES = [
+    'Ride',
+    'GravelRide',
+    'MountainBikeRide',
+    'EBikeRide',
+    'EMountainBikeRide',
+    'Velomobile',
+    'Handcycle',
+];
 
 const CACHE_TTL_SECONDS = 900;          // 15 min — Strava erlaubt 100 Calls/15 min
 const ACTIVITY_PAGES    = 3;            // bis zu 3 x 100 Aktivitaeten
@@ -30,8 +47,10 @@ if (!is_file(CONFIG_FILE)) {
 
 $config = require CONFIG_FILE;
 
+$debug = isset($_GET['debug']) && $_GET['debug'] !== '0';
+
 // ── Cache ───────────────────────────────────────────────
-if (is_file(CACHE_FILE) && (time() - filemtime(CACHE_FILE)) < CACHE_TTL_SECONDS) {
+if (!$debug && is_file(CACHE_FILE) && (time() - filemtime(CACHE_FILE)) < CACHE_TTL_SECONDS) {
     readfile(CACHE_FILE);
     exit;
 }
@@ -133,12 +152,42 @@ $tripDays  = [];
 $tripTours = [];
 $pastTours = [];
 
+// Diagnose: erst zaehlen, dann filtern — sonst sieht man gerade das nicht,
+// was rausfaellt.
+$seenSportTypes = [];
+$skipped = [];
+$newest = [];
+
 foreach ($activities as $activity) {
-    if (($activity['type'] ?? '') !== 'Ride' && ($activity['sport_type'] ?? '') !== 'Ride') {
+    if (!is_array($activity)) {
         continue;
     }
 
+    $sportType = (string) ($activity['sport_type'] ?? '');
+    $legacyType = (string) ($activity['type'] ?? '');
+    $effectiveType = $sportType !== '' ? $sportType : $legacyType;
     $startLocal = substr((string) ($activity['start_date_local'] ?? ''), 0, 10);
+
+    $key = $effectiveType !== '' ? $effectiveType : '(ohne Typ)';
+    $seenSportTypes[$key] = ($seenSportTypes[$key] ?? 0) + 1;
+
+    if (count($newest) < 10) {
+        $newest[] = [
+            'date'       => $startLocal,
+            'name'       => (string) ($activity['name'] ?? ''),
+            'type'       => $legacyType,
+            'sport_type' => $sportType,
+            'distanceKm' => round(((float) ($activity['distance'] ?? 0)) / 1000, 1),
+        ];
+    }
+
+    $isRide = in_array($sportType, RIDE_TYPES, true) || in_array($legacyType, RIDE_TYPES, true);
+
+    if (!$isRide) {
+        $skipped[] = ['date' => $startLocal, 'type' => $legacyType, 'sport_type' => $sportType];
+        continue;
+    }
+
     $distanceKm = ((float) ($activity['distance'] ?? 0)) / 1000;
     $elevationM = (float) ($activity['total_elevation_gain'] ?? 0);
     $movingTime = (int) ($activity['moving_time'] ?? 0);
@@ -239,6 +288,23 @@ foreach ($tripDays as $day => $values) {
 }
 krsort($tripDays);
 usort($tripTours, fn($a, $b) => strcmp($b['date'], $a['date']));
+
+if ($debug) {
+    // Diagnose-Antwort: beantwortet, warum eine Etappe fehlt. Bewusst OHNE
+    // Cache-Schreiben — sonst laege die Diagnose als normale Antwort im Cache.
+    echo json_encode([
+        'debug'              => true,
+        'tripStart'          => $tripStart,
+        'aktivitaetenGesamt' => count($activities),
+        'davonRadfahrten'    => $totals['rides'],
+        'sportarten'         => $seenSportTypes,
+        'verworfen'          => $skipped,
+        'neueste'            => $newest,
+        'tripTage'           => array_keys($tripDays),
+        'akzeptierteTypen'   => RIDE_TYPES,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    exit;
+}
 
 $payload = json_encode([
     'configured' => true,
