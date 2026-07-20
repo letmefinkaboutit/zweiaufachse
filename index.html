@@ -1478,25 +1478,39 @@
 
     const today = todayKeyForRiders();
     const tripEntries = Object.entries(strava.tripDays ?? {}).sort(([a], [b]) => b.localeCompare(a));
-    const completedEntries = tripEntries.filter(([day]) => day < today);
+
+    // Ein Tourtag gilt als abgeschlossene Etappe, sobald Strava eine Fahrt
+    // dafuer kennt — auch der heutige, sobald die Etappe hochgeladen ist. So
+    // erscheint eine am selben Tag beendete Fahrt sofort und nicht erst, wenn
+    // das Datum umspringt.
+    const stravaTodayKm = strava.tripDays?.[today]?.distanceKm ?? null;
+    const todayDone = stravaTodayKm != null;
+    const completedEntries = tripEntries.filter(([day]) => day <= today);
     const completed = sumTripDays(completedEntries);
-    const todayKm = state.stats.sources?.today === "traccar" ? state.stats.todayKm : null;
-    const totalKm = completed.distanceKm + (todayKm ?? 0);
+    // Live-Zuschlag aus Traccar nur, solange heute noch keine Strava-Etappe
+    // vorliegt — sonst steckt der Tag schon in completed und wuerde doppelt
+    // zaehlen.
+    const liveTodayKm = !todayDone && state.stats.sources?.today === "traccar"
+      ? state.stats.todayKm
+      : null;
+    const totalKm = completed.distanceKm + (liveTodayKm ?? 0);
     const avgHr = completed.hrWeight > 0 ? Math.round(completed.hrSum / completed.hrWeight) : null;
     const completedShare = totalKm > 0 ? completed.distanceKm / totalKm * 100 : 0;
-    const todayShare = totalKm > 0 ? (todayKm ?? 0) / totalKm * 100 : 0;
+    const todayShare = totalKm > 0 ? (liveTodayKm ?? 0) / totalKm * 100 : 0;
 
     $("healthLabel").textContent = "Tour bisher";
     $("healthValue").textContent = fmtDistanceNumber(totalKm);
     $("healthSub").textContent = `${completedEntries.length} ${completedEntries.length === 1 ? "Etappe" : "Etappen"}`;
-    $("healthToday").textContent = todayKm != null ? `heute ${fmtDistanceNumber(todayKm)}` : "heute live";
-    $("healthToday").classList.add("health-tile__live");
+    $("healthToday").textContent = todayDone
+      ? `heute ${fmtDistanceNumber(stravaTodayKm)}`
+      : liveTodayKm != null ? `heute ${fmtDistanceNumber(liveTodayKm)}` : "heute live";
+    $("healthToday").classList.toggle("health-tile__live", !todayDone);
     $("healthBarCompleted").style.width = `${completedShare}%`;
     $("healthBarToday").style.width = `${todayShare}%`;
     $("healthSheetSub").textContent = `Heute live mit Traccar · abgeschlossene Tage aus Strava`;
 
     const tours = (strava.tripTours ?? [])
-      .filter((tour) => tour.date < today)
+      .filter((tour) => tour.date <= today)
       .slice(0, 12);
 
     $("healthContent").innerHTML = `
@@ -1513,7 +1527,7 @@
           </div>
           <div class="health-source__labels">
             <div><span>Strava · fertig</span><b>${fmtKm(completed.distanceKm)}</b></div>
-            <div><span>Traccar · heute</span><b>${todayKm != null ? fmtKm(todayKm) : "live"}</b></div>
+            <div><span>Traccar · heute</span><b>${todayDone ? "fertig" : liveTodayKm != null ? fmtKm(liveTodayKm) : "live"}</b></div>
           </div>
         </div>
       </div>
