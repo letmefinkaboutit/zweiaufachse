@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pausen-Animationen · Timo & Tino</title>
+  <meta name="description" content="Separate Vorschau für mögliche Pausen-Animationen der Fahreransicht." />
+  <link rel="icon" type="image/svg+xml" href="../src/assets/favicon.svg" />
+  <link rel="stylesheet" href="./pause-animations.css" />
+</head>
+<body>
+  <header class="lab-header">
+    <a class="back-link" href="../">← Fahrer-Screen</a>
+    <div>
+      <p class="eyebrow">Werkstatt · nur zur Vorschau</p>
+      <h1>Was machen die zwei eigentlich in der Pause?</h1>
+      <p class="intro">
+        Sieben kleine SVG-Loops mit den Erkennungsmerkmalen der echten Fahrer:
+        Hellas-Trikots, blaue Helme und natürlich die Brille. Kontext einstellen,
+        Zufall drücken und schauen, was später zur Situation passen würde.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <section class="context-panel" aria-labelledby="context-title">
+      <div class="context-panel__copy">
+        <p class="eyebrow">Kontext-Simulator</p>
+        <h2 id="context-title">Welche Pause passt gerade?</h2>
+      </div>
+      <div class="context-grid">
+        <label>
+          Wetter
+          <select id="weather">
+            <option value="sunny">Sonnig</option>
+            <option value="cloudy">Bewölkt</option>
+            <option value="rain">Regen</option>
+            <option value="wind">Windig</option>
+          </select>
+        </label>
+        <label>
+          Uhrzeit
+          <select id="time">
+            <option value="morning">Morgens</option>
+            <option value="midday" selected>Mittags</option>
+            <option value="afternoon">Nachmittags</option>
+            <option value="evening">Abends</option>
+            <option value="night">Nachts</option>
+          </select>
+        </label>
+        <label>
+          Umgebung
+          <select id="terrain">
+            <option value="village">Ort / Café</option>
+            <option value="open" selected>Freies Feld</option>
+            <option value="forest">Wald</option>
+            <option value="mountain">Berge</option>
+            <option value="coast">Küste</option>
+          </select>
+        </label>
+        <label>
+          Temperatur
+          <span class="range-value"><output id="temperatureValue">27</output> °C</span>
+          <input id="temperature" type="range" min="4" max="40" value="27" />
+        </label>
+      </div>
+      <button class="random-button" id="randomButton" type="button">
+        <span aria-hidden="true">↻</span>
+        Passende Pause auslosen
+      </button>
+    </section>
+
+    <section class="selected-panel" aria-live="polite" aria-labelledby="selected-title">
+      <div class="phone-preview">
+        <div class="phone-preview__island"></div>
+        <div class="phone-preview__stage" id="selectedAnimation"></div>
+      </div>
+      <div class="selected-copy">
+        <p class="eyebrow">Aktuelle Auswahl</p>
+        <h2 id="selected-title"></h2>
+        <p class="selected-copy__state"><span aria-hidden="true">Ⅱ</span> Gerade wird Pause gemacht</p>
+        <p class="selected-copy__message" id="selectedMessage"></p>
+        <p class="selected-copy__reason" id="selectedReason"></p>
+        <div class="selected-copy__tags" id="selectedTags"></div>
+      </div>
+    </section>
+
+    <section class="gallery-section" aria-labelledby="gallery-title">
+      <div class="gallery-heading">
+        <div>
+          <p class="eyebrow">Favoriten zuerst</p>
+          <h2 id="gallery-title">Die Pausenmomente</h2>
+        </div>
+        <p>Auf eine Karte klicken, um sie oben groß zu sehen.</p>
+      </div>
+      <div class="animation-grid" id="animationGrid"></div>
+    </section>
+
+    <aside class="implementation-note">
+      <strong>Hinweis zur späteren Auswahl:</strong>
+      Der Zufall bleibt erhalten, wird aber gewichtet. Regen macht den Schirm
+      wahrscheinlicher, Hitze die Sonnencreme oder Hängematte, Wind die Faltkarte
+      und Dunkelheit die Ketten-OP. Universelle Szenen bleiben als Überraschung im Topf.
+    </aside>
+  </main>
+
+  <script type="module" src="./pause-animations.js"></script>
+</body>
+</html>

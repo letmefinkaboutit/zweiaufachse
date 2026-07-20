@@ -9,6 +9,7 @@
 <link rel="manifest" href="./manifest.json" />
 <link rel="apple-touch-icon" href="./src/assets/apple-touch-icon.png" />
 <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
+<link rel="preload" as="image" href="./src/assets/riders-loader-portrait.webp" fetchpriority="high" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="T&T Tour" />
@@ -53,6 +54,91 @@
     flex-direction: column;
     overflow: hidden;
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* ── Start-/Refresh-Loader ── */
+  .tour-loader {
+    position: fixed; inset: 0; z-index: 10000;
+    display: grid; place-items: center;
+    min-height: var(--app-height, 100dvh);
+    overflow: hidden;
+    color: #1f2a2f; background: #fcf8ed;
+    opacity: 1; visibility: visible;
+    transition: opacity 0.48s ease, visibility 0.48s ease;
+  }
+  .tour-loader::before {
+    content: ""; position: absolute; inset: 0;
+    background: #fcf8ed;
+    pointer-events: none;
+  }
+  .tour-loader.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+  .tour-loader__inner {
+    position: relative; width: min(100%, 520px); height: var(--app-height, 100dvh);
+    display: flex; flex-direction: column; align-items: center;
+    padding: calc(22px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+  }
+  .tour-loader__brand {
+    position: relative; z-index: 2;
+    text-align: center;
+  }
+  .tour-loader__eyebrow {
+    margin: 0 0 5px; color: #eb8f34;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .tour-loader__brand strong {
+    display: block; font-size: clamp(25px, 7vw, 38px); line-height: 1;
+    letter-spacing: -0.045em;
+  }
+  .tour-loader__portrait {
+    position: relative; flex: 1 1 auto; min-height: 0;
+    top: -24px; width: min(112vw, 560px); margin: 6px -18px 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tour-loader__portrait img {
+    display: block; width: 100%; max-height: 64vh; object-fit: contain; object-position: center bottom;
+    animation:
+      loader-arrive 0.72s cubic-bezier(0.2, 0.75, 0.25, 1) both,
+      loader-breathe 2.8s 0.72s ease-in-out infinite alternate;
+  }
+  @keyframes loader-arrive {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes loader-breathe {
+    from { transform: translateY(0); }
+    to { transform: translateY(-4px); }
+  }
+  .tour-loader__status {
+    position: relative; z-index: 2; width: 100%;
+    margin-top: -2px; text-align: center;
+  }
+  .tour-loader__status strong {
+    display: block; font-size: 18px; line-height: 1.2; letter-spacing: -0.02em;
+  }
+  .tour-loader__status p {
+    margin: 5px auto 14px; max-width: 300px;
+    color: #58656b; font-size: 12.5px; font-weight: 600; line-height: 1.45;
+  }
+  .tour-loader__road {
+    position: relative; width: min(240px, 70vw); height: 14px; margin: 0 auto;
+    overflow: hidden;
+  }
+  .tour-loader__road::before {
+    content: ""; position: absolute; top: 6px; left: 0; right: 0;
+    border-top: 2px dashed rgba(31, 42, 47, 0.18);
+  }
+  .tour-loader__rider {
+    position: absolute; top: 2px; left: -12px;
+    width: 10px; height: 10px; border: 2px solid #fcf8ed; border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(31, 42, 47, 0.2);
+    animation: loader-ride 2.1s ease-in-out infinite;
+  }
+  .tour-loader__rider--a { background: #0c6b58; }
+  .tour-loader__rider--b { background: #eb8f34; animation-delay: 0.16s; }
+  @keyframes loader-ride {
+    0% { left: -12px; opacity: 0; }
+    12%, 86% { opacity: 1; }
+    100% { left: calc(100% + 2px); opacity: 0; }
   }
 
   .scene-wrap {
@@ -626,6 +712,47 @@
 </style>
 </head>
 <body>
+<div class="tour-loader" id="tourLoader" role="status" aria-live="polite" aria-label="Die Touransicht wird geladen">
+  <div class="tour-loader__inner">
+    <div class="tour-loader__brand">
+      <p class="tour-loader__eyebrow">Zwei auf Achse</p>
+      <strong>Timo &amp; Tino</strong>
+    </div>
+    <div class="tour-loader__portrait">
+      <img src="./src/assets/riders-loader-portrait.webp" alt="" width="850" height="954" fetchpriority="high" />
+    </div>
+    <div class="tour-loader__status">
+      <strong>Die Tour wird vorbereitet</strong>
+      <p>Route, Wetter und Live-Position kommen gleich.</p>
+      <div class="tour-loader__road" aria-hidden="true">
+        <i class="tour-loader__rider tour-loader__rider--a"></i>
+        <i class="tour-loader__rider tour-loader__rider--b"></i>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (() => {
+    const loader = document.getElementById("tourLoader");
+    const shownAt = performance.now();
+    let dismissed = false;
+
+    window.dismissTourLoader = (immediately = false) => {
+      if (!loader || dismissed) return;
+      dismissed = true;
+      const minimumVisibleMs = immediately ? 0 : 1100;
+      const delay = Math.max(0, minimumVisibleMs - (performance.now() - shownAt));
+
+      window.setTimeout(() => {
+        loader.classList.add("is-leaving");
+        window.setTimeout(() => { loader.hidden = true; }, 520);
+      }, delay);
+    };
+
+    // Auch bei einer fehlgeschlagenen Datenquelle darf der Splash nie blockieren.
+    window.setTimeout(() => window.dismissTourLoader?.(true), 7000);
+  })();
+</script>
 <div class="scene-wrap">
 <svg class="scene" id="scene" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMax slice" aria-label="Live-Blick über den Lenker">
   <defs>
@@ -2413,6 +2540,7 @@
   });
 
   await provider.start();
+  window.dismissTourLoader?.();
 
   if (window.L) initMaps();
   else window.addEventListener("load", initMaps, { once: true });
