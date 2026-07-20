@@ -348,6 +348,17 @@
     border: none; border-radius: 50%; background: rgba(31, 42, 47, 0.06);
     color: #1f2a2f; font-size: 15px; cursor: pointer; z-index: 2;
   }
+  .album-days { display: flex; flex-direction: column; gap: 14px; }
+  .album-day__head {
+    position: sticky; top: -1px; z-index: 2;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    margin-bottom: 6px; padding: 5px 0 4px;
+    /* Der Sheet-Karten-Hintergrund, damit die Fotos sauber darunter wegscrollen */
+    background: #fffdf8;
+    border-bottom: 1px solid rgba(31, 42, 47, 0.08);
+  }
+  .album-day__head h4 { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; }
+  .album-day__head span { font-size: 10.5px; font-weight: 700; color: #58656b; white-space: nowrap; }
   .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .album-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #e9e2d2; cursor: pointer; }
   .health-sheet__card { width: min(94vw, 600px); max-height: min(88vh, 780px); padding: 20px 18px 18px; }
@@ -529,8 +540,15 @@
     transition: transform .12s ease;
   }
   .photo-map-marker:hover { transform: scale(1.1); }
-  .photo-map-marker img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
+  /* Leaflet erzwingt fuer Bilder im Marker-Pane width:auto (Workaround gegen
+     einen Kachel-Bug in Firefox) und ist mit .leaflet-container
+     .leaflet-marker-pane img spezifischer als eine einfache Klassenregel.
+     Ohne dieselbe Spezifitaet hier behaelt das Foto seine natuerliche Breite,
+     wird aber auf 40px Hoehe gestaucht — aus border-radius:50% wird dann eine
+     Ellipse statt eines Kreises. Feste Kantenlaenge + cover haelt jedes
+     Vorschaubild rund, egal ob Hoch- oder Querformat. */
+  .leaflet-container .leaflet-marker-pane .photo-map-marker img {
+    width: 40px; height: 40px; object-fit: cover; display: block;
     border-radius: 50%; border: 2px solid #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,.3);
   }
@@ -924,7 +942,7 @@
     <button class="sheet__close" data-close aria-label="Schließen">✕</button>
     <h3 class="sheet__title">Fotoalbum</h3>
     <p class="sheet__sub" id="albumCount">Fotos von unterwegs</p>
-    <div class="album-grid" id="albumGrid"></div>
+    <div class="album-days" id="albumGrid"></div>
   </div>
 </div>
 
@@ -1526,6 +1544,32 @@
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   }
 
+  // Reisetag zu einem Datum: Tag 1 ist der Abfahrtstag. Fotos von vor der
+  // Abfahrt (Testbilder) bekommen keine Tagesnummer.
+  function tourDayNumber(dayKey) {
+    if (!dayKey || !tripMeta.startDate) return null;
+    const start = new Date(`${tripMeta.startDate}T00:00:00`);
+    const day = new Date(`${dayKey}T00:00:00`);
+    if (Number.isNaN(day.getTime())) return null;
+    const diff = Math.round((day - start) / 86_400_000);
+    return diff >= 0 ? diff + 1 : null;
+  }
+
+  function albumDayLabel(dayKey) {
+    if (!dayKey) return "Ohne Datum";
+
+    const today = todayKeyForRiders();
+    if (dayKey === today) return "Heute";
+
+    const yesterday = new Date(`${today}T00:00:00`);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+    if (dayKey === yesterdayKey) return "Gestern";
+
+    return new Date(`${dayKey}T00:00:00`)
+      .toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  }
+
   function renderPhotos() {
     const photos = state.photos.filter((photo) => photo.thumbUrl);
 
@@ -1533,11 +1577,46 @@
       photos.slice(0, 3).map((photo) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" alt="" loading="lazy" />`).join("") +
       (photos.length ? `<span class="thumb-stack__count">${photos.length}</span>` : "");
 
-    $("albumGrid").innerHTML = photos
-      .map((photo, index) => `<img src="${PHOTO_HOST}${photo.thumbUrl}" data-idx="${index}" alt="Foto von unterwegs" loading="lazy" />`)
-      .join("");
+    // Nach Tagen gruppieren. Der Index bleibt der Index in albumPhotos() —
+    // die Lightbox blaettert weiter durch das ganze Album, nicht nur durch
+    // den angetippten Tag.
+    const dayGroups = new Map();
+    photos.forEach((photo, index) => {
+      const key = photo.date?.slice(0, 10) || "";
+      if (!dayGroups.has(key)) dayGroups.set(key, []);
+      dayGroups.get(key).push({ photo, index });
+    });
+
+    // Neueste Tage zuerst, Fotos ohne Datum ans Ende.
+    const orderedDays = [...dayGroups.keys()].sort((a, b) => {
+      if (!a) return 1;
+      if (!b) return -1;
+      return b.localeCompare(a);
+    });
+
+    $("albumGrid").innerHTML = orderedDays.map((day) => {
+      const entries = dayGroups.get(day);
+      const tourDay = tourDayNumber(day);
+      const meta = [tourDay ? `Tag ${tourDay}` : null, `${entries.length} ${entries.length === 1 ? "Foto" : "Fotos"}`]
+        .filter(Boolean)
+        .join(" · ");
+
+      return `
+        <section class="album-day">
+          <div class="album-day__head">
+            <h4>${albumDayLabel(day)}</h4>
+            <span>${meta}</span>
+          </div>
+          <div class="album-grid">
+            ${entries.map(({ photo, index }) =>
+              `<img src="${PHOTO_HOST}${photo.thumbUrl}" data-idx="${index}" alt="Foto von unterwegs" loading="lazy" />`).join("")}
+          </div>
+        </section>`;
+    }).join("");
+
+    const dayCount = orderedDays.filter(Boolean).length;
     $("albumCount").textContent = photos.length
-      ? `${photos.length} Fotos von unterwegs`
+      ? `${photos.length} Fotos an ${dayCount} ${dayCount === 1 ? "Tag" : "Tagen"}`
       : "Noch keine Fotos";
 
     // Slider: nur Fotos des heutigen Kalendertages
