@@ -11,3 +11,8 @@ api/traccar-cache.json
 
 # Build-Cache der Nominatim-Abfragen (tools/build-country-crossings.mjs)
 tools/.nominatim-cache.json
+
+# Zur Laufzeit erzeugte Reichweiten-Ablage (bleibt auf dem Server)
+api/analytics-store.php
+api/analytics-visitors.php
+api/analytics.lock

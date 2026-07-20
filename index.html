@@ -990,6 +990,7 @@
   import { loadCountrySegments, COUNTRY_NAMES } from "./src/services/routeCountryService.js";
   import { reverseGeocode, geocodeOnce } from "./src/services/geocodeService.js";
   import { fetchTraccarTrack } from "./src/services/traccarProxyService.js";
+  import { trackPageview, trackEvent } from "./src/services/trackService.js";
   import { loadPoiData } from "./src/services/poiService.js";
   import { startPhotoService } from "./src/services/photoService.js";
   import { fetchWeather } from "./src/services/weatherService.js";
@@ -1741,6 +1742,7 @@
     const img = event.target.closest("img[data-idx]");
     if (!img) return;
     lbIdx = Number(img.dataset.idx);
+    trackEvent("foto", "live");
     showLightbox();
     lightbox.showModal();
   });
@@ -1759,18 +1761,19 @@
   });
 
   // ── Popups ──
-  function wireSheet(sheetId, opener, onOpen) {
+  function wireSheet(sheetId, opener, onOpen, eventName) {
     const sheet = $(sheetId);
     opener?.addEventListener("click", () => {
       sheet.classList.add("open");
+      if (eventName) trackEvent(eventName, "live");
       onOpen?.();
     });
     sheet.querySelector("[data-close]").addEventListener("click", () => sheet.classList.remove("open"));
     sheet.addEventListener("click", (event) => { if (event.target === sheet) sheet.classList.remove("open"); });
   }
-  wireSheet("statusSheet", $("tourProgress"));
-  wireSheet("healthSheet", $("boxHealth"));
-  wireSheet("albumSheet", $("boxAlbum"));
+  wireSheet("statusSheet", $("tourProgress"), null, "tourstatus");
+  wireSheet("healthSheet", $("boxHealth"), null, "strava");
+  wireSheet("albumSheet", $("boxAlbum"), null, "album");
 
   // ── Karten (Minimap + Popup) ──
   let miniMap = null;
@@ -1930,7 +1933,7 @@
         }
         renderBigMapLayers();
       });
-    });
+    }, "karte");
 
     updateMapMarker();
   }
@@ -2171,6 +2174,7 @@
     const img = event.target.closest("img[data-map-photo-idx]");
     if (!img) return;
     lbIdx = Number(img.dataset.mapPhotoIdx);
+    trackEvent("foto", "live");
     showLightbox();
     lightbox.showModal();
   });
@@ -2281,6 +2285,11 @@
     document.title = `Timo & Tino · Tag ${day}`;
   }
   renderTripDay();
+
+  // ── Reichweite (anonym, ohne Cookies) ──
+  trackPageview("live");
+  document.querySelector('a[href="./backup/"]')
+    ?.addEventListener("click", () => trackEvent("klassisch", "live"));
 
   // ── Neue Version bemerken ──
   // Waehrend der Tour wird mehrmals taeglich deployt, und die Seite laeuft bei

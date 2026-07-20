@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Wer schaut zu? · Timo &amp; Tino on Tour</title>
+<meta name="description" content="Wie viele Menschen die Radreise mitverfolgen — anonyme Summen, keine Cookies." />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/svg+xml" href="../src/assets/favicon.svg" />
+<style>
+  /* Farben: die Diagrammfarben sind NICHT die App-Farben. Das App-Gruen
+     #0c6b58 faellt in Flaechen unter die Buntheitsschwelle (liest sich grau),
+     das App-Orange bleibt unter 3:1 gegen den hellen Grund. Beide Modi wurden
+     mit dem Validator geprueft: hell 0d9b76/c06a12 auf fffdf8, dunkel
+     16a07a/cb7a1a auf 16211f. */
+  :root {
+    color-scheme: light;
+    --bg: #f7f1e7;
+    --surface: #fffdf8;
+    --line: rgba(31, 42, 47, 0.12);
+    --text: #1f2a2f;
+    --muted: #58656b;
+    --serie-besucher: #0d9b76;
+    --serie-aufrufe: #c06a12;
+    --grid: rgba(31, 42, 47, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101917;
+      --surface: #16211f;
+      --line: rgba(255, 253, 248, 0.14);
+      --text: #f2efe8;
+      --muted: #a8b4b1;
+      --serie-besucher: #16a07a;
+      --serie-aufrufe: #cb7a1a;
+      --grid: rgba(255, 253, 248, 0.1);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101917; --surface: #16211f; --line: rgba(255,253,248,.14);
+    --text: #f2efe8; --muted: #a8b4b1;
+    --serie-besucher: #16a07a; --serie-aufrufe: #cb7a1a;
+    --grid: rgba(255,253,248,.1);
+  }
+
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 400 15px/1.5 "Segoe UI", "Helvetica Neue", sans-serif;
+    padding: 18px 14px calc(28px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+  header h1 { font-size: 22px; letter-spacing: -0.02em; font-weight: 800; }
+  header p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .backlink {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+    font-size: 12px; font-weight: 700; color: var(--serie-aufrufe); text-decoration: none;
+  }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 14px;
+  }
+  .card > h2 {
+    font-size: 13px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 2px;
+  }
+  .card > p.hint { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; }
+
+  /* ── Kennzahlen ── */
+  .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (min-width: 620px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; }
+  .kpi__label { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .kpi__value { font-size: 27px; font-weight: 800; letter-spacing: -0.03em; margin-top: 3px; }
+  .kpi__sub { font-size: 11px; color: var(--muted); }
+
+  /* ── Saeulen (Tage, Stunden) ── */
+  .cols { display: flex; align-items: flex-end; gap: 2px; height: 150px; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%; cursor: default; }
+  .col__pair { display: flex; align-items: flex-end; gap: 2px; height: 100%; }
+  /* 4px runde Enden am oberen Ende, am Grundlinienende eckig */
+  .bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 2px; transition: filter .12s ease; }
+  .bar--besucher { background: var(--serie-besucher); }
+  .bar--aufrufe { background: var(--serie-aufrufe); }
+  .col:hover .bar { filter: brightness(1.12); }
+  .axis { display: flex; gap: 2px; margin-top: 6px; }
+  .axis span { flex: 1; min-width: 0; text-align: center; font-size: 9px; color: var(--muted); overflow: hidden; white-space: nowrap; }
+
+  /* ── Legende ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 9px; height: 9px; border-radius: 3px; }
+
+  /* ── Waagerechte Balken ── */
+  .rows { display: flex; flex-direction: column; gap: 9px; }
+  .row__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; }
+  .row__name { font-weight: 600; }
+  .row__value { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .row__track { height: 9px; border-radius: 999px; background: var(--grid); overflow: hidden; margin-top: 3px; }
+  .row__fill { height: 100%; border-radius: 999px; background: var(--serie-besucher); }
+
+  /* ── Anteilsbalken (Geraete, Ansicht) ── */
+  .split { display: flex; gap: 2px; height: 26px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+  .split div { min-width: 3px; }
+  .split-labels { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11.5px; color: var(--muted); }
+  .split-labels span { display: inline-flex; align-items: center; gap: 5px; }
+  .split-labels i { width: 9px; height: 9px; border-radius: 3px; }
+  .split-labels b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .two { display: grid; gap: 14px; }
+  @media (min-width: 620px) { .two { grid-template-columns: 1fr 1fr; } }
+
+  /* ── Tabelle (Zugaenglichkeit: dieselben Zahlen ohne Farbe) ── */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+  summary { font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .tablewrap { overflow-x: auto; margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  td { font-variant-numeric: tabular-nums; }
+
+  .note { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+  .empty { text-align: center; padding: 30px 12px; color: var(--muted); font-size: 13px; }
+
+  /* ── Tooltip ── */
+  #tip {
+    position: fixed; z-index: 50; pointer-events: none; opacity: 0;
+    transform: translate(-50%, -100%); transition: opacity .1s ease;
+    background: var(--text); color: var(--surface);
+    padding: 6px 9px; border-radius: 8px; font-size: 11.5px; line-height: 1.4;
+    white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <h1>Wer schaut zu?</h1>
+    <p id="stand">wird geladen …</p>
+    <a class="backlink" href="../">← zurück zur Live-Ansicht</a>
+  </header>
+  <div id="content"></div>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat("de-DE");
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  const tip = $("tip");
+  function showTip(event, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = "1";
+    const rect = event.currentTarget.getBoundingClientRect();
+    tip.style.left = `${rect.left + rect.width / 2}px`;
+    tip.style.top = `${rect.top - 8}px`;
+  }
+  const hideTip = () => { tip.style.opacity = "0"; };
+
+  // Hover UND Tap: auf dem Handy gibt es kein Hover.
+  function wireTip(el, html) {
+    el.addEventListener("mouseenter", (e) => showTip(e, html));
+    el.addEventListener("mouseleave", hideTip);
+    el.addEventListener("click", (e) => showTip(e, html));
+  }
+
+  const dateLabel = (iso) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  const weekday = (iso) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString("de-DE", { weekday: "long" });
+
+  // ── Saeulen: Besucher und Aufrufe pro Tag ──
+  function renderDaily(tage) {
+    const max = Math.max(1, ...tage.map((t) => Math.max(t.aufrufe, t.besucher)));
+    // Bei vielen Tagen nur jede n-te Beschriftung, sonst ueberlappen sie.
+    const every = Math.ceil(tage.length / 12);
+
+    const cols = tage.map((t) => {
+      const hB = Math.max(2, (t.besucher / max) * 100);
+      const hA = Math.max(2, (t.aufrufe / max) * 100);
+      return `<div class="col" data-tip="${esc(`<b>${weekday(t.datum)}, ${dateLabel(t.datum)}</b>${t.reisetag ? ` · Tag ${t.reisetag}` : ""}<br>${nf.format(t.besucher)} Besucher · ${nf.format(t.aufrufe)} Aufrufe`)}">
+          <div class="col__pair">
+            <div class="bar bar--besucher" style="height:${hB}%"></div>
+            <div class="bar bar--aufrufe" style="height:${hA}%"></div>
+          </div>
+        </div>`;
+    }).join("");
+
+    const axis = tage.map((t, i) =>
+      `<span>${i % every === 0 ? dateLabel(t.datum) : ""}</span>`).join("");
+
+    return `
+      <div class="card">
+        <h2>Besucher pro Tag</h2>
+        <p class="hint">Ein Besucher zählt einmal pro Tag, egal wie oft er nachschaut.</p>
+        <div class="legend">
+          <span><i style="background:var(--serie-besucher)"></i>Besucher</span>
+          <span><i style="background:var(--serie-aufrufe)"></i>Aufrufe</span>
+        </div>
+        <div class="cols">${cols}</div>
+        <div class="axis">${axis}</div>
+      </div>`;
+  }
+
+  // ── Saeulen: Tageszeit ──
+  function renderHours(stunden) {
+    const max = Math.max(1, ...stunden);
+    const cols = stunden.map((wert, stunde) => {
+      const h = wert === 0 ? 2 : Math.max(4, (wert / max) * 100);
+      // Der Balken MUSS in der Zeilen-Huelle stecken: .bar hat flex:1, und in
+      // einer Spalten-Flexbox wuerde das die Hoehe ueberschreiben — dann waeren
+      // alle Stunden gleich hoch.
+      return `<div class="col" data-tip="${esc(`<b>${String(stunde).padStart(2, "0")}–${String((stunde + 1) % 24).padStart(2, "0")} Uhr</b><br>${nf.format(wert)} Aufrufe`)}">
+        <div class="col__pair">
+          <div class="bar bar--besucher" style="height:${h}%;${wert === 0 ? "opacity:.25" : ""}"></div>
+        </div>
+      </div>`;
+    }).join("");
+    const axis = stunden.map((_, s) => `<span>${s % 4 === 0 ? s : ""}</span>`).join("");
+
+    return `
+      <div class="card">
+        <h2>Wann wird geschaut?</h2>
+        <p class="hint">Aufrufe nach Tageszeit, über alle Tage summiert (Uhrzeit Deutschland).</p>
+        <div class="cols" style="height:110px">${cols}</div>
+        <div class="axis">${axis}</div>
+      </div>`;
+  }
+
+  // ── Waagerechte Balken: was angeschaut wird ──
+  const EREIGNIS_NAMEN = {
+    karte: "Karte geöffnet",
+    album: "Fotoalbum geöffnet",
+    foto: "Foto groß angesehen",
+    tourstatus: "Tourstatus & Höhenprofil",
+    strava: "Werte & Strava",
+    klassisch: "In die klassische Ansicht",
+    "zurueck-live": "Zurück zur Live-Ansicht",
+  };
+
+  function renderEvents(ereignisse) {
+    const eintraege = Object.entries(ereignisse);
+    if (!eintraege.length) {
+      return `<div class="card"><h2>Was wird angeschaut?</h2><p class="hint">Noch keine Interaktionen gezählt.</p></div>`;
+    }
+    const max = Math.max(...eintraege.map(([, n]) => n));
+    const rows = eintraege.map(([schluessel, anzahl]) => `
+      <div>
+        <div class="row__head">
+          <span class="row__name">${esc(EREIGNIS_NAMEN[schluessel] ?? schluessel)}</span>
+          <span class="row__value">${nf.format(anzahl)}</span>
+        </div>
+        <div class="row__track"><div class="row__fill" style="width:${(anzahl / max) * 100}%"></div></div>
+      </div>`).join("");
+
+    return `
+      <div class="card">
+        <h2>Was wird angeschaut?</h2>
+        <p class="hint">Wie oft die einzelnen Bereiche geöffnet wurden.</p>
+        <div class="rows">${rows}</div>
+      </div>`;
+  }
+
+  // ── Anteilsbalken ──
+  function renderSplit(titel, hinweis, daten, namen) {
+    const eintraege = Object.entries(daten).filter(([, n]) => n > 0);
+    if (!eintraege.length) return "";
+    const summe = eintraege.reduce((a, [, n]) => a + n, 0);
+    const farben = ["var(--serie-besucher)", "var(--serie-aufrufe)", "var(--muted)"];
+
+    const balken = eintraege.map(([k, n], i) =>
+      `<div style="flex:${n};background:${farben[i % farben.length]}"></div>`).join("");
+    const labels = eintraege.map(([k, n], i) =>
+      `<span><i style="background:${farben[i % farben.length]}"></i>${esc(namen[k] ?? k)} <b>${Math.round((n / summe) * 100)} %</b></span>`).join("");
+
+    return `
+      <div class="card">
+        <h2>${esc(titel)}</h2>
+        <p class="hint">${esc(hinweis)}</p>
+        <div class="split">${balken}</div>
+        <div class="split-labels">${labels}</div>
+      </div>`;
+  }
+
+  function renderSources(quellen) {
+    const eintraege = Object.entries(quellen);
+    if (!eintraege.length) return "";
+    const rows = eintraege.map(([q, n]) =>
+      `<tr><td>${esc(q)}</td><td>${nf.format(n)}</td></tr>`).join("");
+    return `
+      <div class="card">
+        <h2>Woher kommen die Aufrufe?</h2>
+        <p class="hint">Nur die Quelle, nie die vollständige Adresse. „direkt“ heißt: Lesezeichen oder eingetippt.</p>
+        <div class="tablewrap">
+          <table><thead><tr><th>Quelle</th><th>Aufrufe</th></tr></thead><tbody>${rows}</tbody></table>
+        </div>
+      </div>`;
+  }
+
+  function renderTable(tage) {
+    const rows = [...tage].reverse().map((t) => `
+      <tr>
+        <td>${dateLabel(t.datum)}${t.reisetag ? ` · Tag ${t.reisetag}` : ""}</td>
+        <td>${nf.format(t.besucher)}</td>
+        <td>${nf.format(t.aufrufe)}</td>
+      </tr>`).join("");
+    return `
+      <details>
+        <summary>Alle Zahlen als Tabelle</summary>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Tag</th><th>Besucher</th><th>Aufrufe</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </details>`;
+  }
+
+  const DATENSCHUTZ = `
+    <div class="card">
+      <h2>Was hier gezählt wird</h2>
+      <p class="note">
+        Diese Seite kommt ohne Cookies aus und speichert keine IP-Adressen. Um Besucher
+        eines Tages auseinanderzuhalten, wird aus IP und Browserkennung ein Kennwert
+        gebildet — mit einem Zufallswert, der jede Nacht neu gewürfelt und weggeworfen
+        wird. Dadurch lässt sich niemand über zwei Tage hinweg wiedererkennen, auch von
+        uns nicht. Gespeichert werden ausschließlich Summen pro Tag.
+      </p>
+    </div>`;
+
+  // ── Laden ──
+  try {
+    const response = await fetch("../api/analytics.php", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const daten = await response.json();
+
+    if (daten.leer || !daten.tage?.length) {
+      $("stand").textContent = "noch keine Daten";
+      $("content").innerHTML = `
+        <div class="card"><div class="empty">
+          Es wurde noch kein Aufruf gezählt.<br>
+          Die Zählung beginnt mit dem ersten Besuch nach dem Einbau — rückwirkend gibt es nichts.
+        </div></div>${DATENSCHUTZ}`;
+    } else {
+      const stand = new Date(daten.standVon).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      $("stand").textContent = `Stand ${stand} Uhr · seit ${dateLabel(daten.tage[0].datum)}`;
+
+      $("content").innerHTML = `
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__label">Heute</div><div class="kpi__value">${nf.format(daten.heute.besucher)}</div><div class="kpi__sub">Besucher</div></div>
+          <div class="kpi"><div class="kpi__label">Heute</div><div class="kpi__value">${nf.format(daten.heute.aufrufe)}</div><div class="kpi__sub">Aufrufe</div></div>
+          <div class="kpi"><div class="kpi__label">Gesamt</div><div class="kpi__value">${nf.format(daten.summe.aufrufe)}</div><div class="kpi__sub">Aufrufe an ${nf.format(daten.summe.tage)} Tagen</div></div>
+          <div class="kpi"><div class="kpi__label">Schnitt</div><div class="kpi__value">${nf.format(daten.summe.proTag)}</div><div class="kpi__sub">Aufrufe pro Tag</div></div>
+        </div>
+        ${renderDaily(daten.tage)}
+        ${renderHours(daten.stunden)}
+        ${renderEvents(daten.ereignisse)}
+        <div class="two">
+          ${renderSplit("Womit wird geschaut?", "Anteil der Geräte an allen Aufrufen.", daten.geraete, { handy: "Handy", tablet: "Tablet", rechner: "Rechner", unbekannt: "unbekannt" })}
+          ${renderSplit("Welche Ansicht?", "Live-Ansicht gegenüber der klassischen Ansicht.", daten.ansichten, { live: "Live-Ansicht", classic: "Klassische Ansicht" })}
+        </div>
+        ${renderSources(daten.quellen)}
+        ${renderTable(daten.tage)}
+        ${DATENSCHUTZ}`;
+
+      for (const el of document.querySelectorAll("[data-tip]")) wireTip(el, el.dataset.tip);
+      document.addEventListener("scroll", hideTip, { passive: true });
+    }
+  } catch (error) {
+    $("stand").textContent = "nicht erreichbar";
+    $("content").innerHTML = `<div class="card"><div class="empty">Die Zahlen konnten nicht geladen werden.<br>${esc(error.message)}</div></div>`;
+  }
+</script>
+</body>
+</html>

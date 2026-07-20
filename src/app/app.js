@@ -7,6 +7,7 @@ import { mapLocationToRoute, computeMovementStatus } from "../services/routePosi
 import { createDefaultPoiFilters, filterPois, loadPoiData } from "../services/poiService.js";
 import { reverseGeocode, geocodeOnce } from "../services/geocodeService.js";
 import { loadCountrySegments } from "../services/routeCountryService.js";
+import { trackPageview, trackEvent } from "../services/trackService.js";
 import { startDailyStatsService } from "../services/traccarHistoryService.js";
 import { mountMapObserver, updateLiveMap } from "../services/liveMapService.js";
 import { startPhotoService } from "../services/photoService.js";
@@ -43,6 +44,11 @@ export async function createApp(root) {
   let locationProvider = null;
 
   root.innerHTML = createShell();
+
+  // Reichweite (anonym, ohne Cookies) — Gegenstueck: api/track.php
+  trackPageview("classic");
+  root.querySelector(".bottom-nav__item--live")
+    ?.addEventListener("click", () => trackEvent("zurueck-live", "classic"));
   mountMapObserver();
   mountPhotoTileObserver();
   mountPhotoMapObserver(() => state);
